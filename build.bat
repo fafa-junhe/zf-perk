@@ -1,0 +1,1 @@
+bin\spcomp64.exe zombie_fortress_perk.sp -o target/zombie_fortress_perk.smx
