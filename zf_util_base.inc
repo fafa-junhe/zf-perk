@@ -1045,7 +1045,7 @@ stock subMetalPct(client, Float:metalPct)
     new curMetal = getMetal(client);
     new maxMetal = 200;
     new metal = RoundToCeil(maxMetal * metalPct);
-    subMetal(client, max((curMetal - metal), 0);
+    subMetal(client, max((curMetal - metal), 0));
   }
 }
 
