@@ -1,11 +1,18 @@
-            #if defined _ZF_PERK_INC
-#endinput
+#pragma newdecls required
+
+#if defined _ZF_PERK_INC
+  #endinput
 #endif
 #define _ZF_PERK_INC
 
 #include "zf_util_base.inc"
 #include "zf_util_fx.inc"
 #include "zf_util_pref.inc"
+
+#include "perks/perk_structs.inc"
+#include "perks/base_perk.inc"
+#include "perks/sur_athletic.inc"
+#include "perks/zom_alpha.inc"
 
 //
 // Perk Objects
@@ -416,6 +423,7 @@ new Float:zf_perkPos[MAXPLAYERS+1][5][3]; // Position array shared by many perks
 new String:zf_perkStr[MAXPLAYERS+1][32];  // String shared by many perks
 
 new zf_perkAlphaMaster[MAXPLAYERS+1];     // Perk-specific var. Didn't want to use it, but had no choice.
+new BasePerk:g_hPerks[MAXPLAYERS+1];
 
 // Stats
 #define TOTAL_ZFSTATS 5
@@ -987,7 +995,15 @@ stock resetClient(client)
   // FX
   removeAura(client);
   removeIcon(client);
-  removeItems(client); 
+  removeItems(client);
+
+  // New Perk Object
+  if (g_hPerks[client] != null)
+  {
+      g_hPerks[client].onRemove();
+      delete g_hPerks[client];
+      g_hPerks[client] = null;
+  }
 }
 
 stock resetClientStats(client)
@@ -1438,8 +1454,8 @@ stock doItemThrow(
 // Perk Logic Helpers
 //
 ////////////////////////////////////////////////////////////
-stock doAlphaSummon(client)
-{ 
+stock perk_DoAlphaSummon(client)
+{
   decl summonCount;
   decl validMinionCount;
   decl validMinions[MAXPLAYERS+1];
@@ -1447,7 +1463,7 @@ stock doAlphaSummon(client)
   decl Float:clientAng[3];
   decl Float:summonVel[3];
   
-  GetClientAbsOrigin(client, clientPos);  
+  GetClientAbsOrigin(client, clientPos);
   GetClientAbsAngles(client, clientAng);
   
   // Determine which clients to summon.
@@ -1462,7 +1478,7 @@ stock doAlphaSummon(client)
    
   // Summon valid minions.
   summonCount = 0;
-  SortIntegers(validMinions, validMinionCount, Sort_Random); 
+  SortIntegers(validMinions, validMinionCount, Sort_Random);
   for(new i = 0; i < validMinionCount; i++)
   {
     if(i == ZF_ALPHA_SUMMON_LIMIT) break;
@@ -1480,9 +1496,9 @@ stock doAlphaSummon(client)
   if(summonCount == 1)
     PrintHintText(client, "你召唤了 %d 个随从!", summonCount);
   else if(summonCount > 1)
-    PrintHintText(client, "你召唤了 %d 个随从!", summonCount);    
+    PrintHintText(client, "你召唤了 %d 个随从!", summonCount);
     
-  return summonCount; 
+  return summonCount;
 }
 
 stock doCarpenterBuild(client, Float:physPos[3])
@@ -2392,45 +2408,7 @@ stock updateCondStats()
   {
     new thisZom = validZoms[i];
          
-    // Handle Perk (Z): ALPHA
-    if(usingZomPerk(thisZom, ZF_PERK_ALPHA))
-    {
-      // Handle timer
-      if(zf_perkTimer[thisZom] > 0)
-      {
-        zf_perkTimer[thisZom]--;
-        if(zf_perkTimer[thisZom] == 0)
-          PrintHintText(thisZom, "阿尔法准备就绪!");    //这句话没弄懂出现的场合，可能需要优化?
-      }
-    
-      // Handle bonuses
-      new attBonus = 0;
-      new regBonus = 0;
-      for(j = 0; j < validZomCount; j++)
-      {
-        if(i == j) continue;
-        if(GetVectorDistance(validZomsPos[i], validZomsPos[j], true) <= ZF_ALPHA_RADIUSSQ)
-        {
-          if(zf_perkAlphaMaster[validZoms[j]] > 0)
-          {
-            attBonus += ZF_ALPHA_ATTACK_MINION;
-            regBonus += ZF_ALPHA_REGEN_MINION;
-          }
-          else
-          {
-            attBonus += ZF_ALPHA_ATTACK;
-            regBonus += ZF_ALPHA_REGEN;            
-          }
-        }
-      }
-      addStat(thisZom, ZFStatAtt, ZFStatTypeCond, attBonus);
-      addHealth(thisZom, regBonus);
-      
-      // Handle HUD string.
-      Format(zf_perkStr[thisZom], 32, (zf_perkTimer[thisZom] == 0 ? "(随从传送准备就绪)" : ""));          
-    }     
-         
-    // Handle Perk (Z): COMBUSTIBLE
+   // Handle Perk (Z): COMBUSTIBLE
     else if(usingZomPerk(thisZom, ZF_PERK_COMBUSTIBLE))
     {
       fxExplosionTiny(thisZom);
@@ -2742,90 +2720,89 @@ stock updateConds()
 //
 ////////////////////////////////////////////////////////////
 public perk_OnPeriodic() // 1Hz
-{ 
-  decl i;
-  decl validCount;
-  decl validClients[MAXPLAYERS+1];
-    
+{
   zf_frameCounter++;
 
-  // 
-  // Update conditional and temporary bonuses.
   //
-  updateConds();
-  updateTempStats();  
-  updateCondStats();
-    
+  // Build common state information for periodic updates.
   //
-  // Build common state information. 
-  // + Clients must be in game and alive.
-  //
-  validCount = 0;
-  for(i = 1; i <= MaxClients; i++)
+  decl validSurCount, validZomCount;
+  decl validSurs[MAXPLAYERS+1], validZoms[MAXPLAYERS+1];
+  decl Float:validSursPos[MAXPLAYERS+1][3], Float:validZomsPos[MAXPLAYERS+1][3];
+  
+  validSurCount = 0;
+  validZomCount = 0;
+  for(new i = 1; i <= MaxClients; i++)
   {
     if(IsClientInGame(i) && IsPlayerAlive(i))
     {
-      if(isSur(i) || isZom(i)) 
-        validClients[validCount++] = i;      
+      if(isSur(i))
+      {
+        validSurs[validSurCount] = i;
+        GetClientAbsOrigin(i, validSursPos[validSurCount]);
+        validSurCount++;
+      }
+      else if(isZom(i))
+      {
+        validZoms[validZomCount] = i;
+        GetClientAbsOrigin(i, validZomsPos[validZomCount]);
+        validZomCount++;
+      }
     }
   }
-      
-  for(i = 0; i < validCount; i++)
-  {  
-    new thisClient = validClients[i];
 
-    //
-    // Apply Condition: Crippled
-    // + Create blood effects.
-    //
-    if(getCond(thisClient, ZFCondCrippled))
+  //
+  // Call new object-oriented periodic updates
+  //
+  for(new i = 1; i <= MaxClients; i++)
+  {
+    if(g_hPerks[i] != null && IsClientInGame(i) && IsPlayerAlive(i))
     {
-      if(GetRandomInt(0,3) == 1)
-        fxBloodBurst(thisClient);
-      if(GetRandomInt(0,3) == 1)
-        fxBloodSpray(thisClient);
-      if(GetRandomInt(0,3) == 1)
-        fxPain(thisClient);      
+      g_hPerks[i].onPeriodicUpdate(validSurs, validSurCount, validSursPos, validZoms, validZomCount, validZomsPos, zf_perkAlphaMaster);
     }
+  }
+
+  //
+  // Legacy updates for non-refactored perks
+  //
+  updateConds();
+  updateTempStats();
+  updateCondStats(); // This now only handles legacy perks
     
-    //
-    // Apply Condition: Intimidated
-    // + Apply defense penalty.
-    //
-    if(getCond(thisClient, ZFCondIntimidated))
+  //
+  // Legacy condition application
+  //
+  for(new i = 1; i <= MaxClients; i++)
+  {
+    if(IsClientInGame(i) && IsPlayerAlive(i))
     {
-      addStat(thisClient, ZFStatDef, ZFStatTypeCond, ZF_DAZE_DEFEND);
+      if(getCond(i, ZFCondCrippled))
+      {
+        if(GetRandomInt(0,3) == 1) fxBloodBurst(i);
+        if(GetRandomInt(0,3) == 1) fxBloodSpray(i);
+        if(GetRandomInt(0,3) == 1) fxPain(i);
+      }
+      if(getCond(i, ZFCondIntimidated))
+      {
+        addStat(i, ZFStatDef, ZFStatTypeCond, ZF_DAZE_DEFEND);
+      }
+      if(getCond(i, ZFCondPoisoned))
+      {
+        if(isBeingHealed(i)) subCond(i, ZFCondPoisoned, ZF_POISON_HEAL_MEDIC);
+        if(isUbered(i)) subCond(i, ZFCondPoisoned, ZF_POISON_HEAL_UBER);
+        SDKHooks_TakeDamage(i, zf_lastPoison[i], zf_lastPoison[i], float(ZF_POISON_DAMAGE), ZF_DMGTYPE_POISON);
+        fxHealthLost(i);
+      }
+      setGlow(i, getCond(i, ZFCondTracked));
     }
-        
-    //
-    // Apply Condition: Poisoned
-    // + Apply poison damage.
-    //
-    if(getCond(thisClient, ZFCondPoisoned))
-    {
-      if(isBeingHealed(thisClient))
-        subCond(thisClient, ZFCondPoisoned, ZF_POISON_HEAL_MEDIC);
-      if(isUbered(thisClient))
-        subCond(thisClient, ZFCondPoisoned, ZF_POISON_HEAL_UBER);
-
-      SDKHooks_TakeDamage(thisClient, zf_lastPoison[thisClient], zf_lastPoison[thisClient], float(ZF_POISON_DAMAGE), ZF_DMGTYPE_POISON); 
-      fxHealthLost(thisClient);      
-    }
-       
-    //
-    // Handle Condition: Tracked
-    // + Reveal glow around client.
-    //
-    setGlow(thisClient, getCond(thisClient, ZFCondTracked));
   }
   
   //
-  // Handle HUD updates. 
-  // Do not update at end of round.
+  // Handle HUD updates.
   //
   if(roundState() != RoundPost)
   {
-    for(i = 1; i <= MaxClients; i++)
+    for(new i = 1; i <= MaxClients; i++)
     {
       updateHud(i);
     }
@@ -3869,174 +3846,66 @@ public perk_OnPlayerSpawn(client)
     //
     if(perkChange)
     {
-      // State
-      zf_lastAttack[client] = 0;
-      zf_lastButtons[client] = 0;
-      zf_lastHealth[client] = 0;
-      zf_lastKiller[client] = 0;
-      zf_lastPoison[client] = 0;
-      zf_lastTeam[client] = GetClientTeam(client);
-            
-      // Logic
-      zf_perkTimer[client] = 0;
-      zf_perkState[client] = 0;
-      for(new i = 0; i < 5; i++)
-        for(new j = 0; j < 3; j++)
-          zf_perkPos[client][i][j] = 0.0;
-      zf_perkStr[client] = "";
+        // Delete old perk object if it exists
+        if (g_hPerks[client] != null)
+        {
+            g_hPerks[client].onRemove();
+            delete g_hPerks[client];
+            g_hPerks[client] = null;
+        }
 
-      // FX
-      removeAura(client);
-      removeIcon(client);
-      removeItems(client);
-      fxSetClientColor(client, 255, 255, 255, 255);
-      setGlow(client, false);
-            
-      // Implement new bonuses and effects.
-      resetClientStats(client);
-      resetClientConds(client);
-      updateClientPermStats(client);
-      updateClientPermEffects(client);
+        // Create new perk object based on team and selected perk
+        if (isSur(client))
+        {
+            switch (nextPerk)
+            {
+                case ZF_PERK_ATHLETIC:
+                {
+                    g_hPerks[client] = new AthleticPerk(client);
+                }
+                // ... other survivor perks will be added here
+                default:
+                {
+                    g_hPerks[client] = new base_perk(client);
+                }
+            }
+        }
+        else if (isZom(client))
+        {
+            switch (nextPerk)
+            {
+                case ZF_PERK_ALPHA:
+                {
+                    g_hPerks[client] = new AlphaPerk(client);
+                }
+                // ... other zombie perks will be added here
+                default:
+                {
+                    g_hPerks[client] = new base_perk(client);
+                }
+            }
+        }
     }
-    else
-    {      
-      // State
-      zf_lastAttack[client] = 0;
-      zf_lastButtons[client] = 0;
-      zf_lastHealth[client] = 0;
-      zf_lastKiller[client] = 0;
-      zf_lastPoison[client] = 0;
-      zf_lastTeam[client] = GetClientTeam(client);
-      
-      // Bonuses
-      resetClientStatType(client, ZFStatTypeCond);
-      resetClientStatType(client, ZFStatTypeTemp);
-      resetClientStatType(client, ZFStatTypeTempDuration);
-      resetClientConds(client);
-      
-      // FX
-      showAura(client);
-      showIcon(client);
-      fxSetClientColor(client, 255, 255, 255, 255);
-      setGlow(client, false);
-      
-      // Reset permanent effects.
-      updateClientPermEffects(client);
+
+    //
+    // Call the onSpawn method for the current perk object
+    //
+    if (g_hPerks[client] != null)
+    {
+        g_hPerks[client].onSpawn();
     }
     
+    // Reset legacy state vars that are no longer managed by individual perks
+    zf_lastAttack[client] = 0;
+    zf_lastButtons[client] = 0;
+    zf_lastHealth[client] = 0;
+    zf_lastKiller[client] = 0;
+    zf_lastPoison[client] = 0;
+    zf_lastTeam[client] = GetClientTeam(client);
+
     // HUD
     updateHud(client);
   }
-
-  if(validSur(client))
-  {
-    if(usingSurPerk(client, ZF_PERK_FRIEND))
-    {
-      zf_perkState[client] = 0;
-    }
-    else if(usingSurPerk(client, ZF_PERK_LEADER))
-    {
-      zf_perkTimer[client] = 0;
-    }
-    else if(usingSurPerk(client, ZF_PERK_NINJA))
-    {
-      zf_perkState[client] = 0;
-      zf_perkTimer[client] = 0;
-    }     
-    else if(usingSurPerk(client, ZF_PERK_STASH))
-    {
-      zf_perkTimer[client] = 0;
-      removeItems(client);
-    }
-    else if(usingSurPerk(client, ZF_PERK_STIRCRAZY))
-    {
-      for(new i = 0; i < ZF_STIRCRAZY_MAX_POINTS; i++)
-        GetClientAbsOrigin(client, zf_perkPos[client][i]);
-    }
-    else if(usingSurPerk(client, ZF_PERK_SUPPLIER))
-    {
-      zf_perkState[client] = 0;
-      zf_perkTimer[client] = 0;      
-    }
-    else if(usingSurPerk(client, ZF_PERK_TRAPPER))
-    {
-      zf_perkTimer[client] = 0;
-    }
-    else if(usingSurPerk(client, ZF_PERK_TANTRUM))
-    {
-      zf_perkTimer[client] = 0;
-    }
-    else if(usingSurPerk(client, ZF_PERK_ZENLIKE))
-    {
-      zf_perkState[client] = 0;
-    }
-  }
-  
-  else if(validZom(client))
-  {                   
-    if(usingZomPerk(client, ZF_PERK_HUNTER))
-    {    
-      zf_perkState[client] = 0;  
-      if(validAura(client))
-      {
-        decl Float:spawnPos[3];
-        getEntityPos(zf_aura[client], spawnPos);
-        TeleportEntity(client, spawnPos, zf_perkPos[client][0], NULL_VECTOR);
-        
-        addStatTempStack(client, ZFStatAtt, ZF_HUNTER_ATTACK, ZF_HUNTER_DURATION);          
-        
-        //
-        // Remove spawn protection. This is a giant hack to 
-        // fix compatibility issues with spawn protection mods.
-        //
-        remInvincibility(client);
-        fxSetClientColor(client, 255, 255, 255, 255);
-                  
-        ClientCommand(client, "voicemenu 1 0");
-        fxTeleportTrail(client, 10.0);
-      }
-    }
-    else if(usingZomPerk(client, ZF_PERK_LEAP))
-    {
-      zf_perkTimer[client] = 0;  
-    }
-    else if(usingZomPerk(client, ZF_PERK_MARKED))
-    {
-      if(roundState() <= RoundGrace)
-        zf_perkState[client] = -1;
-    }
-    else if(usingZomPerk(client, ZF_PERK_MAGNETIC))
-    {
-      addFlagNoTarget(client);
-    }
-    else if(usingZomPerk(client, ZF_PERK_RAGE))
-    {
-      zf_perkState[client] = 0;
-      zf_perkTimer[client] = 0;
-    }  
-    else if(usingZomPerk(client, ZF_PERK_ROAR))
-    {
-      zf_perkTimer[client] = 0;  
-    }    
-    else if(usingZomPerk(client, ZF_PERK_SCORCHING))
-    {
-      TF2_IgnitePlayer(client, client);
-    }
-    else if(usingZomPerk(client, ZF_PERK_SICK))
-    {
-      zf_perkTimer[client] = 0;
-      removeItems(client);
-    }      
-    else if(usingZomPerk(client, ZF_PERK_TARRED))
-    {
-      zf_perkTimer[client] = 0;
-      removeItems(client);
-    }
-    else if(usingZomPerk(client, ZF_PERK_THIEVING))
-    {
-      zf_perkState[client] = 0;
-    }
-  }          
 }
 
 public perk_OnPlayerDeath(victim, killer, assist, inflictor, damagetype)
