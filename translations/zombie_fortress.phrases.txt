@@ -325,4 +325,264 @@
 		"en"	"Zombie Fortress (%s)"
 		"zh"	"僵尸要塞 (%s)"
 	}
+	"ZF_Perk_Mode_Current"
+	{
+		"en"	"Current game mode: %d"
+		"zh"	"当前游戏模式: %d"
+	}
+	"ZF_Perk_Mode_Set_Normal"
+	{
+		"en"	"Game mode set to 0 (Normal). Changes apply on new round."
+		"zh"	"游戏模式已设为 0 (普通)。更改将在下一回合生效。"
+	}
+	"ZF_Perk_Mode_Set_RandPlayer"
+	{
+		"en"	"Game mode set to 1 (Random perks per player). Changes apply on new round."
+		"zh"	"游戏模式已设为 1 (玩家随机职业)。更改将在下一回合生效。"
+	}
+	"ZF_Perk_Mode_Set_RandTeam"
+	{
+		"en"	"Game mode set to 2 (Random perks per team). Changes apply on new round."
+		"zh"	"游戏模式已设为 2 (队伍随机职业)。更改将在下一回合生效。"
+	}
+	"ZF_Perk_Mode_Set_CvarTeam"
+	{
+		"en"	"Game mode set to 3 (CVAR perks per team). Changes apply on new round."
+		"zh"	"游戏模式已设为 3 (CVAR队伍职业)。更改将在下一回合生效。"
+	}
+	"ZF_Perk_Mode_Usage"
+	{
+		"en"	"Usage: %s [0|normal|1|randplayer|2|randteam|3|cvarteam]"
+		"zh"	"用法: %s [0|normal|1|randplayer|2|randteam|3|cvarteam]"
+	}
+	"ZF_Perk_Team_Set_Sur"
+	{
+		"en"	"Selected %s as survivor perk for CVAR per team mode."
+		"zh"	"已选择 %s 作为CVAR队伍模式的幸存者职业。"
+	}
+	"ZF_Perk_Team_Usage_Sur"
+	{
+		"en"	"Usage: %s [<surperk>]"
+		"zh"	"用法: %s [<幸存者职业>]"
+	}
+	"ZF_Perk_Team_Set_Zom"
+	{
+		"en"	"Selected %s as zombie perk for CVAR per team mode."
+		"zh"	"已选择 %s 作为CVAR队伍模式的僵尸职业。"
+	}
+	"ZF_Perk_Team_Usage_Zom"
+	{
+		"en"	"Usage: %s [<zomperk>]"
+		"zh"	"用法: %s [<僵尸职业>]"
+	}
+	"ZF_Perk_List_Sur_Header"
+	{
+		"en"	"Survivor Perks (enabled unless specified):"
+		"zh"	"幸存者职业 (除非特别说明否则已启用):"
+	}
+	"ZF_Perk_List_Item"
+	{
+		"en"	" > %s (Limit: %d)"
+		"zh"	" > %s (限制: %d)"
+	}
+	"ZF_Perk_List_Item_Disabled"
+	{
+		"en"	" [Disabled] > %s (Limit: %d)"
+		"zh"	" [已禁用] > %s (限制: %d)"
+	}
+	"ZF_Perk_List_Zom_Header"
+	{
+		"en"	"Zombie Perks (enabled unless specified):"
+		"zh"	"僵尸职业 (除非特别说明否则已启用):"
+	}
+	"ZF_Perk_List_Usage"
+	{
+		"en"	"Usage: %s [all|allsur|allzom]"
+		"zh"	"用法: %s [all|allsur|allzom]"
+	}
+	"ZF_Perk_Enable_All_Sur"
+	{
+		"en"	"%s all survivor perks. Changes apply on new round."
+		"zh"	"%s 全部幸存者职业。更改将在下一回合生效。"
+	}
+	"ZF_Perk_Enable_All_Zom"
+	{
+		"en"	"%s all zombie perks. Changes apply on new round."
+		"zh"	"%s 全部僵尸职业。更改将在下一回合生效。"
+	}
+	"ZF_Perk_Enable_Single"
+	{
+		"en"	"%s %s. Changes apply on new round."
+		"zh"	"%s %s。更改将在下一回合生效。"
+	}
+	"ZF_Perk_Invalid"
+	{
+		"en"	"\"%s\" is not a valid perk!"
+		"zh"	"“%s”不是一个有效的职业！"
+	}
+	"ZF_Perk_Enable_Usage"
+	{
+		"en"	"Usage: %s [all|allsur|allzom|<perk>]"
+		"zh"	"用法: %s [all|allsur|allzom|<职业>]"
+	}
+	"ZF_Perk_Limit_All_Sur"
+	{
+		"en"	"Survivor perk limits set to %d. Changes fully apply on new round."
+		"zh"	"幸存者职业限制已设为 %d。更改将在下一回合完全生效。"
+	}
+	"ZF_Perk_Limit_All_Zom"
+	{
+		"en"	"Zombie perk limits set to %d. Changes fully apply on new round."
+		"zh"	"僵尸职业限制已设为 %d。更改将在下一回合完全生效。"
+	}
+	"ZF_Perk_Limit_Single"
+	{
+		"en"	"%s perk limit set to %d. Changes fully apply on new round."
+		"zh"	"%s 职业限制已设为 %d。更改将在下一回合完全生效。"
+	}
+	"ZF_Perk_Limit_Usage"
+	{
+		"en"	"Usage: %s [all|allsur|allzom|<perk>] [<limit>]"
+		"zh"	"用法: %s [all|allsur|allzom|<职业>] [<限制>]"
+	}
+	"ZF_Perk_Select_Usage"
+	{
+		"en"	"Usage: %s [<perk>]"
+		"zh"	"用法: %s [<职业>]"
+	}
+	"ZF_Perk_Select_Error_Invalid"
+	{
+		"en"	"[ZF] Can't select perk: Invalid perk."
+		"zh"	"[ZF] 无法选择职业: 职业无效。"
+	}
+	"ZF_Perk_Select_Error_Disabled_Sur"
+	{
+		"en"	"[ZF] Can't select %s as survivor perk: Disabled by server."
+		"zh"	"[ZF] 无法选择 %s 作为幸存者职业：已被服务器禁用。"
+	}
+	"ZF_Perk_Select_Error_Gamemode_Sur"
+	{
+		"en"	"[ZF] Can't select %s as survivor perk: Non-standard game mode active."
+		"zh"	"[ZF] 无法选择 %s 作为幸存者职业：当前为非常规游戏模式。"
+	}
+	"ZF_Perk_Select_Error_Limit_Sur"
+	{
+		"en"	"[ZF] Can't select %s as survivor perk: Perk limit reached (%d)."
+		"zh"	"[ZF] 无法选择 %s 作为幸存者职业：已达到职业限制 (%d)。"
+	}
+	"ZF_Perk_Select_Success_Sur"
+	{
+		"en"	"[ZF] You have selected %s as your survivor perk. It will be applied on your next spawn."
+		"zh"	"[ZF] 你选择 %s 作为幸存者职业,将会在复活后切换。"
+	}
+	"ZF_Perk_Select_Error_Disabled_Zom"
+	{
+		"en"	"[ZF] Can't select %s as zombie perk: Disabled by server."
+		"zh"	"[ZF] 你不能选择 %s 职业: 该职业被服务器禁用。"
+	}
+	"ZF_Perk_Select_Error_Gamemode_Zom"
+	{
+		"en"	"[ZF] Can't select %s as zombie perk: Non-standard game mode active."
+		"zh"	"[ZF] 你不能选择 %s 职业: 现在是非常规模式。"
+	}
+	"ZF_Perk_Select_Error_Limit_Zom"
+	{
+		"en"	"[ZF] Can't select %s as zombie perk: Perk limit reached (%d)."
+		"zh"	"[ZF] 你不能选择 %s 职业: 该职业达到限制.(%d)。"
+	}
+	"ZF_Perk_Select_Success_Zom"
+	{
+		"en"	"[ZF] You have selected %s as your zombie perk. It will be applied on your next spawn."
+		"zh"	"[ZF] 你选择 %s 作为僵尸职业,将会在复活后切换。"
+	}
+	"ZF_HUD_Perk"
+	{
+		"en"	"Perk: %s"
+		"zh"	"职业: %s"
+	}
+	"ZF_HUD_Bonuses1"
+	{
+		"en"	"Attack: %d%%, Defense: %d%%"
+		"zh"	"攻击力: %d%%, 防御力: %d%%"
+	}
+	"ZF_HUD_Bonuses2"
+	{
+		"en"	"Crit Chance: %d%%, Speed: %d"
+		"zh"	"暴击率: %d%%, 速度: %d"
+	}
+	"ZF_HUD_KilledBy"
+	{
+		"en"	"You were killed by a(n) %s..."
+		"zh"	"你被 %s 职业杀死了......"
+	}
+	"ZF_HUD_Spectating"
+	{
+		"en"	"Spectating Perk: %s "
+		"zh"	"观察目标职业: %s "
+	}
+	"ZF_Menu_SelectSurPerk_Title"
+	{
+		"en"	"Select Survivor Perk"
+		"zh"	"选择幸存者职业"
+	}
+	"ZF_Menu_SelectZomPerk_Title"
+	{
+		"en"	"Select Zombie Perk"
+		"zh"	"选择僵尸职业"
+	}
+	"ZF_Menu_PerkSelect_Title"
+	{
+		"en"	"Perk Selection"
+		"zh"	"技能选择"
+	}
+	"ZF_Menu_PerkSelect_Select"
+	{
+		"en"	"[Select]"
+		"zh"	"[选择]"
+	}
+	"ZF_Menu_PerkSelect_Disabled"
+	{
+		"en"	"(Disabled by server)"
+		"zh"	"(被服务器禁用)"
+	}
+	"ZF_Menu_PerkSelect_Back"
+	{
+		"en"	"[Back]"
+		"zh"	"[返回]"
+	}
+	"ZF_Menu_PerkSelect_Close"
+	{
+		"en"	"[Close]"
+		"zh"	"[关闭]"
+	}
+	"ZF_Perk_Cleared"
+	{
+		"en"	"[ZF] Perks have been cleared. You must reselect your perks."
+		"zh"	"[ZF] 职业已清除。你必须重新选择你的职业。"
+	}
+	"ZF_Perk_Random_Player"
+	{
+		"en"	"[ZF] Random perks: %s (Survivor) / %s (Zombie)"
+		"zh"	"[ZF] 随机职业: %s (幸存者) / %s (僵尸)"
+	}
+	"ZF_Perk_Random_Team"
+	{
+		"en"	"[ZF] Random team perks: %s (Survivors) vs. %s (Zombies)"
+		"zh"	"[ZF] 随机团队职业: %s (幸存者) vs. %s (僵尸)"
+	}
+	"ZF_Perk_Cvar_Team"
+	{
+		"en"	"[ZF] CVAR team perks: %s (Survivors) vs. %s (Zombies)"
+		"zh"	"[ZF] CVAR团队职业: %s (幸存者) vs. %s (僵尸)"
+	}
+	"ZF_Perk_Limit_Reached_Sur"
+	{
+		"en"	"[ZF] Desired perk (%s) already at limit (%d)."
+		"zh"	"[ZF] 想要的职业 (%s) 已达到限制 (%d)。"
+	}
+	"ZF_Perk_Limit_Reached_Zom"
+	{
+		"en"	"[ZF] Desired perk (%s) already at limit (%d)."
+		"zh"	"[ZF] 想要的职业 (%s) 已达到限制 (%d)。"
+	}
 }

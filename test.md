@@ -1,3 +1,5 @@
+// zf_perk.inc
+
 /* put the line below after all of the includes!
 #pragma newdecls required
 */
@@ -12,12 +14,41 @@
 #include "zf_util_base.inc"
 #include "zf_util_fx.inc"
 #include "zf_util_pref.inc"
-#include "defines.inc"
+
 ArrayList g_SurPerkTypes;
 StringMap g_SurPerkRegistry;
 ArrayList g_ZomPerkTypes;
 StringMap g_ZomPerkRegistry;
 
+#define RegisterPerk(%1,%2,%3,%4) \
+        { \
+            StringMap perk = %1_new(-1); \
+            char classname[64]; \
+            %1_getName(perk, classname, sizeof(classname)); \
+            LogMessage("[ZF DEBUG] Registering %s perk. Initial classname: '%s'", %4, classname); \
+            if (%2.ContainsKey(classname)){ \
+                LogError("[ZF] Attempted to register %s perk with duplicate classname: '%s'", %4, classname); \
+            } \
+            else { \
+                StringMap perkInfo = new StringMap(); \
+                char shortDesc[128]; \
+                %1_getShortdesc(perk, shortDesc, sizeof(shortDesc)); \
+                char longDesc[1024]; \
+                %1_getDesc(perk, longDesc, sizeof(longDesc)); \
+                \
+                perkInfo.SetString("name", classname); \
+                perkInfo.SetString("shortDesc", shortDesc); \
+                perkInfo.SetString("longDesc", longDesc); \
+                \
+                %2.SetValue(classname, perkInfo); \
+                %3.Push(perkInfo); \
+                LogMessage("[ZF DEBUG] Registered %s perk: '%s'", %4, classname); \
+            } \
+            delete perk; \
+        } LogMessage("[ZF] Success Register")
+
+#define RegisterSurvivorPerk(%1) RegisterPerk(%1, g_SurPerkRegistry, g_SurPerkTypes, "survivor")
+#define RegisterZombiePerk(%1) RegisterPerk(%1, g_ZomPerkRegistry, g_ZomPerkTypes, "zombie")
 
 #include "perks/Registraion.inc"
 #include "perks/perk_structs.inc"
@@ -39,7 +70,8 @@ int zf_perkAlphaMaster[MAXPLAYERS+1]; // 记录每个僵尸的主控者（零号
 #define ZF_PERK_NONE            0
   
 
-StringMap g_hPerks[MAXPLAYERS+1];
+
+// int g_hPerks[MAXPLAYERS+1];   // 存储每个玩家的Perk对象
 
 
 
@@ -1222,169 +1254,6 @@ public void panel_HandleZomPerkSelect(Handle menu, MenuAction action, int param1
   }
 }
 
-////////////////////////////////////////////////////////////
-//
-// Aura Effect Routines
-//
-////////////////////////////////////////////////////////////
-stock void createAura(int client, const char[] strPart, ZFParticleAttachStyle attachStyle, const float offset[3] = {0.0, 0.0, 0.0})
-{
-  removeAura(client);
-  zf_aura[client] = fxCreateParticle(strPart, client, attachStyle, 0.0, offset);
-}
-
-stock void removeAura(int client)
-{
-  fxDeleteParticle(zf_aura[client]);
-  zf_aura[client] = -1;
-}
-
-stock bool validAura(int client)
-{ return fxIsParticleValid(zf_aura[client]); }
-
-stock void showAura(int client)
-{ fxStartParticle(zf_aura[client]); }
-
-stock void hideAura(int client)
-{ fxStopParticle(zf_aura[client]); }
-
-////////////////////////////////////////////////////////////
-//
-// Icons Effect Routines
-//
-////////////////////////////////////////////////////////////
-stock void createIcon(int ownerClient, int targetClient, const char[] strSprite)
-{
-  removeIcon(ownerClient);
-  fxCreateSprite(strSprite, targetClient, zf_icon[ownerClient][ICON_SPR], zf_icon[ownerClient][ICON_ANC]);
-}
-
-stock void removeIcon(int client)
-{
-  fxDeleteSprite(zf_icon[client][ICON_SPR], zf_icon[client][ICON_ANC]);
-  zf_icon[client][ICON_SPR] = -1;
-  zf_icon[client][ICON_ANC] = -1;
-}
-
-stock bool validIcon(int client)
-{ return fxIsSpriteValid(zf_icon[client][ICON_SPR], zf_icon[client][ICON_ANC]); }
-
-stock void showIcon(int client)
-{ fxShowSprite(zf_icon[client][ICON_SPR], zf_icon[client][ICON_ANC]); }
-
-stock void hideIcon(int client)
-{ fxHideSprite(zf_icon[client][ICON_SPR], zf_icon[client][ICON_ANC]); }
-
-////////////////////////////////////////////////////////////
-//
-// Items Effect Routines
-//
-////////////////////////////////////////////////////////////
-stock void removeItem(int client, int item)
-{
-  if(validItem(client, item))
-    fxPuffSmall(zf_item[client][item]);
-  fxDeleteModel(zf_item[client][item]);
-  zf_item[client][item] = -1;
-}
-
-stock void removeItems(int client)
-{
-  for(int i = 0; i < MAX_ITEMS; i++)
-    removeItem(client, i);
-}
-
-stock bool validItem(int client, int itemIndex)
-{ return fxIsModelValid(zf_item[client][itemIndex]); }
-
-stock int getItemMetadata(int item)
-{
-  // Utilizes an entity prop that is, in theory, not used.
-  return GetEntProp(item, Prop_Send, "m_hEffectEntity");
-}
-
-stock void setItemMetadata(int item, int value)
-{
-  // Utilizes an entity prop that is, in theory, not used.
-  SetEntProp(item, Prop_Send, "m_hEffectEntity", value);
-}
-
-stock int getFreeItemIndex(int client, int maxItems)
-{
-  // Return first item index in range [0, maxItems-1] that is free (i.e. not valid).
-  // Return -1 if no item in range is free.
-  for(int i = 0; i < maxItems; i++)
-  {
-    if(!validItem(client, i))
-      return i;
-  }
-  return -1;
-}
-
-////////////////////////////////////////////////////////////
-//
-// Perk Utility Helpers
-//
-////////////////////////////////////////////////////////////
-stock void addHealth(int client, int health, bool doOverheal = false)
-{
-  // Add health up to max (or overheal max [500]).
-  int cur = GetClientHealth(client);
-  int lim = doOverheal ? 500 : clientMaxHealth(client);
-  if(cur < lim)
-  {
-    SetEntityHealth(client, min((cur+health),lim));
-    if(!isCloaked(client)) 
-      fxHealthGained(client);
-  }
-}
-
-////////////////////////////////////////////////////////////
-//
-// Perk Logic Helpers
-//
-////////////////////////////////////////////////////////////
-stock bool doItemCollide(
-  int ent, 
-  const float prevPos[3], 
-  float hitPos[3], 
-  float hitVec[3])
-{
-  bool didHit = false;
-  float thisPos[3];
-  float diffPos[3];
-  float nextPos[3];
-  
-  // Use current position(thisPos) and previous position(prevPos)
-  // to calculate a difference (diffPos). Normalize and scale
-  // difference to compute predicted next position (nextPos).
-  getEntityPos(ent, thisPos);
-  SubtractVectors(thisPos, prevPos, diffPos);      
-  NormalizeVector(diffPos, diffPos);
-  ScaleVector(diffPos, 35.0);              
-  AddVectors(thisPos, diffPos, nextPos);
-
-  // Trace from current to next position, checking for impacts.
-  Handle TraceEx = TR_TraceRayFilterEx(thisPos, nextPos, MASK_SOLID, RayType_EndPoint, TraceFilter);
-  if(TR_DidHit(TraceEx))
-  {
-    TR_GetEndPosition(hitPos, TraceEx);
-    TR_GetPlaneNormal(TraceEx, hitVec);
-    if(!TR_PointOutsideWorld(hitPos))
-    {
-      didHit = true;
-    }
-  }
-  CloseHandle(TraceEx);
-
-  return didHit;     
-}
-
-public bool TraceFilter(int ent, int contentMask)
-{
-  return false;
-}
-
 
 ////////////////////////////////////////////////////////////
 //
@@ -1432,994 +1301,91 @@ stock void updateClientPermEffects(int client)
   }
 }
 
-stock void updateCondStats()
-{  
-  // 修复: 移除了未使用的变量 j 和 k
-  int i;
-  int validSurCount;
-  int validZomCount;
-  int validSurs[MAXPLAYERS+1];
-  int validZoms[MAXPLAYERS+1];  
-  float validSursPos[MAXPLAYERS+1][3];
-  float validZomsPos[MAXPLAYERS+1][3];
-  
-  // Clear conditional bonuses
-  resetStatType(ZFStatTypeCond);
-  
-  // Build common state information. 
-  // + Survivors must be in game and alive.
-  // + Zombies must be in game and alive.
-  validSurCount = 0;
-  validZomCount = 0;  
-  for(i = 1; i <= MaxClients; i++)
-  {
-    if(IsClientInGame(i) && IsPlayerAlive(i))
-    {
-      if(isSur(i))
-      {
-        validSurs[validSurCount] = i;
-        GetClientAbsOrigin(i, validSursPos[validSurCount]);
-        validSurCount++;
-      }
-      else if(isZom(i))
-      {
-        validZoms[validZomCount] = i;
-        GetClientAbsOrigin(i, validZomsPos[validZomCount]);
-        validZomCount++;
-      }
-    }
-  }
-  
-  // 3. Apply conditional bonuses for survivors.
-  for(i = 0; i < validSurCount; i++)
-  {   
-    // 修复: 移除了未使用的变量 thisSur
-    int thisSur = validSurs[i];
-    // if (g_hPerks[thisSur] != null) {
-    //     g_hPerks[thisSur].updateCondStats();
-    // }
-    
-  }
-   
-  // 4. Apply conditional bonuses for zombies.
-  for(i = 0; i < validZomCount; i++)
-  {
-    int thisZom = validZoms[i];
-    // if (g_hPerks[thisZom] != null) {
-    //     g_hPerks[thisZom].updateCondStats();
-    // }
-    
-    // Hide auras on cloaked zombies.
-    isCloaked(thisZom) ? hideAura(thisZom) : showAura(thisZom);
-  }
 
-   
+// BasePerk.inc
+// Generated from D:\workspace\code\tf2\zf\src\python\perks\BasePerk.py
+
+#if defined __BasePerk_included
+#endinput
+#endif
+#define __BasePerk_included
+
+#include "../zf_util_base.inc"
+#include <adt_trie>
+
+#define BASE_PERK_NAME "Unselected"
+#define BASE_PERK_SHORTDESC "Unselected"
+#define BASE_PERK_DESC "Please select one perk to check info"
+
+stock StringMap BasePerk_new(int client) {
+    StringMap sm = new StringMap();
+    setParam(sm, "owner", client);
+    setParamString(sm, "test", "orrrrr");
+    return sm;
 }
 
-stock void updateTempStats()
-{  
-  for(int i = 0; i < MAXPLAYERS; i++)
-  {
-    for(int j = 0; j < TOTAL_ZFSTATS; j++)
-    {
-      // Clear temp bonus if duration reaches zero.
-      zf_stat[i][j][ZFStatTypeTempDuration]--;
-      if(zf_stat[i][j][ZFStatTypeTempDuration] <= 0)
-      {
-        zf_stat[i][j][ZFStatTypeTemp] = 0;
-        zf_stat[i][j][ZFStatTypeTempDuration] = 0;
-      }
-    }
-  }
+stock void BasePerk_getName(StringMap self, char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, BASE_PERK_NAME);
 }
 
-stock void updateConds()
-{
-  for(int i = 0; i < MAXPLAYERS; i++)
-  {
-    for(int j = 0; j < TOTAL_ZFCONDS; j++)
-    {
-      if(zf_cond[i][j] > 0)
-        zf_cond[i][j]--;
-    }
-  }
+stock void BasePerk_getShortdesc(StringMap self, char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, BASE_PERK_SHORTDESC);
 }
 
-////////////////////////////////////////////////////////////
-//
-// Perk Event Logic, Timing / Round State Events
-//
-////////////////////////////////////////////////////////////
-public void perk_OnPeriodic() // 1Hz
-{
-  zf_frameCounter++;
-
-  //
-  // Build common state information for periodic updates.
-  //
-  int validSurCount, validZomCount;
-  int validSurs[MAXPLAYERS+1], validZoms[MAXPLAYERS+1];
-  float validSursPos[MAXPLAYERS+1][3];
-  float validZomsPos[MAXPLAYERS+1][3];
-  
-  validSurCount = 0;
-  validZomCount = 0;
-  for(int i = 1; i <= MaxClients; i++)
-  {
-    if(IsClientInGame(i) && IsPlayerAlive(i))
-    {
-      if(isSur(i))
-      {
-        validSurs[validSurCount] = i;
-        GetClientAbsOrigin(i, validSursPos[validSurCount]);
-        validSurCount++;
-      }
-      else if(isZom(i))
-      {
-        validZoms[validZomCount] = i;
-        GetClientAbsOrigin(i, validZomsPos[validZomCount]);
-        validZomCount++;
-      }
-    }
-  }
-
-  //
-  // Call new object-oriented periodic updates
-  //
-  for(int i = 1; i <= MaxClients; i++)
-  {
-    // if(g_hPerks[i] != null && IsClientInGame(i) && IsPlayerAlive(i))
-    // {
-    //   g_hPerks[i].onPeriodic();
-    // }
-  }
-
-  //
-  // Legacy updates for non-refactored perks
-  //
-  updateConds();
-  updateTempStats();
-  updateCondStats(); // This now only handles legacy perks
-    
-  //
-  // Legacy condition application
-  //
-  for(int i = 1; i <= MaxClients; i++)
-  {
-    if(IsClientInGame(i) && IsPlayerAlive(i))
-    {
-      if(getCond(i, ZFCondCrippled))
-      {
-        if(GetRandomInt(0,3) == 1) fxBloodBurst(i);
-        if(GetRandomInt(0,3) == 1) fxBloodSpray(i);
-        if(GetRandomInt(0,3) == 1) fxPain(i);
-      }
-      if(getCond(i, ZFCondIntimidated))
-      {
-        // addStat(i, ZFStatDef, ZFStatTypeCond, ZF_DAZE_DEFEND);
-      }
-      if(getCond(i, ZFCondPoisoned))
-      {
-        // if(isBeingHealed(i)) subCond(i, ZFCondPoisoned, ZF_POISON_HEAL_MEDIC);
-        // if(isUbered(i)) subCond(i, ZFCondPoisoned, ZF_POISON_HEAL_UBER);
-        // SDKHooks_TakeDamage(i, zf_lastPoison[i], zf_lastPoison[i], float(ZF_POISON_DAMAGE), ZF_DMGTYPE_POISON);
-        fxHealthLost(i);
-      }
-      setGlow(i, getCond(i, ZFCondTracked));
-    }
-  }
-  
-  //
-  // Handle HUD updates.
-  //
-  if(roundState() != RoundPost)
-  {
-    for(int i = 1; i <= MaxClients; i++)
-    {
-      updateHud(i);
-    }
-  }
+stock void BasePerk_getDesc(StringMap self, char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, BASE_PERK_DESC);
 }
 
-public void perk_OnGameFrame()
-{
-  // 修复: 移除了未使用的变量
-  // float collidePos[3];
-  // float collideVec[3];
-
-  for(int i = 1; i <= MaxClients; i++)
-  {
-    // if(g_hPerks[i] != null && IsClientInGame(i) && IsPlayerAlive(i))
-    // {
-    //   g_hPerks[i].onGameFrame();
-    // }
-  }
-  
-  for(int i = 1; i <= MaxClients; i++)
-  {
-    if(IsClientInGame(i) && IsPlayerAlive(i))
-    {
-      //
-      // Handle Condition: Crippled
-      // + Prevent health gain.
-      //
-      if(getCond(i, ZFCondCrippled))
-      {
-        zf_lastHealth[i] = min(GetClientHealth(i), zf_lastHealth[i]);
-        zf_lastHealth[i] = max(1, zf_lastHealth[i]);
-        SetEntityHealth(i, zf_lastHealth[i]);
-      }
-      
-      //
-      // Handle rate of fire calculations.
-      // 
-      if(zf_lastAttack[i] == 1)
-      {
-        zf_lastAttack[i] = 0;
-        if((getStat(i, ZFStatRof) != 0) && !isWieldingAuto(i))
-        {
-          setWeaponRof(activeWeapon(i), getStat(i, ZFStatRof));
-        }        
-      } 
-    
-      //
-      // Handle zombie logic.
-      //
-      if(isZom(i))
-      {
-        
-                
-      } // isZom(i)
-    } // Client in game and alive.
-  } // for i
+stock void BasePerk_updateClientPermStats(StringMap self) {
 }
 
-public void perk_OnMapStart()
-{ 
-  utilFxPrecache(); 
-  resetAllClients();
+
+
+// AthleticPerk.inc
+// Generated from D:\workspace\code\tf2\zf\src\python\perks\survival\AthleticPerk.py
+
+#if defined __AthleticPerk_included
+#endinput
+#endif
+#define __AthleticPerk_included
+
+#include "../../zf_perk.inc"
+#include "../../zf_util_base.inc"
+#include "../perk_structs.inc"
+#include "SurvivorBasePerk.inc"
+#include <adt_trie>
+
+#define ZF_ATHLETIC_ATTACK -40
+#define ZF_ATHLETIC_CRIT -100
+#define ZF_ATHLETIC_ROF 100
+#define ZF_ATHLETIC_SPEED 100
+#define ATHLETIC_PERK_NAME "Athletic"
+#define ATHLETIC_PERK_SHORTDESC "Faster movement and ROF"
+#define ATHLETIC_PERK_DESC "Faster movement and ROF!!"
+
+stock StringMap AthleticPerk_new(int client) {
+    StringMap sm = SurvivorBasePerk_new(client);
+    setParamString(sm, "test", "okkk");
+    return sm;
 }
 
-public void perk_OnMapEnd()
-{
-  resetAllClients();
+stock void AthleticPerk_getName(StringMap self, char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, ATHLETIC_PERK_NAME);
 }
 
-public void perk_OnClientConnect(int client)
-{
-  resetClient(client);
-  if(prefGet(client, PerkSelectMode) > 1)
-    prefSet(client, PerkSelectMode, 0);
+stock void AthleticPerk_getShortdesc(StringMap self, char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, ATHLETIC_PERK_SHORTDESC);
 }
 
-public void perk_OnClientDisconnect(int client)
-{
-  // 删除Perk对象
-  // if (g_hPerks[client] != null)
-  // {
-  //   g_hPerks[client].onRemove();
-  //   delete g_hPerks[client];
-  //   g_hPerks[client] = null;
-  // }
-
-  resetClient(client);
+stock void AthleticPerk_getDesc(StringMap self, char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, ATHLETIC_PERK_DESC);
 }
 
-public void perk_OnRoundStart()
-{
-  resetAllClients();
- 
-  //
-  // Handle ZF Mode Selection
-  //
-  zf_perkMode = zf_perkPendingMode;
-
-  //
-  // Reset perk select mode.
-  //
-  for(int i = 1; i <= MaxClients; i++)
-    prefSet(i, PerkSelectMode, 0);
-        
-  //
-  // Select random team perks.
-  //
-  if(zf_perkMode == 2)
-  {
-    int validSurPerkCount = 0;
-    int validZomPerkCount = 0;   
-    int validSurPerks[22];
-    int validZomPerks[18];
-       
-    for(int i = 1; i < GetTotalSurPerks(); i++)
-      if(surPerkEnabled(i))
-        validSurPerks[validSurPerkCount++] = i;
-    zf_perkRandSurPerk = (validSurPerkCount == 0) ? ZF_PERK_NONE : validSurPerks[GetRandomInt(0, validSurPerkCount - 1)];
-
-    for(int i = 1; i < GetTotalZomPerks(); i++)
-      if(zomPerkEnabled(i))
-        validZomPerks[validZomPerkCount++] = i;
-    zf_perkRandZomPerk = (validZomPerkCount == 0) ? ZF_PERK_NONE : validZomPerks[GetRandomInt(0, validZomPerkCount - 1)];
-  }
+stock void AthleticPerk_updateClientPermStats(StringMap self) {
+    addStat(getParam(self, "owner"), ZFStatAtt, ZFStatTypePerm, ZF_ATHLETIC_ATTACK);
+    addStat(getParam(self, "owner"), ZFStatCrit, ZFStatTypePerm, ZF_ATHLETIC_CRIT);
+    addStat(getParam(self, "owner"), ZFStatRof, ZFStatTypePerm, ZF_ATHLETIC_ROF);
+    addStat(getParam(self, "owner"), ZFStatSpeed, ZFStatTypePerm, ZF_ATHLETIC_SPEED);
 }
 
-public void perk_OnGraceEnd()
-{
-  for(int i = 1; i <= MaxClients; i++)
-  {
-    // if (g_hPerks[i] != null) {
-    //     g_hPerks[i].onGraceEnd();
-    // }
-    //
-    // Handle survivor logic.
-    // Survivors must be alive, otherwise they will respawn as a zombie.
-    //
-    if(validLivingSur(i))
-    {
-      
-    }
-    
-    //
-    // Handle zombie logic.
-    //
-    else if(validZom(i))
-    {
-      
-    }
-  }
-}
-
-public void perk_OnRoundEnd()
-{
-  // Destroy all perk objects
-  for (int i = 1; i <= MaxClients; i++)
-  {
-    // if (g_hPerks[i] != null)
-    // {
-    //   g_hPerks[i].onRemove();
-    //   delete g_hPerks[i];
-    //   g_hPerks[i] = null;
-    // }
-  }
-  
-  resetAllClients();
-}
-
-////////////////////////////////////////////////////////////
-//
-// Perk Event Logic, Entity Events
-//
-////////////////////////////////////////////////////////////
-public void perk_OnEntityCreated(int entity, const char[] classname)
-{
-  if(StrEqual(classname, "env_sprite"))
-    SDKHook(entity, SDKHook_Spawn, perk_OnEntitySpawn);
-}
-
-public void perk_OnEntitySpawn(int entity)
-{
-  // TODO consider use of m_hEffectEntity for sprites to further filter?
-  SDKHook(entity, SDKHook_SetTransmit, perk_OnSetTransmit);
-}
-
-public Action perk_OnSetTransmit(int entity, int client)
-{
-  // if (g_hPerks[client] != null) {
-  //   g_hPerks[client].onSetTransmit(entity, client);
-  // }
-  if(isSur(client))
-  {
-    
-  }
-  else if(isZom(client))
-  {
-    
-  }
-  return Plugin_Handled;
-}
-
-public void perk_OnCharitableGiftTouched(int entity, int other)
-{
-  char zf_statStr[ZFStat][] = { "Attack", "Crit", "Defense", "Rate of Fire", "Speed", "" };
-  
-  //
-  // Determine gift owner.
-  //
-  int giftOwner = -1;  
-  int giftIndex = -1;
-  for(int i = 1; i <= MaxClients; i++)
-  {
-    // for(int j = 0; j < ZF_CHARITABLE_MAX_ITEMS; j++)
-    //   if(zf_item[i][j] == entity)
-    //   {
-    //     giftOwner = i;
-    //     giftIndex = j;
-    //   }
-  }
-   
-  // 
-  // Handle gift bonus generation and pickup.
-  // + Gift owner can't pick up gift.
-  // + Other survivors receive stat bonus.
-  //
-  if(validLivingClient(other))
-  {
-    if(other == giftOwner) return;
-      
-    // Calculate gift bonus.
-    int randStat = GetRandomInt(0, (TOTAL_ZFSTATS - 1));
-    // int randBonus = GetRandomInt(ZF_CHARITABLE_GIFT_BONUS_MIN, ZF_CHARITABLE_GIFT_BONUS_MAX);
-    
-    // Apply gift bonus.
-    if(isSur(other))
-    {
-      // PrintHintText(other, "你获得了 %s 的加成!", zf_statStr[randStat], randBonus);    
-      // addStatTempStack(other, view_as<ZFStat>(randStat), randBonus, ZF_CHARITABLE_GIFT_DURATION);    
-      // addHealth(giftOwner, ZF_CHARITABLE_GIFT_BONUS_HEALTH, true);
-    }
-    
-    fxExplosionParty(entity);     
-    removeItem(giftOwner, giftIndex);
-  }
-}
-
-////////////////////////////////////////////////////////////
-//
-// Perk Event Logic, Player Gameplay Events
-//
-////////////////////////////////////////////////////////////
-public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon)
-{
-  int prevButtons = buttons;
-
-  // if (g_hPerks[client] != null) {
-  //   g_hPerks[client].onPlayerRunCmd(buttons, impulse, vel, angles, weapon);
-  // }
-  
-  if(isSur(client))
-  {
-   
-  }
-  else if(isZom(client))
-  {
-    
-  }
-  
-  // Save buttons for next call.
-  zf_lastButtons[client] = prevButtons;
-  return Plugin_Continue;
-}
-
-public void perk_OnCalcIsAttackCritical(int client)
-{
-  // DEBUG
-  //PrintToChatAll("[ZF] CalcCrit (%d, slot %d)", client, activeWeaponSlot(client));
-  
-  if(validLivingSur(client))
-  {
-    // if (g_hPerks[client] != null) {
-    //   g_hPerks[client].onCalcIsAttackCritical();
-    // }
-  }
-  
-  // Handle general RoF logic.
-  zf_lastAttack[client] = 1;
-}
-
-public Action perk_OnFenceTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
-{
-//    // DEBUG
-//    char inflictorClass[32];
-//    GetEdictClassname(inflictor, inflictorClass, sizeof(inflictorClass));
-//    PrintToChatAll("\x05[ZF DEBUG]\x01 Vic %d, Att %d, Inf %d (%s), Dmg %f, DTp %x", victim, attacker, inflictor, inflictorClass, damage, damagetype);
-
-  int fenceOwner = -1;
-  int fenceIndex = -1;
-  int fenceHP;
-  int fenceFx;
-  float off[3];
-  
-  //
-  // Determine fence owner and index.
-  //
-  for(int i = 1; i <= MaxClients; i++)
-  {
-    // for(int j = 0; j < CARPENTER_MAX_ITEMS; j++)
-    // {
-    //   if(victim == zf_item[i][j])
-    //   {
-    //     fenceOwner = i;
-    //     fenceIndex = j;
-    //     fenceHP = getItemMetadata(zf_item[i][j]);
-    //     fenceFx = (fenceHP * 255) / CARPENTER_BARRICADE_HEALTH;
-    //   }
-    // }
-  }
-  
-  //
-  // Adjust fence health.
-  //
-  if(fenceOwner != -1)
-  {
-    fenceHP -= RoundToCeil(damage);
-    if(fenceHP <= 0)
-    {
-      // Barricade destruction effects
-      off[2] -= 120.0; // Adjust for ZFMDL_FENCE
-      fxCreateParticle(ZFPART_PUFFBIG, victim, AttachNone, 4.0, off); 
-      fxCreateSoundToAll(ZFSND_WOOD_HIT[GetRandomInt(2,3)], victim);
-        
-      removeItem(fenceOwner, fenceIndex);
-    }
-    else
-    {     
-      setItemMetadata(zf_item[fenceOwner][fenceIndex], fenceHP);
-      SetEntityRenderMode(zf_item[fenceOwner][fenceIndex], RENDER_TRANSCOLOR);
-      SetEntityRenderColor(zf_item[fenceOwner][fenceIndex], 255, fenceFx, fenceFx, 255); 
-    }
-  }
-  else
-  {
-    // Remove fence.
-    LogError("[ZF] - perk_OnFenceTakeDamage() - Invalid owner of fence (%d)", victim);
-    AcceptEntityInput(victim, "Kill");
-  }
-  return Plugin_Continue;
-}
-
-public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
-{
-  // if (g_hPerks[victim] != null) {
-  //   g_hPerks[victim].onTakeDamage(victim, attacker, inflictor, damage, damagetype);
-  // }
-  // 修复: 移除了未使用的变量
-  // int localAttAdjust = 0;
-  // int localDefAdjust = 0;
-  
-  //
-  // Ignore perk damage events for ubered victims.
-  //
-  if(validClient(victim) && isUbered(victim))
-    return Plugin_Continue;
-
-  //
-  // Attribute poison damage.
-  //
-  if(damagetype & ZF_DMGTYPE_POISON)
-  {
-    if(validClient(victim) && (validSur(zf_lastPoison[victim]) || validZom(zf_lastPoison[victim])))
-    {
-      attacker = zf_lastPoison[victim];
-    }
-    return Plugin_Changed;
-  }
-   
-  //
-  // Calculate attack (from attacker) and defense (from victim) damage adjustments.
-  //
-  if(validLivingClient(attacker) && (victim != attacker))
-    /* localAttAdjust = */ getStat(attacker, ZFStatAtt); // 变量未使用，但保留函数调用（如果它有副作用）
-  if(validLivingClient(victim) && (victim != attacker))
-    /* localDefAdjust = */ getStat(victim, ZFStatDef); // 变量未使用，但保留函数调用
-  
-  //
-  // Reduce sentry attack bonuses by half.
-  //
-  if(entIsSentry(inflictor))
-    // localAttAdjust /= 2; // 变量未使用
-    {}
-    
-
-  return Plugin_Changed;
-}
-
-public void perk_OnTakeDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype)
-{
-  // if (g_hPerks[victim] != null) {
-  //   g_hPerks[victim].onTakeDamagePost(victim, attacker, inflictor, damage, damagetype);
-  // }
-//   // DEBUG
-//   char inflictorClass[32];
-//   GetEdictClassname(inflictor, inflictorClass, sizeof(inflictorClass));
-//   PrintToChatAll("\x05[ZF DEBUG]\x01 Vic %d, Att %d, Inf %d (%s), Dmg %f, DTp %x", victim, attacker, inflictor, inflictorClass, damage, damagetype);
-     
-  //
-  // Survivor is taking damage from zombie.
-  //
-  if(validSur(victim) && validZom(attacker))
-  {
-    
-  }
-  //
-  // Zombie is taking damage from survivor.
-  //
-  else if(validZom(victim) && validSur(attacker))
-  {
-    
-  }
-}
-
-public void perk_OnTouch(int toucher, int touchee)
-{
-  if(validLivingZom(toucher) && validLivingSur(touchee))
-  {
-    // if (g_hPerks[toucher] != null) {
-    //   g_hPerks[toucher].onTouch(toucher, touchee);
-    // }
-  }
-}
-
-public void perk_OnPlayerSpawn(int client)
-{
-  if(validClient(client))
-  {
-    //
-    // Handle spawn menu presentation.
-    //
-    if(zf_perkMode == 0)
-    {
-      int js = prefGet(client, JoinState);
-      if(validSur(client))
-      {
-        if((js & ZF_JOINSTATE_SUR) == 0)
-        {
-          DisplayMenu(zf_menuSurPerkList, client, MENU_TIME_FOREVER);
-          prefSet(client, JoinState, (js | ZF_JOINSTATE_SUR));
-        }
-      }
-      else if(validZom(client))
-      {
-        if((js & ZF_JOINSTATE_ZOM) == 0)
-        {
-          DisplayMenu(zf_menuZomPerkList, client, MENU_TIME_FOREVER);
-          prefSet(client, JoinState, (js | ZF_JOINSTATE_ZOM));
-        }
-      }
-    }
-
-    //
-    // Change perks if they were not selected during current game mode.
-    //
-    if(prefGet(client, PerkSelectMode) != zf_perkMode)
-    {
-      //
-      // Clear perks.
-      //
-      if(zf_perkMode == 0)
-      {
-        prefSet(client, SurPendPerk, ZF_PERK_NONE);
-        prefSet(client, ZomPendPerk, ZF_PERK_NONE);
-        PrintToChat(client, "%T", "ZF_Perk_Cleared", client);
-      }
-      //
-      // Select random perks.
-      //
-      else if(zf_perkMode == 1)
-      {
-        int validSurPerkCount = 0;
-        int validZomPerkCount = 0;
-        int validSurPerks[22];
-        int validZomPerks[18];
-           
-        for(int i = 1; i < GetTotalSurPerks(); i++)
-          if(surPerkEnabled(i))
-            validSurPerks[validSurPerkCount++] = i;
-        if(validSurPerkCount == 0)
-          validSurPerks[validSurPerkCount++] = 0;
-    
-        for(int i = 1; i < GetTotalZomPerks(); i++)
-          if(zomPerkEnabled(i))
-            validZomPerks[validZomPerkCount++] = i;
-        if(validZomPerkCount == 0)
-          validZomPerks[validZomPerkCount++] = 0;
-
-        prefSet(client, SurPendPerk, validSurPerks[GetRandomInt(0, validSurPerkCount - 1)]);
-        prefSet(client, ZomPendPerk, validZomPerks[GetRandomInt(0, validZomPerkCount - 1)]);
-        char surPerkName[64], zomPerkName[64];
-        GetSurPerkName(prefGet(client, SurPendPerk), surPerkName, sizeof(surPerkName));
-        GetZomPerkName(prefGet(client, ZomPendPerk), zomPerkName, sizeof(zomPerkName));
-        PrintToChat(client, "%T", "ZF_Perk_Random_Player", client, surPerkName, zomPerkName);
-      }
-      //
-      // Use random team perks.
-      //
-      else if(zf_perkMode == 2)
-      {
-        prefSet(client, SurPendPerk, zf_perkRandSurPerk);
-        prefSet(client, ZomPendPerk, zf_perkRandZomPerk);
-        char surPerkName[64], zomPerkName[64];
-        GetSurPerkName(zf_perkRandSurPerk, surPerkName, sizeof(surPerkName));
-        GetZomPerkName(zf_perkRandZomPerk, zomPerkName, sizeof(zomPerkName));
-        PrintToChat(client, "%T", "ZF_Perk_Random_Team", client, surPerkName, zomPerkName);
-      }
-      //
-      // Use CVAR team perks.
-      //
-      else if(zf_perkMode == 3)
-      {
-        prefSet(client, SurPendPerk, zf_perkTeamSurPerk);
-        prefSet(client, ZomPendPerk, zf_perkTeamZomPerk);
-        char surPerkName[64], zomPerkName[64];
-        GetSurPerkName(zf_perkTeamSurPerk, surPerkName, sizeof(surPerkName));
-        GetZomPerkName(zf_perkTeamZomPerk, zomPerkName, sizeof(zomPerkName));
-        PrintToChat(client, "%T", "ZF_Perk_Cvar_Team", client, surPerkName, zomPerkName);
-      }
-      prefSet(client, SurPerk, ZF_PERK_NONE);
-      prefSet(client, ZomPerk, ZF_PERK_NONE);
-      prefSet(client, PerkSelectMode, zf_perkMode);
-    }
-    
-    //
-    // Apply new perk if client changed teams or if desired perk
-    // (accounting for those disabled) differs from current perk.
-    // Account for perk limits (only during normal game mode).
-    //
-    int nextPerk = ZF_PERK_NONE;
-    bool perkChange = false;
-    bool teamChange = (GetClientTeam(client) != zf_lastTeam[client]);
-    if(isSur(client))
-    {
-      if(surPerkEnabled(prefGet(client, SurPendPerk)))
-        nextPerk = prefGet(client, SurPendPerk);
-      else if(surPerkEnabled(prefGet(client, SurPerk)))
-        nextPerk = prefGet(client, SurPerk);
-      
-      if((zf_perkMode == 0) && surPerkAtLimit(client, nextPerk))
-      {
-        char perkName[64];
-        GetSurPerkName(nextPerk, perkName, sizeof(perkName));
-        PrintToChat(client, "%T", "ZF_Perk_Limit_Reached_Sur", client, perkName, zf_surPerksLimit[nextPerk]);
-        nextPerk = ZF_PERK_NONE;
-      }
-        
-      if(teamChange || (nextPerk != prefGet(client, SurPerk)))
-      {
-        perkChange = true;
-        prefSet(client, SurPerk, nextPerk);
-      }
-      prefSet(client, SurPendPerk, nextPerk);
-    }
-    else if(isZom(client))
-    {
-      if(zomPerkEnabled(prefGet(client, ZomPendPerk)))
-        nextPerk = prefGet(client, ZomPendPerk);
-      else if(zomPerkEnabled(prefGet(client, ZomPerk)))
-        nextPerk = prefGet(client, ZomPerk);
-
-      if((zf_perkMode == 0) && zomPerkAtLimit(client, nextPerk))
-      {
-        char perkName[64];
-        GetZomPerkName(nextPerk, perkName, sizeof(perkName));
-        PrintToChat(client, "%T", "ZF_Perk_Limit_Reached_Zom", client, perkName, zf_zomPerksLimit[nextPerk]);
-        nextPerk = ZF_PERK_NONE;
-      }
-                        
-      if(teamChange || (nextPerk != prefGet(client, ZomPerk)))
-      {
-        perkChange = true;
-        prefSet(client, ZomPerk, nextPerk);
-      }
-      prefSet(client, ZomPendPerk, nextPerk);
-    }
-
-    //
-    // Create or update Perk object
-    //
-    if (perkChange)
-    {
-            if (g_hPerks[client] != null)
-            {
-                dispatch_onRemove(client);
-                delete g_hPerks[client];
-                g_hPerks[client] = null;
-            }
-
-            // 使用宏来创建新的perk对象
-            char perkName[64];
-            if (isSur(client)) GetSurPerkName(nextPerk, perkName, sizeof(perkName));
-            else if (isZom(client)) GetZomPerkName(nextPerk, perkName, sizeof(perkName));
-            
-            // 调用我们新的创建宏
-            CREATE_PERK_OBJECT(client, perkName);
-    }
-    dispatch_onPlayerSpawn(client);
-
-    // Call perk's onSpawn method
-    // if (g_hPerks[client] != null)
-    // {
-    //     g_hPerks[client].onPlayerSpawn();
-    // }
-    
-    // Reset legacy state
-    zf_lastAttack[client] = 0;
-    zf_lastButtons[client] = 0;
-    zf_lastHealth[client] = 0;
-    zf_lastKiller[client] = 0;
-    zf_lastPoison[client] = 0;
-    zf_lastTeam[client] = GetClientTeam(client);
-
-    // Update HUD
-    updateHud(client);
-  }
-}
-
-public void perk_OnPlayerDeath(int victim, int killer, int assist, int inflictor, int damagetype)
-{
-//   // DEBUG
-//   LogMessage("[ZF DEBUG] Vic %d, Klr %d, Ast %d, Inf %d, DTp %x", victim, killer, assist, inflictor, damagetype);
-  
-  if(validClient(victim))
-  {
-    // if (g_hPerks[victim] != null)
-    // {
-    //     g_hPerks[victim].onPlayerDeath(victim, killer, assist, inflictor, damagetype);
-    // }
-    // // Destroy perk object
-    // if (g_hPerks[victim] != null)
-    // {
-    //     g_hPerks[victim].onRemove();
-    //     delete g_hPerks[victim];
-    //     g_hPerks[victim] = null;
-    // }
-    
-    //
-    // Set last killer.
-    //
-    zf_lastKiller[victim] = killer;
-             
-    //
-    // Clear conditions.
-    //
-    resetClientConds(victim);
-    
-    //
-    // Handle effects.
-    //
-    hideAura(victim);
-    hideIcon(victim);
-    removeItems(victim);
-    setGlow(victim, false);
-  }
-
-  //
-  // Survivor killed.
-  //
-  if(validSur(victim))
-  {
-    //
-    // Survivor killed by zombie.
-    //
-    if(validZom(killer))
-    {
-      
-    }
-    
-    //
-    // Survivor killed, assisted by zombie.
-    //
-    if(validZom(assist))
-    {
-      
-    }
-  }
-  //
-  // Zombie killed.
-  //
-  else if(validZom(victim))
-  {
-   
-    //
-    // Zombie killed by survivor.
-    //
-    if(validSur(killer))
-    {
-      
-    }
-    
-    //
-    // Zombie killed, assisted by survivor.
-    //
-    if(validSur(assist))
-    {
-      
-    }
-  }
-}
-
-public Action perk_OnCallForMedic(int client)
-{
-  if(validLivingSur(client))
-  {
-    // if (g_hPerks[client] != null) {
-    //   g_hPerks[client].onCallForMedic();
-    // }
-
-    return Plugin_Handled;
-  }
-    
-  return Plugin_Continue;
-}
-
-public void perk_OnAmmoPickup(int client, int pickup)
-{
-  if(validLivingSur(client))
-  {
-    // if (g_hPerks[client] != null) {
-    //   g_hPerks[client].onAmmoPickup(pickup);
-    // }
-  }
-}
-
-public void perk_OnMedPickup(int client, int pickup)
-{
-  if(validLivingSur(client))
-  {
-    // if (g_hPerks[client] != null) {
-    //   g_hPerks[client].onMedPickup(pickup);
-    // }
-    // Handle general survivor logic
-    // subCond(client, ZFCondPoisoned, ZF_POISON_HEAL_MEDPACK);
-    
-    
-  }
-}
-
-////////////////////////////////////////////////////////////
-//
-// Perk Event Logic, Timer Callbacks
-//
-////////////////////////////////////////////////////////////
-public void perk_tSpawnClient(Handle timer, any client)
-{
-  if(validClient(client) && !IsPlayerAlive(client))
-  {
-    spawnClient(client, zomTeam());
-  }
-}
-
-public void perk_tNinjaDecoyPoof(Handle Timer, any client)
-{
-  if(validClient(client))
-  {
-    // doNinjaDecoyPoof(client);
-  }
-}
-   
-public void perk_tSickSpit(Handle timer, Handle dataPack)
-{        
-  ResetPack(dataPack);
-  int client = ReadPackCell(dataPack);
-  int entIdx = ReadPackCell(dataPack); 
-  CloseHandle(dataPack);
-    
-  if(validLivingZom(client))
-  {
-    // zf_item[client][entIdx] = doItemThrow(client, ZFMDL_PRESENT[2], 1200.0, {75,255,75});
-    getEntityPos(zf_item[client][entIdx], zf_perkPos[client][entIdx]);
-    fxCreateSoundToAll(ZFSND_SPIT[GetRandomInt(0,2)], client);   
-  }  
-}
-
-public void perk_tTarredSpit(Handle timer, Handle dataPack)
-{
-  ResetPack(dataPack);
-  int client = ReadPackCell(dataPack);
-  int entIdx = ReadPackCell(dataPack); 
-  CloseHandle(dataPack);
-    
-  if(validLivingZom(client))
-  {
-    // zf_item[client][entIdx] = doItemThrow(client, ZFMDL_PRESENT[2], 900.0, {25,25,25});
-    getEntityPos(zf_item[client][entIdx], zf_perkPos[client][entIdx]);
-    fxCreateSoundToAll(ZFSND_SPIT[GetRandomInt(0,2)], client);
-  }  
-}
-
-public void perk_tZenlikeAttack(Handle timer, any client)
-{
-  if(validLivingSur(client))
-  {
-    // zf_perkState[client] -= ZF_ZENLIKE_CRIT_DEC;
-    if(zf_perkState[client] < 0) 
-      zf_perkState[client] = 0;
-  }
-}
+想办法让zf_perk.inc对接BasePerk.inc及其相关perk，不能修改BasePerk.inc及其相关perk。可以使用宏等方法

@@ -1,13 +1,15 @@
 from python.perks import BasePerk
 
 
-class SurvivalBasePerk(BasePerk):
-    __NAME__ = "Unselected"
+class SurvivorBasePerk(BasePerk):
+    __NAME__ = "SurvivorUnselected"
     __SHORTDESC__ = "Unselected"
     __DESC__ = "Please select one perk to check info"
     
     def __init__(self, client: int):
         super().__init__(client)
+        self.test = "nooooo"
+
 
     def onCharitableGiftTouched(self, entity: int, other: int):
         """

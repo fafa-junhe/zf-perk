@@ -1,11 +1,3 @@
-/* put the line below after all of the includes!
-#pragma newdecls required
-*/
-
-/* put the line below after all of the includes!
-#pragma newdecls required
-*/
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Z O M B I E - F O R T R E S S - [TF2]

@@ -8,6 +8,7 @@ class BasePerk:
     __DESC__ = "Please select one perk to check info"
     def __init__(self, client: int):
         self.owner = client
+        self.test = "orrrrr"
 
     # Event Handlers
     def onPlayerRunCmd(self, buttons: int, impulse: int, vel: 'list[float]', angles: 'list[float]', weapon: int):

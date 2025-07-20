@@ -113,6 +113,8 @@ Handle zf_cvSwapOnAttdef;
 ////////////////////////////////////////////////////////////
 public void OnPluginStart()
 {
+    LoadTranslations("common.phrases.txt");
+    LoadTranslations("zombie_fortress.phrases.txt");
     // TODO Doesn't register as true at this point. Where else can it be called?
     //   // Check for necessary extensions
     //   if(LibraryExists("sdkhooks"))
@@ -136,8 +138,6 @@ public void OnPluginStart()
     utilFxInit();
     perkInit();
 
-    LoadTranslations("common.phrases.txt");
-    LoadTranslations("zombie_fortress.phrases.txt");
 
     // Register cvars
     CreateConVar("sm_zf_version", PLUGIN_VERSION, "Current Zombie Fortress Version", FCVAR_SPONLY | FCVAR_REPLICATED | FCVAR_NOTIFY);
@@ -524,6 +524,7 @@ public Action hook_zfTeamPref(int client,
 
 public Action cmd_zfMenu(int client, int args)
 {
+    LogMessage("[ZF DEBUG] cmd_zfMenu called by client %d", client);
     if (!zf_bEnabled) return Plugin_Continue;
     panel_PrintMain(client);
 
@@ -1427,6 +1428,7 @@ public void help_printZFInfoChat(int client)
 //
 public void panel_PrintMain(int client)
 {
+    LogMessage("[ZF DEBUG] panel_PrintMain called for client %d", client);
     Handle panel = CreatePanel();
     char   buffer[128];
 
@@ -1452,36 +1454,46 @@ public void panel_PrintMain(int client)
     DrawPanelItem(panel, buffer, 0);
     SendPanelToClient(panel, client, panel_HandleMain, 30);
     CloseHandle(panel);
+    LogMessage("[ZF DEBUG] panel_PrintMain: Main menu panel sent to client %d", client);
 }
 
 public void panel_HandleMain(Handle menu, MenuAction action, int param1, int param2)
 {
+    LogMessage("[ZF DEBUG] panel_HandleMain called. Action: %d, Client: %d, Item: %d", action, param1, param2);
     if (action == MenuAction_Select)
     {
         switch (param2)
         {
             case 1:
             {
+                LogMessage("[ZF DEBUG] panel_HandleMain: Client %d selected item 1 (Survivor Perks). Menu handle: %x", param1, zf_menuSurPerkList);
                 DisplayMenu(zf_menuSurPerkList, param1, MENU_TIME_FOREVER);
+                return;
             }
             case 2:
             {
+                LogMessage("[ZF DEBUG] panel_HandleMain: Client %d selected item 2 (Zombie Perks). Menu handle: %x", param1, zf_menuZomPerkList);
                 DisplayMenu(zf_menuZomPerkList, param1, MENU_TIME_FOREVER);
+                return;
             }
             case 3:
             {
                 panel_PrintPrefTeam(param1);
+                return;
             }
             case 4:
             {
                 panel_PrintHelp(param1);
+                return;
             }
             case 5:
             {
                 panel_PrintPerkHelp(param1);
+                return;
             }
             case 6:
             {
+                return;
             }
         }
     }
@@ -2051,9 +2063,11 @@ public void panel_HandleClass(Handle menu, MenuAction action, int param1, int pa
             case 1:    // Back
             {
                 panel_PrintHelp(param1);
+                return;
             }
             case 2:    // Close
             {
+                return;
             }
         }
     }

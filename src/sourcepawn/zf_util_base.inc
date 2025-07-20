@@ -1,6 +1,4 @@
-/* put the line below after all of the includes!
 #pragma newdecls required
-*/
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -438,9 +436,9 @@ stock int zomTeam()
 { return zf_zomTeam; }
 stock int surTeam()
 { return zf_surTeam; }
-stock void setZomTeam(team)
+stock void setZomTeam(int team)
 { zf_zomTeam = team; }
-stock void setSurTeam(team)
+stock void setSurTeam(int team)
 { zf_surTeam = team; }
 stock int isZom(int client)
 { return GetClientTeam(client) == zf_zomTeam; }
@@ -738,22 +736,22 @@ stock bool attackWasSelfFall(int inflictor, int damagetype)
   return (inflictor == 0) && attackWasFall(damagetype);
 }
 
-stock bool attackWasBleed(damagetype)
+stock bool attackWasBleed(int damagetype)
 { return (damagetype == TF2_DMGTYPE_BLEED); }
 
-stock bool attackWasBludgeon(damagetype)
+stock bool attackWasBludgeon(int damagetype)
 { return (damagetype & TF2_DMGTYPE_BLUDGEON) != 0; }
 
-stock bool attackWasEnvExplosion(damagetype)
+stock bool attackWasEnvExplosion(int damagetype)
 { return (damagetype == TF2_DMGTYPE_EXPLOSIVE); }
 
-stock bool attackWasExplosive(damagetype)
+stock bool attackWasExplosive(int damagetype)
 { return (damagetype & TF2_DMGTYPE_EXPLOSIVE) != 0; }
 
-stock bool attackWasFall(damagetype)
+stock bool attackWasFall(int damagetype)
 { return (damagetype == TF2_DMGTYPE_FALL); }
 
-stock bool attackWasFire(damagetype)
+stock bool attackWasFire(int damagetype)
 { return (damagetype & TF2_DMGTYPE_FIRE) != 0; } // Note: Does not account for medic syringe gun damage
 
 ////////////////////////////////////////////////////////////
@@ -983,7 +981,7 @@ stock void setGlow(int client, bool glowEnabled)
 // Sentry Utils
 //
 ////////////////////////////////////////////////////////////
-stock bool entIsSentry(ent)
+stock bool entIsSentry(int ent)
 { return entClassnameContains(ent, "obj_sentrygun"); }
 
 ////////////////////////////////////////////////////////////
@@ -1273,9 +1271,9 @@ void setTeamRespawnTime(int team, float time)
   if(index != -1)
   {
     SetVariantFloat(time/2.0);
-    if(team == _:TFTeam_Blue)
+    if(team == zf_zomTeam)
       AcceptEntityInput(index, "SetBlueTeamRespawnWaveTime", -1, -1, 0);
-    if(team == _:TFTeam_Red)
+    if(team == zf_surTeam)
       AcceptEntityInput(index, "SetRedTeamRespawnWaveTime", -1, -1, 0);
   }       
 }
@@ -1286,9 +1284,9 @@ void setTeamRespawnTime(int team, float time)
 //
 ////////////////////////////////////////////////////////////
 stock void applyDamageRadialAtClient(
-  client, 
-  damage, 
-  radius, 
+  int client, 
+  int damage, 
+  int radius, 
   bool doFx = false)
 {
   float pos[3];
@@ -1297,10 +1295,10 @@ stock void applyDamageRadialAtClient(
 }
 
 stock void applyDamageRadial(
-  attacker, 
-  damage, 
+  int attacker, 
+  int damage, 
   const float pos[3],
-  radius, 
+  int radius, 
   bool doFx = false)
 {
   if((damage <= 0) || (radius <= 0) || !validClient(attacker))
@@ -1346,4 +1344,24 @@ stock void applyDamageRadial(
   }
   
   return;  
+}
+
+// StringMap Function
+
+public int getParam(StringMap self, const char[] key) {
+    int value;
+    self.GetValue(key, value);
+    return value;
+}
+
+public void setParam(StringMap self, const char[] key, int value) {
+    self.SetValue(key, value);
+}
+
+public void getParamString(StringMap self, const char[] key, char[] buffer, int maxlen) {
+    self.GetString(key, buffer, maxlen);
+}
+
+public void setParamString(StringMap self, const char[] key, const char[] value) {
+    self.SetString(key, value);
 }

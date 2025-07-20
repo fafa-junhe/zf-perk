@@ -75,7 +75,8 @@ def compile_plugin():
         str(compiler_path),
         str(source_file),
         f"-o{output_file}",              # 输出文件
-        "-w203"
+        "-w203",
+        "--compress-level=0"
     ]
 
     print(f"Compiler command: {' '.join(command)}")
