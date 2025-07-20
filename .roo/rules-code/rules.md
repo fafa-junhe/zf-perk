@@ -34,6 +34,9 @@
     ````markdown
     # [项目名称] - 任务状态 - [YYYY-MM-DD HH:MM]
 
+    ## 用户原始需求
+    > [用户原始需求]
+
     ## 当前任务 (Current Task)
     > [这里是 current_task 的详细描述]
 
@@ -82,3 +85,7 @@
 结果会写入target/zombie_fortress_perk.smx
 ## 注意事项
 这个项目使用了SourcePawn语言，相关语法参考`docs/sourcepawn_syntax.md`。若有比较高级的语法，请先参照文档核对是否正确。
+## python
+我使用了一个python与sourcepawn互相转换的系统，以方便编写perk。
+目前只能把sourcepawn include的转换为python定义 
+之后打算做：写好python代码之后，用python的ast库解析python代码，再转换回sourcepawn

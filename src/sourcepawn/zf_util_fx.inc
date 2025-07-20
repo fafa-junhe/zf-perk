@@ -1,3 +1,11 @@
+/* put the line below after all of the includes!
+#pragma newdecls required
+*/
+
+/* put the line below after all of the includes!
+#pragma newdecls required
+*/
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Z O M B I E - F O R T R E S S - [TF2]
@@ -10,6 +18,7 @@
 
 // TODO
 // Change how to set an entity parent using "!activator" instead of changing targetname?
+#pragma newdecls required
 
 #if defined _ZF_UTIL_FX_INC
   #endinput
@@ -21,36 +30,36 @@
 //
 // ZF Offset Objects
 //
-static oMyWeapons;
+static int oMyWeapons;
 
 //
 // ZF Model Objects
 //
 // HL2 models
-stock String:ZFMDL_SUPPLYCRATE[]      = "models/items/item_item_crate.mdl";
-stock String:ZFMDL_MINE[]             = "models/props_combine/combine_mine01.mdl";
+stock char ZFMDL_SUPPLYCRATE[]      = "models/items/item_item_crate.mdl";
+stock char ZFMDL_MINE[]             = "models/props_combine/combine_mine01.mdl";
 
 // Standard models
-stock String:ZFMDL_HAYBALE[]          = "models/props_farm/haypile001.mdl";
-stock String:ZFMDL_FLAG[]             = "models/flag/flag.mdl";
-stock String:ZFMDL_FENCE[]            = "models/props_coalmines/wood_fence_short_128.mdl";
+stock char ZFMDL_HAYBALE[]          = "models/props_farm/haypile001.mdl";
+stock char ZFMDL_FLAG[]             = "models/flag/flag.mdl";
+stock char ZFMDL_FENCE[]            = "models/props_coalmines/wood_fence_short_128.mdl";
 
-stock String:ZFMDL_TOTEM[2][] = {
+stock char ZFMDL_TOTEM[2][] = {
   "models/props_badlands/rock001_skybox.mdl",
   "models/props_badlands/rock002_skybox.mdl"
 };
-stock String:ZFMDL_TOTEMCLIP[2][] = {
+stock char ZFMDL_TOTEMCLIP[2][] = {
   "models/props_swamp/buoy_ref.mdl",
   "models/props_2fort/trainwheel003.mdl"
 };
 
 // Physics models
-stock String:ZFMDL_PRESENT[3][] = {
+stock char ZFMDL_PRESENT[3][] = {
   "models/effects/bday_gib01.mdl", // Box
   "models/effects/bday_gib02.mdl", // Box
   "models/effects/bday_gib04.mdl"  // Disc
 };
-stock String:ZFMDL_CUTOUT[10][] = { // Index with TFClassType
+stock char ZFMDL_CUTOUT[10][] = { // Index with TFClassType
   "models/props_training/target_scout.mdl", // Need something other than "" here, crash on PrecacheModel("", ...
   "models/props_training/target_scout.mdl",
   "models/props_training/target_sniper.mdl",
@@ -75,77 +84,77 @@ enum ZFParticleAttachStyle
 }
 
 // Persistent particle systems
-stock String:ZFPART_AURA00RED[]         = "teleporter_red_floorglow";
-stock String:ZFPART_AURA00BLU[]         = "teleporter_blue_floorglow";
-stock String:ZFPART_AURA01RED[]         = "player_glowred";
-stock String:ZFPART_AURA01BLU[]         = "player_glowblue";
-stock String:ZFPART_AURA02RED[]         = "teleporter_red_charged_hotplate";
-stock String:ZFPART_AURA02BLU[]         = "teleporter_blue_charged_hotplate";
-stock String:ZFPART_AURAINRED[]         = "soldierbuff_red_spikes";
-stock String:ZFPART_AURAINBLU[]         = "soldierbuff_blue_spikes";
-stock String:ZFPART_AURAOUTRED[]        = "soldierbuff_red_spirial";
-stock String:ZFPART_AURAOUTBLU[]        = "soldierbuff_blue_spiral";
-stock String:ZFPART_AURAHALO[]          = "halopoint";
-stock String:ZFPART_AURASPARKLE[]       = "community_sparkle";
-stock String:ZFPART_AURAVORTEXBLU[]     = "coin_blue";
-stock String:ZFPART_AURAGLOW[]          = "superrare_beam1_glow";
-stock String:ZFPART_AURAGLOWBEAMS[]     = "superrare_beams1";
-stock String:ZFPART_AURABURNINGORANGE[] = "superrare_burning1";
-stock String:ZFPART_AURABURNINGGREEN[]  = "superrare_burning2";
-stock String:ZFPART_AURAFLIES[]         = "superrare_flies";
-stock String:ZFPART_AURAENERGYGREEN[]   = "superrare_greenenergy";
-stock String:ZFPART_AURAENERGYPURPLE[]  = "superrare_purpleenergy";
+stock char ZFPART_AURA00RED[]         = "teleporter_red_floorglow";
+stock char ZFPART_AURA00BLU[]         = "teleporter_blue_floorglow";
+stock char ZFPART_AURA01RED[]         = "player_glowred";
+stock char ZFPART_AURA01BLU[]         = "player_glowblue";
+stock char ZFPART_AURA02RED[]         = "teleporter_red_charged_hotplate";
+stock char ZFPART_AURA02BLU[]         = "teleporter_blue_charged_hotplate";
+stock char ZFPART_AURAINRED[]         = "soldierbuff_red_spikes";
+stock char ZFPART_AURAINBLU[]         = "soldierbuff_blue_spikes";
+stock char ZFPART_AURAOUTRED[]        = "soldierbuff_red_spirial";
+stock char ZFPART_AURAOUTBLU[]        = "soldierbuff_blue_spiral";
+stock char ZFPART_AURAHALO[]          = "halopoint";
+stock char ZFPART_AURASPARKLE[]       = "community_sparkle";
+stock char ZFPART_AURAVORTEXBLU[]     = "coin_blue";
+stock char ZFPART_AURAGLOW[]          = "superrare_beam1_glow";
+stock char ZFPART_AURAGLOWBEAMS[]     = "superrare_beams1";
+stock char ZFPART_AURABURNINGORANGE[] = "superrare_burning1";
+stock char ZFPART_AURABURNINGGREEN[]  = "superrare_burning2";
+stock char ZFPART_AURAFLIES[]         = "superrare_flies";
+stock char ZFPART_AURAENERGYGREEN[]   = "superrare_greenenergy";
+stock char ZFPART_AURAENERGYPURPLE[]  = "superrare_purpleenergy";
 
 // Non-persistent particle systems
-stock String:ZFPART_REDPOWERUP[]    = "teleportedin_red";
-stock String:ZFPART_BLUPOWERUP[]    = "teleportedin_blue";
-stock String:ZFPART_HEALTHGAINRED[] = "healthgained_red";
-stock String:ZFPART_HEALTHGAINBLU[] = "healthgained_blu";
-stock String:ZFPART_HEALTHLOSTRED[] = "healthlost_red";
-stock String:ZFPART_HEALTHLOSTBLU[] = "healthlost_blu";
-stock String:ZFPART_HEALTHMISTRED[] = "healhuff_red_mist";
-stock String:ZFPART_HEALTHMISTBLU[] = "healhuff_blu_mist";
-stock String:ZFPART_BLOODBURST[]    = "blood_impact_red_01";
-stock String:ZFPART_BLOODMIST[]     = "env_sawblood_mist";
-stock String:ZFPART_BLOODSPRAY[]    = "blood_spray_red_01";
-stock String:ZFPART_CONFETTIBIG[]   = "bday_confetti";
-stock String:ZFPART_CONFETTISMALL[] = "bday_blood";
-stock String:ZFPART_CONFETTIBITS1[] = "superrare_confetti_green";
-stock String:ZFPART_CONFETTIBITS2[] = "superrare_confetti_purple";
-stock String:ZFPART_EXPLOSION0[]    = "ExplosionCore_MidAir";
-stock String:ZFPART_EXPLOSION1[]    = "Explosions_MA_FloatieEmbers";
-stock String:ZFPART_EXPLOSION2[]    = "Explosions_UW_Debris001";
-stock String:ZFPART_FIREWORKS[]     = "mini_fireworks";
-stock String:ZFPART_PUFFSMALL[]     = "doublejump_smoke";
-stock String:ZFPART_PUFFBIG[]       = "target_break_child_puff";
-stock String:ZFPART_SPARKS[]        = "sapper_flyingembers";
-stock String:ZFPART_SMOKE[]         = "sapper_smoke";
-stock String:ZFPART_YIKES[]         = "yikes_text";
-stock String:ZFPART_PUMPKINBITS[]   = "pumpkin_bits";
+stock char ZFPART_REDPOWERUP[]    = "teleportedin_red";
+stock char ZFPART_BLUPOWERUP[]    = "teleportedin_blue";
+stock char ZFPART_HEALTHGAINRED[] = "healthgained_red";
+stock char ZFPART_HEALTHGAINBLU[] = "healthgained_blu";
+stock char ZFPART_HEALTHLOSTRED[] = "healthlost_red";
+stock char ZFPART_HEALTHLOSTBLU[] = "healthlost_blu";
+stock char ZFPART_HEALTHMISTRED[] = "healhuff_red_mist";
+stock char ZFPART_HEALTHMISTBLU[] = "healhuff_blu_mist";
+stock char ZFPART_BLOODBURST[]    = "blood_impact_red_01";
+stock char ZFPART_BLOODMIST[]     = "env_sawblood_mist";
+stock char ZFPART_BLOODSPRAY[]    = "blood_spray_red_01";
+stock char ZFPART_CONFETTIBIG[]   = "bday_confetti";
+stock char ZFPART_CONFETTISMALL[] = "bday_blood";
+stock char ZFPART_CONFETTIBITS1[] = "superrare_confetti_green";
+stock char ZFPART_CONFETTIBITS2[] = "superrare_confetti_purple";
+stock char ZFPART_EXPLOSION0[]    = "ExplosionCore_MidAir";
+stock char ZFPART_EXPLOSION1[]    = "Explosions_MA_FloatieEmbers";
+stock char ZFPART_EXPLOSION2[]    = "Explosions_UW_Debris001";
+stock char ZFPART_FIREWORKS[]     = "mini_fireworks";
+stock char ZFPART_PUFFSMALL[]     = "doublejump_smoke";
+stock char ZFPART_PUFFBIG[]       = "target_break_child_puff";
+stock char ZFPART_SPARKS[]        = "sapper_flyingembers";
+stock char ZFPART_SMOKE[]         = "sapper_smoke";
+stock char ZFPART_YIKES[]         = "yikes_text";
+stock char ZFPART_PUMPKINBITS[]   = "pumpkin_bits";
 
 //
 // ZF Sound Objects
 //
-stock String:ZFSND_PICKUPAMMO[]        = "items/gunpickup2.wav";
-stock String:ZFSND_PICKUPMED[]         = "items/smallmedkit1.wav";           // HL2
-stock String:ZFSND_PICKUPSPAWN[]       = "items/spawn_item.wav";
-stock String:ZFSND_EXPLOSION[]         = "weapons/pipe_bomb1.wav";
-stock String:ZFSND_BIRTHDAY[]          = "misc/happy_birthday.wav";
-stock String:ZFSND_PUSHBACK[]          = "player/pl_impact_airblast2.wav";
-stock String:ZFSND_PACKPICKUP[]        = "ui/item_pack_pickup.wav";
-stock String:ZFSND_PACKDROP[]          = "ui/item_pack_drop.wav";
-stock String:ZFSND_SPLASH[]            = "player/footsteps/mud1.wav";
-stock String:ZFSND_CRITXMIT[]          = "player/crit_hit2.wav";
-stock String:ZFSND_CRITRECV[]          = "player/crit_received1.wav";
-stock String:ZFSND_CRITMINI[]          = "player/crit_hit_mini.wav";
-stock String:ZFSND_TICK[]              = "player/taunt_cig_flick.wav";
-stock String:ZFSND_KRITZSTART[]        = "weapons/boxing_gloves_crit_enabled.wav";
-stock String:ZFSND_KRITZSTOP[]         = "weapons/weapon_crit_charged_off.wav";
-stock String:ZFSND_THUD[]              = "player/taunt_chest_thump.wav";
-stock String:ZFSND_SPARK[]             = "ambient/energy/spark4.wav";         // HL2
-stock String:ZFSND_BOING[]             = "weapons/sentry_damage2.wav";
+stock char ZFSND_PICKUPAMMO[]        = "items/gunpickup2.wav";
+stock char ZFSND_PICKUPMED[]         = "items/smallmedkit1.wav";           // HL2
+stock char ZFSND_PICKUPSPAWN[]       = "items/spawn_item.wav";
+stock char ZFSND_EXPLOSION[]         = "weapons/pipe_bomb1.wav";
+stock char ZFSND_BIRTHDAY[]          = "misc/happy_birthday.wav";
+stock char ZFSND_PUSHBACK[]          = "player/pl_impact_airblast2.wav";
+stock char ZFSND_PACKPICKUP[]        = "ui/item_pack_pickup.wav";
+stock char ZFSND_PACKDROP[]          = "ui/item_pack_drop.wav";
+stock char ZFSND_SPLASH[]            = "player/footsteps/mud1.wav";
+stock char ZFSND_CRITXMIT[]          = "player/crit_hit2.wav";
+stock char ZFSND_CRITRECV[]          = "player/crit_received1.wav";
+stock char ZFSND_CRITMINI[]          = "player/crit_hit_mini.wav";
+stock char ZFSND_TICK[]              = "player/taunt_cig_flick.wav";
+stock char ZFSND_KRITZSTART[]        = "weapons/boxing_gloves_crit_enabled.wav";
+stock char ZFSND_KRITZSTOP[]         = "weapons/weapon_crit_charged_off.wav";
+stock char ZFSND_THUD[]              = "player/taunt_chest_thump.wav";
+stock char ZFSND_SPARK[]             = "ambient/energy/spark4.wav";         // HL2
+stock char ZFSND_BOING[]             = "weapons/sentry_damage2.wav";
 
-stock String:ZFSND_WOOD_HIT[8][] = {
+stock char ZFSND_WOOD_HIT[8][] = {
   "physics/wood/wood_crate_break1.wav",     // HL2
   "physics/wood/wood_crate_break2.wav",     // HL2
   "physics/wood/wood_furniture_break1.wav", // HL2
@@ -156,17 +165,17 @@ stock String:ZFSND_WOOD_HIT[8][] = {
   "physics/wood/wood_plank_break4.wav"      // HL2
 }; 
 
-stock String:ZFSND_SPIT[3][] = {
+stock char ZFSND_SPIT[3][] = {
   "player/drown1.wav",
   "player/drown2.wav",
   "player/drown3.wav"
 };
-stock String:ZFSND_TUNE[3][] = {
+stock char ZFSND_TUNE[3][] = {
   "ui/tv_tune.wav",
   "ui/tv_tune2.wav",
   "ui/tv_tune3.wav"
 };
-stock String:ZFSND_SCREAM[10][] = { // Index with TFClassType
+stock char ZFSND_SCREAM[10][] = { // Index with TFClassType
   "vo/halloween_scream3.wav",
   "vo/scout_paincrticialdeath01.wav",
   "vo/sniper_paincrticialdeath01.wav",
@@ -178,7 +187,7 @@ stock String:ZFSND_SCREAM[10][] = { // Index with TFClassType
   "vo/spy_paincrticialdeath01.wav",
   "vo/engineer_paincrticialdeath01.wav"
 };
-stock String:ZFSND_EVILLAUGH[10][] = { // Index with TFClassType
+stock char ZFSND_EVILLAUGH[10][] = { // Index with TFClassType
   "vo/scout_laughevil01.wav", // Need something other than "" here, crash on PrecacheSound("", ...
   "vo/scout_laughevil01.wav",
   "vo/sniper_laughevil01.wav",
@@ -190,7 +199,7 @@ stock String:ZFSND_EVILLAUGH[10][] = { // Index with TFClassType
   "vo/spy_laughevil02.wav",
   "vo/engineer_laughevil04.wav"
 };
-stock String:ZFSND_PAINSHARP[10][] = { // Index with TFClassType
+stock char ZFSND_PAINSHARP[10][] = { // Index with TFClassType
   "vo/scout_painsharp01.wav", // Need something other than "" here, crash on PrecacheSound("", ...
   "vo/scout_painsharp01.wav",
   "vo/sniper_painsharp01.wav",
@@ -207,25 +216,25 @@ stock String:ZFSND_PAINSHARP[10][] = { // Index with TFClassType
 //
 // ZF Sprite Objects
 //
-stock String:ZFSPR_EXCLAMATION[] = "materials/sprites/minimap_icons/voiceicon.vmt";
-stock String:ZFSPR_DEATH[]       = "materials/sprites/minimap_icons/death.vmt";
-stock String:ZFSPR_DOMINATED[]   = "materials/HUD/leaderboard_dominated.vmt";
-stock String:ZFSPR_CROSSHAIR[]   = "materials/HUD/leaderboard_class_sniper.vmt";
+stock char ZFSPR_EXCLAMATION[] = "materials/sprites/minimap_icons/voiceicon.vmt";
+stock char ZFSPR_DEATH[]       = "materials/sprites/minimap_icons/death.vmt";
+stock char ZFSPR_DOMINATED[]   = "materials/HUD/leaderboard_dominated.vmt";
+stock char ZFSPR_CROSSHAIR[]   = "materials/HUD/leaderboard_class_sniper.vmt";
    
 ////////////////////////////////////////////////////////////
 //
 // Util Init
 //
 ////////////////////////////////////////////////////////////
-stock utilFxInit()
+stock void utilFxInit()
 {
   utilFxPrecache();
   
   // Initialize offsets
-  oMyWeapons = FindSendPropOffs("CBasePlayer", "m_hMyWeapons");
+  oMyWeapons = FindSendPropInfo("CBasePlayer", "m_hMyWeapons");
 }
 
-stock utilFxPrecache()
+stock void utilFxPrecache()
 {
   // Precache models.
   PrecacheModel(ZFMDL_SUPPLYCRATE, true);
@@ -233,13 +242,13 @@ stock utilFxPrecache()
   PrecacheModel(ZFMDL_HAYBALE, true);
   PrecacheModel(ZFMDL_FLAG, true);
   PrecacheModel(ZFMDL_FENCE, true);
-  for(new i = 0; i < 1; i++)
+  for(int i = 0; i < 1; i++)
     PrecacheModel(ZFMDL_TOTEM[i], true);
-  for(new i = 0; i < 1; i++)    
+  for(int i = 0; i < 1; i++)    
     PrecacheModel(ZFMDL_TOTEMCLIP[i], true);
-  for(new i = 0; i < 3; i++)
+  for(int i = 0; i < 3; i++)
     PrecacheModel(ZFMDL_PRESENT[i], true);
-  for(new i = 0; i < 10; i++)
+  for(int i = 0; i < 10; i++)
     PrecacheModel(ZFMDL_CUTOUT[i], true);
         
   // Precache sounds.
@@ -261,15 +270,15 @@ stock utilFxPrecache()
   PrecacheSound(ZFSND_THUD, true);
   PrecacheSound(ZFSND_SPARK, true);
   PrecacheSound(ZFSND_BOING, true);
-  for(new i = 0; i < 8; i++)
+  for(int i = 0; i < 8; i++)
     PrecacheSound(ZFSND_WOOD_HIT[i], true);
-  for(new i = 0; i < 3; i++)
+  for(int i = 0; i < 3; i++)
     PrecacheSound(ZFSND_SPIT[i], true);
-  for(new i = 0; i < 3; i++)
+  for(int i = 0; i < 3; i++)
     PrecacheSound(ZFSND_TUNE[i], true);
-  for(new i = 0; i < 10; i++)
+  for(int i = 0; i < 10; i++)
     PrecacheSound(ZFSND_SCREAM[i], true);
-  for(new i = 0; i < 10; i++)
+  for(int i = 0; i < 10; i++)
     PrecacheSound(ZFSND_EVILLAUGH[i], true);
 }
 
@@ -278,7 +287,7 @@ stock utilFxPrecache()
 // Render Effects
 //
 ////////////////////////////////////////////////////////////
-stock fxSetClientColor(client, r, g, b, a, bool:colorWeapons = false, bool:colorWearables = false)
+stock void fxSetClientColor(int client, int r, int g, int b, int a, bool colorWeapons = false, bool colorWearables = false)
 {
   // Set client alpha.
   SetEntityRenderMode(client, RENDER_TRANSCOLOR);
@@ -287,9 +296,9 @@ stock fxSetClientColor(client, r, g, b, a, bool:colorWeapons = false, bool:color
   // Set client weapon alpha.
   if(colorWeapons)
   {
-    for(new i = 0; i < 47; i += 4)
+    for(int i = 0; i < 47; i += 4)
     {
-      new weapon = GetEntDataEnt2(client, oMyWeapons + i);      
+      int weapon = GetEntDataEnt2(client, oMyWeapons + i);      
       if(weapon != -1)
       {
         SetEntityRenderMode(weapon, RENDER_TRANSCOLOR);
@@ -301,7 +310,7 @@ stock fxSetClientColor(client, r, g, b, a, bool:colorWeapons = false, bool:color
   // Set client wearable alpha.
   if(colorWearables)
   {
-    new index = -1;
+    int index = -1;
     while((index = FindEntityByClassname(index, "tf_wearable_item")) != -1)
     {
       if(GetEntPropEnt(index, Prop_Data, "m_hOwnerEntity") == client)
@@ -318,100 +327,100 @@ stock fxSetClientColor(client, r, g, b, a, bool:colorWeapons = false, bool:color
 // Client Effects
 //
 ////////////////////////////////////////////////////////////
-stock fxBloodBurst(client)
+stock void fxBloodBurst(int client)
 {
   fxCreateParticle(ZFPART_BLOODBURST, client, AttachBack, 2.0);
   fxCreateParticle(ZFPART_BLOODMIST, client, AttachBack, 2.0);
 }
 
-stock fxBloodSpray(client)
+stock void fxBloodSpray(int client)
 {
   fxCreateParticle(ZFPART_BLOODSPRAY, client, AttachBack, 2.0);
 }
 
-stock fxDeathScream(client)
+stock void fxDeathScream(int client)
 {
-  new clientClass = _:TF2_GetPlayerClass(client);
+  int clientClass = view_as<int>(TF2_GetPlayerClass(client));
   fxCreateSoundToAll(ZFSND_SCREAM[clientClass], client);
 }
 
-stock fxEvilLaughToAll(client)
+stock void fxEvilLaughToAll(int client)
 {
-  new clientClass = _:TF2_GetPlayerClass(client);
+  int clientClass = view_as<int>(TF2_GetPlayerClass(client));
   fxCreateSoundToAll(ZFSND_EVILLAUGH[clientClass], client);
 }
 
-stock fxEvilLaughToClient(evilClient, otherClient)
+stock void fxEvilLaughToClient(int evilClient, int otherClient)
 {
-  new evilClientClass = _:TF2_GetPlayerClass(evilClient);
+  int evilClientClass = view_as<int>(TF2_GetPlayerClass(evilClient));
   fxCreateSoundToClient(ZFSND_EVILLAUGH[evilClientClass], evilClient);
   fxCreateSoundToClient(ZFSND_EVILLAUGH[evilClientClass], otherClient);
 }
 
-stock fxHealthGained(client)
+stock void fxHealthGained(int client)
 {
-  if(GetClientTeam(client) == _:TFTeam_Red)
+  if(GetClientTeam(client) == view_as<int>(TFTeam_Red))
     fxCreateParticle(ZFPART_HEALTHGAINRED, client, AttachHead, 2.0);
-  else if(GetClientTeam(client) == _:TFTeam_Blue)
+  else if(GetClientTeam(client) == view_as<int>(TFTeam_Blue))
     fxCreateParticle(ZFPART_HEALTHGAINBLU, client, AttachHead, 2.0);
 }
 
-stock fxHealthLost(client)
+stock void fxHealthLost(int client)
 {
-  if(GetClientTeam(client) == _:TFTeam_Red)
+  if(GetClientTeam(client) == view_as<int>(TFTeam_Red))
     fxCreateParticle(ZFPART_HEALTHLOSTRED, client, AttachHead, 2.0);
-  else if(GetClientTeam(client) == _:TFTeam_Blue)
+  else if(GetClientTeam(client) == view_as<int>(TFTeam_Blue))
     fxCreateParticle(ZFPART_HEALTHLOSTBLU, client, AttachHead, 2.0);
 }
 
-stock fxHealthMist(client)
+stock void fxHealthMist(int client)
 {
-  if(GetClientTeam(client) == _:TFTeam_Red)
+  if(GetClientTeam(client) == view_as<int>(TFTeam_Red))
     fxCreateParticle(ZFPART_HEALTHMISTRED, client, AttachHead, 4.0);
-  else if(GetClientTeam(client) == _:TFTeam_Blue)
+  else if(GetClientTeam(client) == view_as<int>(TFTeam_Blue))
     fxCreateParticle(ZFPART_HEALTHMISTBLU, client, AttachHead, 4.0);
 }
 
-stock fxKritzStart(client)
+stock void fxKritzStart(int client)
 {
   fxPowerup(client);
   fxCreateSoundToAll(ZFSND_KRITZSTART, client);
 }
 
-stock fxKritzStop(client)
+stock void fxKritzStop(int client)
 {
   fxCreateSoundToAll(ZFSND_KRITZSTOP, client);
 }
 
-stock fxPain(client)
+stock void fxPain(int client)
 {
-  new clientClass = _:TF2_GetPlayerClass(client);    
+  int clientClass = view_as<int>(TF2_GetPlayerClass(client));    
   fxCreateSoundToAll(ZFSND_PAINSHARP[clientClass], client);
 }
 
-stock fxPowerup(client)
+stock void fxPowerup(int client)
 {
-  if(GetClientTeam(client) == _:TFTeam_Red)
+  if(GetClientTeam(client) == view_as<int>(TFTeam_Red))
   {
     fxCreateParticle(ZFPART_REDPOWERUP, client, AttachBase, 2.0);
     ClientCommand(client, "voicemenu 2 1");
   }
-  else if(GetClientTeam(client) == _:TFTeam_Blue)
+  else if(GetClientTeam(client) == view_as<int>(TFTeam_Blue))
   {
     fxCreateParticle(ZFPART_BLUPOWERUP, client, AttachBase, 2.0);
     ClientCommand(client, "voicemenu 2 1");
   }
 }
 
-stock fxTeleportTrail(client, Float:duration)
+stock void fxTeleportTrail(int client, float duration)
 {
-  if(GetClientTeam(client) == _:TFTeam_Red)
+  if(GetClientTeam(client) == view_as<int>(TFTeam_Red))
     fxCreateParticle(ZFPART_AURA01RED, client, AttachBase, duration);
-  else if(GetClientTeam(client) == _:TFTeam_Blue)
+  else if(GetClientTeam(client) == view_as<int>(TFTeam_Blue))
     fxCreateParticle(ZFPART_AURA01BLU, client, AttachBase, duration);
 }
 
-stock fxYikes(client)
+stock void fxYikes(int client)
 {
   fxCreateParticle(ZFPART_YIKES, client, AttachHead, 4.0);  
   fxCreateSoundToAll(ZFSND_SCREAM[0], client);
@@ -422,13 +431,13 @@ stock fxYikes(client)
 // Client Force Effects
 //
 ////////////////////////////////////////////////////////////
-stock fxJump(client, Float:force, bool:doVert = false)
+stock void fxJump(int client, float force, bool doVert = false)
 {
-  decl Float:ang[3];
+  float ang[3];
   GetClientEyeAngles(client, ang);
   
   // Get jump direction vector. Do vertical jump if specified.
-  decl Float:vec[3];
+  float vec[3];
   GetAngleVectors(ang, vec, NULL_VECTOR, NULL_VECTOR); 
   NormalizeVector(vec, vec);
   if(doVert) vec[2] = 5.0;
@@ -437,15 +446,15 @@ stock fxJump(client, Float:force, bool:doVert = false)
 }
 
 // Apply knockback to targetClient from sourceEntity with specified force.
-stock fxKnockback(targetClient, sourceEntity, Float:force)
+stock void fxKnockback(int targetClient, int sourceEntity, float force)
 {  
-  decl Float:targetPos[3];
-  decl Float:sourcePos[3];
+  float targetPos[3];
+  float sourcePos[3];
   GetClientAbsOrigin(targetClient, targetPos);
   GetEntPropVector(sourceEntity, Prop_Send, "m_vecOrigin", sourcePos);
   
   // Get vector from sourceClient to targetClient.
-  decl Float:vec[3];
+  float vec[3];
   MakeVectorFromPoints(sourcePos, targetPos, vec);
   
   fxApplyForce(targetClient, vec, force);
@@ -453,13 +462,13 @@ stock fxKnockback(targetClient, sourceEntity, Float:force)
 }
 
 // Apply force to an entity along the specified vector.
-stock fxApplyForce(entity, const Float:direction[3], Float:force, bool:forceMinVert = true)
+stock void fxApplyForce(int entity, const float direction[3], float force, bool forceMinVert = true)
 {
-  decl Float:vel[3];
+  float vel[3];
   GetEntPropVector(entity, Prop_Data, "m_vecVelocity", vel);  
   
   // Get unit vector along direction vector.
-  decl Float:vec[3];
+  float vec[3];
   NormalizeVector(direction, vec);
   
   // Calculate force to apply (enforce minimum vertical velocity, if specified).
@@ -475,38 +484,38 @@ stock fxApplyForce(entity, const Float:direction[3], Float:force, bool:forceMinV
 // Explosion Effects
 //
 ////////////////////////////////////////////////////////////
-stock fxBits(entity)
+stock void fxBits(int entity)
 {
   fxCreateParticle(ZFPART_PUMPKINBITS, entity, AttachNone, 2.0);
   fxCreateSoundToAll(ZFSND_SPLASH, entity);
 }
 
-stock fxExplosionBig(entity)
+stock void fxExplosionBig(int entity)
 {
   fxCreateParticle(ZFPART_EXPLOSION0, entity, AttachNone, 2.0);
   fxCreateSoundToAll(ZFSND_EXPLOSION, entity);
 }
 
-stock fxExplosionTiny(entity)
+stock void fxExplosionTiny(int entity)
 {
-  new Float:offset[3] = {0.0, 0.0, 40.0};
+  float offset[3] = {0.0, 0.0, 40.0};
   fxCreateParticle(ZFPART_EXPLOSION1, entity, AttachNone, 4.0, offset);
   fxCreateParticle(ZFPART_SMOKE, entity, AttachNone, 4.0, offset);
 }
 
-stock fxExplosionParty(entity)
+stock void fxExplosionParty(int entity)
 {
   fxCreateParticle(ZFPART_CONFETTISMALL, entity, AttachNone, 4.0);
   fxCreateSoundToAll(ZFSND_BIRTHDAY, entity);
 }
 
-stock fxPuffBig(entity)
+stock void fxPuffBig(int entity)
 {
   // Create main puff.  
   fxCreateParticle(ZFPART_PUFFBIG, entity, AttachNone, 4.0); 
 
   // Create smaller, surrounding puffs.
-  new Float:offset[3] = {0.0, 0.0, 0.0};
+  float offset[3] = {0.0, 0.0, 0.0};
   offset[0] = 50.0; offset[1] = 0.0; offset[2] = 4.0;
   fxCreateParticle(ZFPART_PUFFSMALL, entity, AttachNone, 4.0, offset); 
   offset[0] = 25.0; offset[1] = 43.0; offset[2] = 4.0;
@@ -524,25 +533,25 @@ stock fxPuffBig(entity)
   fxCreateSoundToAll(ZFSND_THUD, entity);
 }
 
-stock fxPuffSmall(entity)
+stock void fxPuffSmall(int entity)
 {
   fxCreateParticle(ZFPART_PUFFSMALL, entity, AttachNone, 4.0);
 }
 
-stock fxSmoke(entity)
+stock void fxSmoke(int entity)
 {
-  new Float:offset[3] = {0.0, 0.0, 40.0};
+  float offset[3] = {0.0, 0.0, 40.0};
   fxCreateParticle(ZFPART_SMOKE, entity, AttachNone, 4.0, offset);
 }
 
-stock fxSpark(entity)
+stock void fxSpark(int entity)
 {
-  new Float:offset[3] = {0.0, 0.0, 40.0};
+  float offset[3] = {0.0, 0.0, 40.0};
   fxCreateParticle(ZFPART_SPARKS, entity, AttachBase, 2.0, offset);
   fxCreateSoundToAll(ZFSND_SPARK, entity);  
 }
 
-stock fxTrailConfetti(entity, Float:duration)
+stock void fxTrailConfetti(int entity, float duration)
 {
   fxCreateParticle(ZFPART_CONFETTIBITS1, entity, AttachBase, duration);
   fxCreateParticle(ZFPART_CONFETTIBITS2, entity, AttachBase, duration);
@@ -553,17 +562,17 @@ stock fxTrailConfetti(entity, Float:duration)
 // Model Utils
 //
 ////////////////////////////////////////////////////////////
-stock fxCreateModelThrown(
-  const String:strModel[],
-  client,
+stock int fxCreateModelThrown(
+  const char[] strModel,
+  int client,
   // bool:isOwned,
   // bool:isSolid,
-  const Float:pos[3] = {0.0, ...},
-  const Float:ang[3] = {0.0, ...},
-  Float:force = 0.0,
-  const color[3] = {255, ...})
+  const float pos[3] = {0.0, ...},
+  const float ang[3] = {0.0, ...},
+  float force = 0.0,
+  const int color[3] = {255, ...})
 {
-  new ent = CreateEntityByName("prop_physics_multiplayer");
+  int ent = CreateEntityByName("prop_physics_multiplayer");
   if(IsValidEntity(ent))
   {   
     // Pre-configure prop.
@@ -586,7 +595,7 @@ stock fxCreateModelThrown(
     AcceptEntityInput(ent, "DisableShadow");
     
     // Orient and teleport prop.
-    decl Float:vec[3];
+    float vec[3];
     GetAngleVectors(ang, vec, NULL_VECTOR, NULL_VECTOR);
     ScaleVector(vec, force);
     TeleportEntity(ent, pos, ang, vec);
@@ -599,16 +608,16 @@ stock fxCreateModelThrown(
   return ent;
 }
 
-stock fxCreateModelStatic(
-  const String:strModel[],
-  client,
-  bool:isOwned = true,
-  bool:isSolid = false,  
-  const Float:pos[3] = {0.0, ...},
-  const Float:ang[3] = {0.0, ...},
-  const color[3] = {255, ...})
+stock int fxCreateModelStatic(
+  const char[] strModel,
+  int client,
+  bool isOwned = true,
+  bool isSolid = false,  
+  const float pos[3] = {0.0, ...},
+  const float ang[3] = {0.0, ...},
+  const int color[3] = {255, ...})
 {
-  new ent = CreateEntityByName("prop_dynamic_override");
+  int ent = CreateEntityByName("prop_dynamic_override");
   if(IsValidEntity(ent))
   {   
     // Pre-configure prop.
@@ -637,13 +646,13 @@ stock fxCreateModelStatic(
   return ent;
 }
 
-stock fxDeleteModel(ent)
+stock void fxDeleteModel(int ent)
 {
   if(fxIsModelValid(ent))
     AcceptEntityInput(ent, "Kill");
 }
 
-stock bool:fxIsModelValid(ent)
+stock bool fxIsModelValid(int ent)
 {
   return (ent > 0) && IsValidEdict(ent) && IsValidEntity(ent) && 
     (entClassnameContains(ent, "prop_physics_multiplayer") || 
@@ -656,18 +665,18 @@ stock bool:fxIsModelValid(ent)
 // (Original Code by J-Factor)
 //
 ////////////////////////////////////////////////////////////
-stock fxCreateParticle(
-  const String:strPart[], 
-  target, 
-  ZFParticleAttachStyle:attachStyle,
-  Float:duration = 0.0,
-  const Float:posOffset[3] = {0.0, ...})
+stock int fxCreateParticle(
+  const char[] strPart, 
+  int target, 
+  ZFParticleAttachStyle attachStyle,
+  float duration = 0.0,
+  const float posOffset[3] = {0.0, ...})
 {
-  new ent = CreateEntityByName("info_particle_system");
+  int ent = CreateEntityByName("info_particle_system");
   if(IsValidEntity(ent))
   {
     // Get target position and add offset.
-    decl Float:pos[3];
+    float pos[3];
     GetEntPropVector(target, Prop_Send, "m_vecOrigin", pos);
     AddVectors(pos, posOffset, pos);    
 
@@ -701,7 +710,7 @@ stock fxCreateParticle(
     // Handle delayed removal. Non-positive duration implies infinite lifespan.
     if(duration > 0.0)
     {
-      decl String:strAddOutput[64];
+      char strAddOutput[64];
       Format(strAddOutput, sizeof(strAddOutput), "OnUser1 !self:kill::%f:1", duration);
       SetVariantString(strAddOutput);
       AcceptEntityInput(ent, "AddOutput");
@@ -716,25 +725,25 @@ stock fxCreateParticle(
   return ent;  
 }
 
-stock fxDeleteParticle(ent)
+stock void fxDeleteParticle(int ent)
 {
   if(fxIsParticleValid(ent))
     AcceptEntityInput(ent, "Kill");
 }
 
-stock fxStartParticle(ent)
+stock void fxStartParticle(int ent)
 {
   if(fxIsParticleValid(ent))
     AcceptEntityInput(ent, "Start");
 }
 
-stock fxStopParticle(ent)
+stock void fxStopParticle(int ent)
 {
   if(fxIsParticleValid(ent))
     AcceptEntityInput(ent, "Stop");
 }
 
-stock bool:fxIsParticleValid(ent)
+stock bool fxIsParticleValid(int ent)
 { return (ent > 0) && IsValidEdict(ent) && IsValidEntity(ent) && entClassnameContains(ent, "info_particle_system"); }
 
 ////////////////////////////////////////////////////////////
@@ -743,11 +752,11 @@ stock bool:fxIsParticleValid(ent)
 // (Original Code by Nut)
 //
 ////////////////////////////////////////////////////////////
-stock fxCreateSprite(
-  const String:strSprite[], 
-  target, 
-  &entSpr, 
-  &entAnc)
+stock void fxCreateSprite(
+  const char[] strSprite, 
+  int target, 
+  int &entSpr, 
+  int &entAnc)
 {
   //
   // Create a networked sprite attached to a player's head.
@@ -763,15 +772,15 @@ stock fxCreateSprite(
     entAnc = CreateEntityByName("prop_physics_multiplayer");
     if(IsValidEntity(entAnc))
     {
-      decl String:strSprTargetname[32]; 
-      decl String:strAncTargetname[32];
-      decl String:strTgtTargetname[32];
+      char strSprTargetname[32]; 
+      char strAncTargetname[32];
+      char strTgtTargetname[32];
       Format(strSprTargetname, sizeof(strSprTargetname), "zfspr%i", entSpr);
       Format(strAncTargetname, sizeof(strAncTargetname), "zfanc%i", entAnc);
       Format(strTgtTargetname, sizeof(strTgtTargetname), "zftgt%i", target);
       
       // Retrieve target's position
-      decl Float:posTgt[3];
+      float posTgt[3];
       GetEntPropVector(target, Prop_Send, "m_vecOrigin", posTgt);
       posTgt[2] += 12.0;
          
@@ -825,7 +834,7 @@ stock fxCreateSprite(
   }
 }
 
-stock fxDeleteSprite(entSpr, entAnc)
+stock void fxDeleteSprite(int entSpr, int entAnc)
 {
   if(fxIsSpriteValid(entSpr, entAnc))
   { 
@@ -834,19 +843,19 @@ stock fxDeleteSprite(entSpr, entAnc)
   }
 }
 
-stock fxShowSprite(entSpr, entAnc)
+stock void fxShowSprite(int entSpr, int entAnc)
 {
   if(fxIsSpriteValid(entSpr, entAnc))
     AcceptEntityInput(entSpr, "ShowSprite");    
 }
 
-stock fxHideSprite(entSpr, entAnc)
+stock void fxHideSprite(int entSpr, int entAnc)
 {
   if(fxIsSpriteValid(entSpr, entAnc))
     AcceptEntityInput(entSpr, "HideSprite");    
 } 
 
-stock bool:fxIsSpriteValid(entSpr, entAnc)
+stock bool fxIsSpriteValid(int entSpr, int entAnc)
 { 
   return (entSpr > 0) && IsValidEdict(entSpr) && IsValidEntity(entSpr) && entClassnameContains(entSpr, "env_sprite") &&
          (entAnc > 0) && IsValidEdict(entAnc) && IsValidEntity(entAnc) && entClassnameContains(entAnc, "prop_physics_multiplayer");
@@ -857,12 +866,12 @@ stock bool:fxIsSpriteValid(entSpr, entAnc)
 // Sound Base Utils
 //
 ////////////////////////////////////////////////////////////
-stock fxCreateSoundToAll(const String:strSound[], entity)
+stock void fxCreateSoundToAll(const char[] strSound, int entity)
 { 
   EmitSoundToAll(strSound, entity); 
 }
 
-stock fxCreateSoundToClient(const String:strSound[], client)
+stock void fxCreateSoundToClient(const char[] strSound, int client)
 {
   EmitSoundToClient(client, strSound);
 }

@@ -1,1 +1,1 @@
-./bin/spcomp64 zombie_fortress_perk.sp -o target/zombie_fortress_perk.smx
+./bin/spcomp64 src/sourcepawn/zombie_fortress_perk.sp -o target/zombie_fortress_perk.smx

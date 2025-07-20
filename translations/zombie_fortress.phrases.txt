@@ -1,0 +1,328 @@
+"Phrases"
+{
+	"ZF_Enable"
+	{
+		"en"	"[ZF] ZF is initializing~"
+		"zh"	"[ZF] ZF 初始化中~"
+	}
+	"ZF_Disable"
+	{
+		"en"	"[ZF] ZF is unloading~"
+		"zh"	"[ZF] ZF 卸载中~"
+	}
+	"ZF_SwapTeams"
+	{
+		"en"	"[ZF] Team roles swapped. Restarting Round..."
+		"zh"	"[ZF] 队伍角色已交换。正在重启回合..."
+	}
+	"ZF_ZombieClasses"
+	{
+		"en"	"[ZF] Available zombie classes: Scout, Heavy, Spy."
+		"zh"	"[ZF] 僵尸可用的兵种: Scout, Heavy, Spy."
+	}
+	"ZF_SurvivorClassChangeDisabled"
+	{
+		"en"	"[ZF] Survivors cannot change class after the round has started!"
+		"zh"	"[ZF]幸存者无法在回合开始后切换兵种!"
+	}
+	"ZF_SurvivorClasses"
+	{
+		"en"	"[ZF] Available survivor classes: Soldier, Pyro, Demo, Engineer, Medic, Sniper."
+		"zh"	"[ZF] 幸存者可用的兵种: Soldier, Pyro, Demo, Engineer, Medic, Sniper."
+	}
+	"ZF_TeamPrefUsage"
+	{
+		"en"	"Usage: %s [sur|zom|none]"
+		"zh"	"用法: %s [sur|zom|none]"
+	}
+	"ZF_GracePeriodStart"
+	{
+		"en"	"[ZF] Grace period has begun. Survivors can change classes and perks."
+		"zh"	"[ZF] 准备时间开始(幸存者可切换兵种和技能)."
+	}
+	"ZF_GracePeriodEnd"
+	{
+		"en"	"[ZF] Grace period has ended."
+		"zh"	"[ZF] 准备时间结束"
+	}
+	"ZF_Infected"
+	{
+		"en"	"[ZF] You have been infected..."
+		"zh"	"[ZF] 你被感染了..."
+	}
+	"ZF_ZombiesHungry"
+	{
+		"en"	"[ZF] The zombies are getting hungry... (Zombie respawn time reduced)"
+		"zh"	"[ZF] 僵尸饿了...(僵尸的重生时间缩短)"
+	}
+	"ZF_TheyAreComing"
+	{
+		"en"	"[ZF] They are coming! (Zombies have no respawn time)"
+		"zh"	"[ZF] 他们来了!(僵尸没有重生时间)"
+	}
+	"ZF_WeAreSafe"
+	{
+		"en"	"[ZF] We are safe... for now. (Zombie respawn time returned to normal)"
+		"zh"	"[ZF] 我们安全了......暂时.(僵尸重生时间回归正常)"
+	}
+	"ZF_MenuHint"
+	{
+		"en"	"[ZF] Type \"!zf\" to open the Zombie Fortress menu (for help and class selection)!"
+		"zh"	"[ZF] 输入 \"!zf\" 打开僵尸模式菜单（查看帮助和选职业）!"
+	}
+	"ZF_Menu_Title"
+	{
+		"en"	"ZF Mode Menu"
+		"zh"	"ZF模式菜单"
+	}
+	"ZF_Menu_SelectSurPerk"
+	{
+		"en"	"Select Survivor Perk"
+		"zh"	"选择幸存者技能"
+	}
+	"ZF_Menu_SelectZomPerk"
+	{
+		"en"	"Select Zombie Perk"
+		"zh"	"选择僵尸技能"
+	}
+	"ZF_Menu_ChangeTeamPref"
+	{
+		"en"	"Change Team Preference"
+		"zh"	"更改队伍偏好"
+	}
+	"ZF_Menu_Help"
+	{
+		"en"	"ZF Mode Help"
+		"zh"	"ZF模式帮助"
+	}
+	"ZF_Menu_PerkHelp"
+	{
+		"en"	"ZF Mode Perk Help"
+		"zh"	"ZF模式技能帮助"
+	}
+	"ZF_Menu_Close"
+	{
+		"en"	"Close Menu"
+		"zh"	"关闭菜单"
+	}
+	"ZF_Menu_Pref_Random"
+	{
+		"en"	"Random"
+		"zh"	"随机"
+	}
+	"ZF_Menu_Pref_Survivor"
+	{
+		"en"	"Survivor"
+		"zh"	"幸存者"
+	}
+	"ZF_Menu_Pref_Zombie"
+	{
+		"en"	"Zombie"
+		"zh"	"僵尸"
+	}
+	"ZF_Help_Overview"
+	{
+		"en"	"Overview"
+		"zh"	"总览"
+	}
+	"ZF_Help_SurvivorOverview"
+	{
+		"en"	"Survivor Overview"
+		"zh"	"幸存者总览"
+	}
+	"ZF_Help_ZombieOverview"
+	{
+		"en"	"Zombie Overview"
+		"zh"	"僵尸总览"
+	}
+	"ZF_Help_ClassSurvivor"
+	{
+		"en"	"Class: Survivor"
+		"zh"	"职业:幸存者"
+	}
+	"ZF_Help_ClassZombie"
+	{
+		"en"	"Class: Zombie"
+		"zh"	"职业:僵尸"
+	}
+	"ZF_Help_Title_Overview"
+	{
+		"en"	"Zombie Fortress Introduction"
+		"zh"	"Zombie Fortress 僵尸要塞 介绍"
+	}
+	"ZF_Help_Text_Overview_Full"
+	{
+		"en"	"Players are chosen as Survivors or Zombies at the start of the round.\nSurvivors must stay alive until the time runs out, or complete the map objective.\nZombies must eliminate all humans, or complete the map objective.\nSurvivors become zombies when they die, while zombies can respawn infinitely."
+		"zh"	"玩家在开局会被选为幸存者或僵尸.\n幸存者必须活着撑到时间结束, 或者完成地图目标(占点等等).\n僵尸则必须消灭所有人类, 或者完成地图目标.\n幸存者死后会变为僵尸, 而僵尸可以无限重生."
+	}
+	"ZF_Menu_Back"
+	{
+		"en"	"Back"
+		"zh"	"返回"
+	}
+	"ZF_Help_Title_SurvivorTeam"
+	{
+		"en"	"Survivor Team"
+		"zh"	"幸存者队伍"
+	}
+	"ZF_Help_Text_SurvivorClasses_Full"
+	{
+		"en"	"Available survivor classes: Soldier, Pyro, Demoman, Engineer, Medic, and Sniper."
+		"zh"	"幸存者可使用的兵种: 士兵、火焰兵、爆破手、工程师、医生和狙击手."
+	}
+	"ZF_Help_Text_SurvivorWeapons"
+	{
+		"en"	"Survivors can use most weapons."
+		"zh"	"幸存者可以使用绝大部分武器."
+	}
+	"ZF_Help_Title_ZombieTeam"
+	{
+		"en"	"Zombie Team"
+		"zh"	"僵尸队伍"
+	}
+	"ZF_Help_Text_ZombieTeam_Full"
+	{
+		"en"	"Available zombie classes: Scout, Heavy, and Spy.\nZombies slowly regenerate health over time.\nZombies cannot use most firearms by default.\n(Zombie weapon whitelist is being developed...)"
+		"zh"	"僵尸可使用的兵种: 侦察兵、 机枪手和间谍.\n僵尸的生命值会随时间缓慢恢复.\n僵尸默认无法使用大部分枪械类武器.\n(僵尸武器白名单制定中......)"
+	}
+	"ZF_Help_Title_SurvivorClasses"
+	{
+		"en"	"Survivor Classes"
+		"zh"	"幸存者兵种"
+	}
+	"ZF_Class_Soldier"
+	{
+		"en"	"Soldier"
+		"zh"	"士兵"
+	}
+	"ZF_Class_Sniper"
+	{
+		"en"	"Sniper"
+		"zh"	"狙击手"
+	}
+	"ZF_Class_Medic"
+	{
+		"en"	"Medic"
+		"zh"	"医生"
+	}
+	"ZF_Class_Demoman"
+	{
+		"en"	"Demoman"
+		"zh"	"爆破手"
+	}
+	"ZF_Class_Pyro"
+	{
+		"en"	"Pyro"
+		"zh"	"火焰兵"
+	}
+	"ZF_Class_Engineer"
+	{
+		"en"	"Engineer"
+		"zh"	"工程师"
+	}
+	"ZF_Help_Title_ZombieClasses"
+	{
+		"en"	"Zombie Classes"
+		"zh"	"僵尸兵种"
+	}
+	"ZF_Class_Scout"
+	{
+		"en"	"Scout"
+		"zh"	"侦察兵"
+	}
+	"ZF_Class_Heavy"
+	{
+		"en"	"Heavy"
+		"zh"	"机枪手"
+	}
+	"ZF_Class_Spy"
+	{
+		"en"	"Spy"
+		"zh"	"间谍"
+	}
+	"ZF_Help_Class_Soldier"
+	{
+		"en"	"Soldier [Survivor]"
+		"zh"	"士兵 [幸存者]"
+	}
+	"ZF_Help_Text_Soldier_Full"
+	{
+		"en"	"Movement speed decreased from 240 to 220."
+		"zh"	"移动速度由240下降到220."
+	}
+	"ZF_Help_Text_Pyro_Full"
+	{
+		"en"	"Primary weapon reserve ammo changed to 125.\nMovement speed decreased from 300 to 240."
+		"zh"	"主武器备弹量更改为125.\n移动速度由300下降到240."
+	}
+	"ZF_Help_Text_Demoman_Full"
+	{
+		"en"	"Movement speed decreased from 280 to 260."
+		"zh"	"移动速度由280下降到260."
+	}
+	"ZF_Help_Text_Engineer_Full"
+	{
+		"en"	"Buildings cannot be upgraded, but can be repaired.\nSentry gun has only 60 ammo.\nAmmo decreases over time and cannot be replenished.\nSentry self-destructs when out of ammo.\nDispenser health increased to 250.\nMovement speed decreased from 300 to 270."
+		"zh"	"建筑物不能升级,但可以修复.\n步哨枪的子弹只有60发.\n子弹会随时间减少,并且无法补充子弹.\n弹药耗尽后，步哨就会自毁.\n补给器的血量增加到250.\n移动速度由300下降到270."
+	}
+	"ZF_Help_Text_Medic_Full"
+	{
+		"en"	"Syringe Gun does not need to be reloaded.\nUber charges faster, but lasts for a shorter duration.\nOverheal is limited to 124% of original health.\nOverheal health decays very slowly.\nMovement speed decreased from 320 to 300."
+		"zh"	"针筒枪不需要换弹.\nUber充能速度更快,但持续时间较短.\n超量治疗限制在原来血量的124%.\n超量治疗的血量衰减很慢.\n移动速度由320下降到300."
+	}
+	"ZF_Help_Text_Sniper_Full"
+	{
+		"en"	"Movement speed decreased from 300 to 250."
+		"zh"	"移动速度由300下降到250."
+	}
+	"ZF_Help_Text_Scout_Full"
+	{
+		"en"	"Movement speed decreased from 400 to 350."
+		"zh"	"移动速度由400下降到350."
+	}
+	"ZF_Help_Text_Heavy_Full"
+	{
+		"en"	"Movement speed increased from 230 to 250."
+		"zh"	"移动速度由230增加到250."
+	}
+	"ZF_Help_Text_Spy_Full"
+	{
+		"en"	"Cannot use the Dead Ringer.\nMovement speed decreased from 300 to 280."
+		"zh"	"无法使用死亡之铃.\n移动速度由300降低到280."
+	}
+	"ZF_Help_Text_Spectator_Full"
+	{
+		"en"	"Same as original."
+		"zh"	"和原版相同."
+	}
+	"ZF_Help_Title_PerkHelp"
+	{
+		"en"	"ZF Mode Perk Help"
+		"zh"	"ZF模式技能帮助"
+	}
+	"ZF_Help_Text_PerkHelp1"
+	{
+		"en"	"Each player can choose one survivor perk and one zombie perk."
+		"zh"	"每个玩家都可以选择一个幸存者职业和僵尸职业"
+	}
+	"ZF_Help_Text_PerkHelp2"
+	{
+		"en"	"Different perks have different skills and buffs/debuffs, find the playstyle that suits you!"
+		"zh"	"不同职业有不同的技能和增益减益,找到适合你的玩法吧!"
+	}
+	"ZF_Menu_Back_Brackets"
+	{
+		"en"	"[Back]"
+		"zh"	"[返回]"
+	}
+	"ZF_Menu_Close_Brackets"
+	{
+		"en"	"[Close Menu]"
+		"zh"	"[关闭菜单]"
+	}
+	"ZF_GameDescription"
+	{
+		"en"	"Zombie Fortress (%s)"
+		"zh"	"僵尸要塞 (%s)"
+	}
+}

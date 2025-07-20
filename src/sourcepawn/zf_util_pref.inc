@@ -1,3 +1,7 @@
+/* put the line below after all of the includes!
+#pragma newdecls required
+*/
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Z O M B I E - F O R T R E S S - [TF2]
@@ -7,6 +11,7 @@
 //  Includes stock routines for client preferences.
 //
 ////////////////////////////////////////////////////////////////////////////////
+#pragma newdecls required
 
 #if defined _ZF_UTIL_PREF_INC
   #endinput
@@ -31,7 +36,7 @@ enum ZFPref
   ZomPendPerk,
   PerkSelectMode
 };
-new const DEFAULT_PREFS[MAX_PREFS] = {
+int DEFAULT_PREFS[MAX_PREFS] = {
   0,                  // JoinState
   1,                  // TeamPref
   0,                  // SurPerk
@@ -54,15 +59,15 @@ new const DEFAULT_PREFS[MAX_PREFS] = {
 //
 // Objects
 //
-static Handle:prefTrie;
-static prefCache[MAXPLAYERS+1][MAX_PREFS];
+static Handle prefTrie;
+static int prefCache[MAXPLAYERS+1][MAX_PREFS];
 
 ////////////////////////////////////////////////////////////
 //
 // Pref Init
 //
 ////////////////////////////////////////////////////////////
-utilPrefInit()
+void utilPrefInit()
 {
   prefTrie = CreateTrie();
 }
@@ -72,10 +77,10 @@ utilPrefInit()
 // Pref Events
 //
 ////////////////////////////////////////////////////////////
-stock pref_OnClientConnect(client)
+stock void pref_OnClientConnect(int client)
 {
-  decl String:steamID[32];  
-  if(GetClientAuthString(client, steamID, sizeof(steamID)))
+  char steamID[32];  
+  if (GetClientAuthId(client, AuthId_Steam2, steamID, sizeof(steamID)))
   {
     if(GetTrieArray(prefTrie, steamID, prefCache[client], sizeof(DEFAULT_PREFS)))
     {
@@ -128,10 +133,10 @@ stock pref_OnClientConnect(client)
     ClearTrie(prefTrie);
 }
 
-stock pref_OnClientDisconnect(client)
+stock void pref_OnClientDisconnect(int client)
 {
-  decl String:steamID[32];
-  if(GetClientAuthString(client, steamID, sizeof(steamID)))
+  char steamID[32];
+  if (GetClientAuthId(client, AuthId_Steam2, steamID, sizeof(steamID)))
   {
     //
     // Update trie with cache data.
@@ -148,7 +153,7 @@ stock pref_OnClientDisconnect(client)
 // Pref Cache Accessors
 //
 ////////////////////////////////////////////////////////////
-stock prefGet(client, ZFPref:pref)
+stock int prefGet(int client, ZFPref pref)
 { return prefCache[client][pref]; }
-stock prefSet(client, ZFPref:pref, value)
+stock void prefSet(int client, ZFPref pref, int value)
 { prefCache[client][pref]= value; }
