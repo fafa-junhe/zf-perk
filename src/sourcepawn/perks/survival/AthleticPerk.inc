@@ -1,101 +1,35 @@
-// Generated from D:\workspace\code\tf2\zf\src\python\perks\survival\AthleticPerk.py
+// Generated from /mnt/d/workspace/code/tf2/zf/src/python/perks/survival/AthleticPerk.py
 
 #if defined __AthleticPerk_included
 #endinput
 #endif
 #define __AthleticPerk_included
 
+#define DP(%1) view_as<DataPackPos>(%1)
 #include "../../zf_perk.inc"
-#include "../../zf_util_base.inc"
 #include "../perk_structs.inc"
 #include "SurvivorBasePerk.inc"
-#include <adt_trie>
+#include <datapack>
 
-#define ZF_ATHLETIC_ATTACK -40
-#define ZF_ATHLETIC_CRIT -100
-#define ZF_ATHLETIC_ROF 100
-#define ZF_ATHLETIC_SPEED 100
-#define ATHLETIC_PERK_NAME "Athletic"
-#define ATHLETIC_PERK_SHORTDESC "Faster movement and ROF"
-#define ATHLETIC_PERK_DESC "Faster movement and ROF!!"
+methodmap AthleticPerk < SurvivorBasePerk {
+    public AthleticPerk(int client) {
+        SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
+        AthleticPerk sm = view_as<AthleticPerk>(sm_base);
 
-stock StringMap AthleticPerk_new(int client) {
-    StringMap sm = SurvivorBasePerk_new(client);
-    setParamString(sm, "test", "okkk");
-    return sm;
+        sm.Position = DP(1);
+        sm.WriteString("okkk");
+        sm.Position = DP(17);
+        sm.WriteFunction(AthleticPerk_updateClientPermStats);
+
+        return sm;
+    }
 }
 
-stock void AthleticPerk_getName(char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, ATHLETIC_PERK_NAME);
-}
 
-stock void AthleticPerk_getShortdesc(char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, ATHLETIC_PERK_SHORTDESC);
+public void AthleticPerk_updateClientPermStats(AthleticPerk _inst) {
+    addStat(_inst.client, ZFStat.ZFStatAtt, ZFStatType.ZFStatTypePerm, ZF_ATHLETIC_ATTACK);
+    addStat(_inst.client, ZFStat.ZFStatCrit, ZFStatType.ZFStatTypePerm, ZF_ATHLETIC_CRIT);
+    addStat(_inst.client, ZFStat.ZFStatRof, ZFStatType.ZFStatTypePerm, ZF_ATHLETIC_ROF);
+    addStat(_inst.client, ZFStat.ZFStatSpeed, ZFStatType.ZFStatTypePerm, ZF_ATHLETIC_SPEED);
 }
-
-stock void AthleticPerk_getDesc(char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, ATHLETIC_PERK_DESC);
-}
-
-stock void AthleticPerk_onPlayerRunCmd(StringMap self, int buttons, int impulse, any vel, any angles, int weapon) {
-}
-
-stock void AthleticPerk_onAmmoPickup(StringMap self, int pickup) {
-}
-
-stock void AthleticPerk_onCalcIsAttackCritical(StringMap self) {
-}
-
-stock void AthleticPerk_onCallForMedic(StringMap self) {
-}
-
-stock void AthleticPerk_onGameFrame(StringMap self) {
-}
-
-stock void AthleticPerk_onGraceEnd(StringMap self) {
-}
-
-stock void AthleticPerk_onMedPickup(StringMap self, int pickup) {
-}
-
-stock void AthleticPerk_onPeriodic(StringMap self) {
-}
-
-stock void AthleticPerk_onPlayerDeath(StringMap self, int victim, int killer, int assist, int inflictor, int damagetype) {
-}
-
-stock void AthleticPerk_onPlayerSpawn(StringMap self) {
-}
-
-stock void AthleticPerk_onRemove(StringMap self) {
-}
-
-stock void AthleticPerk_onSetTransmit(StringMap self, int entity, int client) {
-}
-
-stock void AthleticPerk_onTakeDamage(StringMap self, int victim, int attacker, int inflictor, float damage, int damagetype) {
-}
-
-stock void AthleticPerk_onTakeDamagePost(StringMap self, int victim, int attacker, int inflictor, float damage, int damagetype) {
-}
-
-stock void AthleticPerk_onTouch(StringMap self, int toucher, int touchee) {
-}
-
-stock void AthleticPerk_updateClientPermStats(StringMap self) {
-    addStat(getParam(self, "owner"), ZFStatAtt, ZFStatTypePerm, ZF_ATHLETIC_ATTACK);
-    addStat(getParam(self, "owner"), ZFStatCrit, ZFStatTypePerm, ZF_ATHLETIC_CRIT);
-    addStat(getParam(self, "owner"), ZFStatRof, ZFStatTypePerm, ZF_ATHLETIC_ROF);
-    addStat(getParam(self, "owner"), ZFStatSpeed, ZFStatTypePerm, ZF_ATHLETIC_SPEED);
-}
-
-stock void AthleticPerk_updateCondStats(StringMap self) {
-}
-
-stock void AthleticPerk_doItemThrow(StringMap self, const char[] model, float force, any color) {
-}
-
-stock void AthleticPerk_onCharitableGiftTouched(StringMap self, int entity, int other) {
-}
-
 

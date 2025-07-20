@@ -1,91 +1,42 @@
-// Generated from D:\workspace\code\tf2\zf\src\python\perks\survival\SurvivorBasePerk.py
+// Generated from /mnt/d/workspace/code/tf2/zf/src/python/perks/survival/SurvivorBasePerk.py
 
 #if defined __SurvivorBasePerk_included
 #endinput
 #endif
 #define __SurvivorBasePerk_included
 
-#include "../../zf_util_base.inc"
+#define DP(%1) view_as<DataPackPos>(%1)
 #include "../BasePerk.inc"
-#include <adt_trie>
+#include <datapack>
 
-#define SURVIVOR_BASE_PERK_NAME "SurvivorUnselected"
-#define SURVIVOR_BASE_PERK_SHORTDESC "Unselected"
-#define SURVIVOR_BASE_PERK_DESC "Please select one perk to check info"
+methodmap SurvivorBasePerk < BasePerk {
+    public SurvivorBasePerk(int client) {
+        BasePerk sm_base = new BasePerk(client);
+        SurvivorBasePerk sm = view_as<SurvivorBasePerk>(sm_base);
 
-stock StringMap SurvivorBasePerk_new(int client) {
-    StringMap sm = BasePerk_new(client);
-    setParamString(sm, "test", "nooooo");
-    return sm;
+        sm.Position = DP(1);
+        sm.WriteString("nooooo");
+        sm.Position = DP(20);
+        sm.WriteFunction(SurvivorBasePerk_onCharitableGiftTouched);
+
+        return sm;
+    }
+
+    public void onCharitableGiftTouched(int entity, int other) {
+        this.Position = DP(20);
+        Function func = this.ReadFunction();
+        this.Reset();
+        Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(entity);
+        Call_PushCell(other);
+        Call_Finish();
+    }
 }
 
-stock void SurvivorBasePerk_getName(char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, SURVIVOR_BASE_PERK_NAME);
-}
 
-stock void SurvivorBasePerk_getShortdesc(char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, SURVIVOR_BASE_PERK_SHORTDESC);
+public void SurvivorBasePerk_onCharitableGiftTouched(SurvivorBasePerk _inst, int entity, int other) {
+    /**
+     * 当慈善家扔出的礼物被触摸时触发。
+     */
 }
-
-stock void SurvivorBasePerk_getDesc(char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, SURVIVOR_BASE_PERK_DESC);
-}
-
-stock void SurvivorBasePerk_onPlayerRunCmd(StringMap self, int buttons, int impulse, any vel, any angles, int weapon) {
-}
-
-stock void SurvivorBasePerk_onAmmoPickup(StringMap self, int pickup) {
-}
-
-stock void SurvivorBasePerk_onCalcIsAttackCritical(StringMap self) {
-}
-
-stock void SurvivorBasePerk_onCallForMedic(StringMap self) {
-}
-
-stock void SurvivorBasePerk_onGameFrame(StringMap self) {
-}
-
-stock void SurvivorBasePerk_onGraceEnd(StringMap self) {
-}
-
-stock void SurvivorBasePerk_onMedPickup(StringMap self, int pickup) {
-}
-
-stock void SurvivorBasePerk_onPeriodic(StringMap self) {
-}
-
-stock void SurvivorBasePerk_onPlayerDeath(StringMap self, int victim, int killer, int assist, int inflictor, int damagetype) {
-}
-
-stock void SurvivorBasePerk_onPlayerSpawn(StringMap self) {
-}
-
-stock void SurvivorBasePerk_onRemove(StringMap self) {
-}
-
-stock void SurvivorBasePerk_onSetTransmit(StringMap self, int entity, int client) {
-}
-
-stock void SurvivorBasePerk_onTakeDamage(StringMap self, int victim, int attacker, int inflictor, float damage, int damagetype) {
-}
-
-stock void SurvivorBasePerk_onTakeDamagePost(StringMap self, int victim, int attacker, int inflictor, float damage, int damagetype) {
-}
-
-stock void SurvivorBasePerk_onTouch(StringMap self, int toucher, int touchee) {
-}
-
-stock void SurvivorBasePerk_updateClientPermStats(StringMap self) {
-}
-
-stock void SurvivorBasePerk_updateCondStats(StringMap self) {
-}
-
-stock void SurvivorBasePerk_doItemThrow(StringMap self, const char[] model, float force, any color) {
-}
-
-stock void SurvivorBasePerk_onCharitableGiftTouched(StringMap self, int entity, int other) {
-}
-
 

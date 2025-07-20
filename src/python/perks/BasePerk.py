@@ -6,8 +6,10 @@ class BasePerk:
     __NAME__ = "Unselected"
     __SHORTDESC__ = "Unselected"
     __DESC__ = "Please select one perk to check info"
+    client: int = -1
+    test: str = "no"
     def __init__(self, client: int):
-        self.owner = client
+        self.client = client
         self.test = "orrrrr"
 
     # Event Handlers
