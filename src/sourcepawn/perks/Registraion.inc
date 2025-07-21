@@ -1,4 +1,4 @@
-// Generated from D:\workspace\code\tf2\zf\src\python\perks\Registraion.py
+// Generated from /mnt/d/workspace/code/tf2/zf/src/python/perks/Registraion.py
 
 #if defined __Registraion_included
 #endinput
@@ -6,19 +6,18 @@
 #define __Registraion_included
 
 #include "../zf_perk.inc"
-#include "../zf_util_base.inc"
 #include "survival/AthleticPerk.inc"
 #include "survival/SurvivorBasePerk.inc"
 #include "zombie/ZombieBasePerk.inc"
-#include <adt_trie>
+#include <datapack>
 
 
-stock void registerSurvivorPerks() {
+public void registerSurvivorPerks() {
     RegisterSurvivorPerk(SurvivorBasePerk);
     RegisterSurvivorPerk(AthleticPerk);
 }
 
-stock void registerZombiePerks() {
+public void registerZombiePerks() {
     RegisterZombiePerk(ZombieBasePerk);
 }
 

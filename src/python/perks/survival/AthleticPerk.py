@@ -13,9 +13,8 @@ class AthleticPerk(SurvivorBasePerk):
     __DESC__ = "Faster movement and ROF!!"
     def __init__(self, client: int):
         super().__init__(client)
-        self.test = "okkk"
 
-    def updateClientPermStats(self):
+    def updateClientPermStats(self) -> None:
         addStat(self.client, ZFStat.ZFStatAtt, ZFStatType.ZFStatTypePerm, ZF_ATHLETIC_ATTACK)
         addStat(self.client, ZFStat.ZFStatCrit, ZFStatType.ZFStatTypePerm, ZF_ATHLETIC_CRIT)
         addStat(self.client, ZFStat.ZFStatRof, ZFStatType.ZFStatTypePerm, ZF_ATHLETIC_ROF)

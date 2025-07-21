@@ -5,7 +5,6 @@
 #endif
 #define __test_included
 
-#define DP(%1) view_as<DataPackPos>(%1)
 #include <datapack>
 
 methodmap Person < DataPack {
@@ -13,10 +12,10 @@ methodmap Person < DataPack {
         DataPack sm_base = new DataPack();
         Person sm = view_as<Person>(sm_base);
 
-        sm.Position = DP(2);
-        sm.WriteString(name);
         sm.Position = DP(0);
         sm.WriteCell(health);
+        sm.Position = DP(2);
+        sm.WriteString(name);
         sm.Position = DP(3);
         sm.WriteFunction(Person_speak);
         sm.Position = DP(4);
@@ -56,21 +55,27 @@ methodmap Person < DataPack {
         this.WriteString(value);
     }
 
-    public void speak() {
+    public any speak() {
+        any __retval;
         this.Position = DP(3);
         Function func = this.ReadFunction();
         this.Reset();
         Call_StartFunction(INVALID_HANDLE, func);
-        Call_Finish();
+        Call_PushCell(this);
+        Call_Finish(__retval);
+        return __retval;
     }
 
-    public void take_damage(int amount) {
+    public any take_damage(int amount) {
+        any __retval;
         this.Position = DP(4);
         Function func = this.ReadFunction();
         this.Reset();
         Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
         Call_PushCell(amount);
-        Call_Finish();
+        Call_Finish(__retval);
+        return __retval;
     }
 }
 
@@ -97,13 +102,21 @@ methodmap Peter < Person {
     }
 }
 
+stock Person Person_new(char[] name, int health) {
+    return new Person(name, health);
+}
 
-public void Person_speak(Person _inst) {
+stock Person Peter_new() {
+    return new Peter();
+}
+
+
+public any Person_speak(Person _inst) {
     char buffer[256];
     FormatEx(buffer, sizeof(buffer), "Hello, my name is %s", __buf_name); PrintToServer(buffer);
 }
 
-public void Person_take_damage(Person _inst, int amount) {
+public any Person_take_damage(Person _inst, int amount) {
     char buffer[256];
     _inst.health -= amount;
     if ((_inst.health <= 0)) {
@@ -112,7 +125,7 @@ public void Person_take_damage(Person _inst, int amount) {
     }
 }
 
-public void Peter_speak(Peter _inst) {
+public any Peter_speak(Peter _inst) {
     char buffer[256];
     FormatEx(buffer, sizeof(buffer), "I'm Peter, and I'm a %s", __buf_occupation); PrintToServer(buffer);
 }

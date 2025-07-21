@@ -1347,7 +1347,7 @@ stock void applyDamageRadial(
 }
 
 // StringMap Function
-
+#define DP(%1) view_as<DataPackPos>(%1)
 public int getParam(StringMap self, const char[] key) {
     int value;
     self.GetValue(key, value);

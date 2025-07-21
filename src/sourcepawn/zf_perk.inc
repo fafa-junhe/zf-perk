@@ -18,6 +18,10 @@ StringMap g_SurPerkRegistry;
 ArrayList g_ZomPerkTypes;
 StringMap g_ZomPerkRegistry;
 
+typedef PerkCreator = function BasePerk (int client);
+ArrayList g_SurPerkCreators;
+ArrayList g_ZomPerkCreators;
+
 
 #include "perks/Registraion.inc"
 #include "perks/perk_structs.inc"
@@ -39,7 +43,7 @@ int zf_perkAlphaMaster[MAXPLAYERS+1]; // 记录每个僵尸的主控者（零号
 #define ZF_PERK_NONE            0
   
 
-StringMap g_hPerks[MAXPLAYERS+1];
+BasePerk g_hPerks[MAXPLAYERS+1];
 
 
 
@@ -109,6 +113,9 @@ Handle zf_cvCripple;
 // Perk Registration
 //
 ////////////////////////////////////////////////////////////
+
+
+
 stock void GetPerkInfoString(ArrayList typeList, int index, const char[] key, char[] buffer, int maxLen)
 {
     if (index < 0 || index >= typeList.Length)
@@ -149,8 +156,10 @@ public void perkInit()
   LogMessage("[ZF DEBUG] perkInit: Starting perk system initialization.");
   g_SurPerkTypes = new ArrayList();
   g_SurPerkRegistry = new StringMap();
+  g_SurPerkCreators = new ArrayList();
   g_ZomPerkTypes = new ArrayList();
   g_ZomPerkRegistry = new StringMap();
+  g_ZomPerkCreators = new ArrayList();
   registerSurvivorPerks();
   registerZombiePerks();
   
@@ -699,12 +708,12 @@ stock void resetClient(int client)
   removeItems(client);
 
   // New Perk Object
-  // if (g_hPerks[client] != null)
-  // {
-  //     g_hPerks[client].onRemove();
-  //     delete g_hPerks[client];
-  //     g_hPerks[client] = null;
-  // }
+  if (g_hPerks[client] != null)
+  {
+      g_hPerks[client].onRemove();
+      delete g_hPerks[client];
+      g_hPerks[client] = null;
+  }
 }
 
 stock void resetClientStats(int client)
@@ -1027,10 +1036,12 @@ Handle perk_buildSurPerkListMenu()
     LogMessage("[ZF DEBUG] perk_buildSurPerkListMenu: Found %d survivor perks to add.", perkCount);
     for(int i = 0; i < perkCount; i++)
     {
-      char name[64], shortDesc[128];
+      char name[128], shortDesc[128];
       GetSurPerkName(i, name, sizeof(name));
       GetSurPerkShortDesc(i, shortDesc, sizeof(shortDesc));
-      AddMenuItem(menu, shortDesc, name);
+      StrCat(name, sizeof(name), " - ");
+      StrCat(name, sizeof(name), shortDesc);
+      AddMenuItem(menu, name, name);
     }
   }
   else
@@ -1076,10 +1087,12 @@ Handle perk_buildZomPerkListMenu()
     LogMessage("[ZF DEBUG] perk_buildZomPerkListMenu: Found %d zombie perks to add.", perkCount);
     for(int i = 0; i < perkCount; i++)
     {
-      char name[64], shortDesc[128];
+      char name[128], shortDesc[128];
       GetZomPerkName(i, name, sizeof(name));
       GetZomPerkShortDesc(i, shortDesc, sizeof(shortDesc));
-      AddMenuItem(menu, name, shortDesc);
+      StrCat(name, sizeof(name), " - ");
+      StrCat(name, sizeof(name), shortDesc);
+      AddMenuItem(menu, name, name);
     }
 
   }
@@ -1395,9 +1408,12 @@ stock void updateClientPermStats(int client)
 {
   resetClientStatType(client, ZFStatTypePerm);
 
-  // if (g_hPerks[client] != null) {
-  //   g_hPerks(client).updateClientPermStats();
-  // }
+  if (g_hPerks[client] != null) {
+    char buffer[64];
+    g_hPerks[client].getName(buffer, sizeof(buffer));
+    LogMessage("[ZF] client %d, choose %s perk, execute updateclientpermstats", client, buffer);
+    g_hPerks[client].updateClientPermStats();
+  }
   //
   // Apply permanent bonuses for survivors.
   // (Survivors must be alive)
@@ -1475,9 +1491,9 @@ stock void updateCondStats()
   {   
     // 修复: 移除了未使用的变量 thisSur
     int thisSur = validSurs[i];
-    // if (g_hPerks[thisSur] != null) {
-    //     g_hPerks[thisSur].updateCondStats();
-    // }
+    if (g_hPerks[thisSur] != null) {
+        g_hPerks[thisSur].updateCondStats();
+    }
     
   }
    
@@ -1485,9 +1501,9 @@ stock void updateCondStats()
   for(i = 0; i < validZomCount; i++)
   {
     int thisZom = validZoms[i];
-    // if (g_hPerks[thisZom] != null) {
-    //     g_hPerks[thisZom].updateCondStats();
-    // }
+    if (g_hPerks[thisZom] != null) {
+        g_hPerks[thisZom].updateCondStats();
+    }
     
     // Hide auras on cloaked zombies.
     isCloaked(thisZom) ? hideAura(thisZom) : showAura(thisZom);
@@ -1568,10 +1584,10 @@ public void perk_OnPeriodic() // 1Hz
   //
   for(int i = 1; i <= MaxClients; i++)
   {
-    // if(g_hPerks[i] != null && IsClientInGame(i) && IsPlayerAlive(i))
-    // {
-    //   g_hPerks[i].onPeriodic();
-    // }
+    if(g_hPerks[i] != null && IsClientInGame(i) && IsPlayerAlive(i))
+    {
+      g_hPerks[i].onPeriodic();
+    }
   }
 
   //
@@ -1580,7 +1596,6 @@ public void perk_OnPeriodic() // 1Hz
   updateConds();
   updateTempStats();
   updateCondStats(); // This now only handles legacy perks
-    
   //
   // Legacy condition application
   //
@@ -1629,10 +1644,10 @@ public void perk_OnGameFrame()
 
   for(int i = 1; i <= MaxClients; i++)
   {
-    // if(g_hPerks[i] != null && IsClientInGame(i) && IsPlayerAlive(i))
-    // {
-    //   g_hPerks[i].onGameFrame();
-    // }
+    if(g_hPerks[i] != null && IsClientInGame(i) && IsPlayerAlive(i))
+    {
+      g_hPerks[i].onGameFrame();
+    }
   }
   
   for(int i = 1; i <= MaxClients; i++)
@@ -1695,12 +1710,12 @@ public void perk_OnClientConnect(int client)
 public void perk_OnClientDisconnect(int client)
 {
   // 删除Perk对象
-  // if (g_hPerks[client] != null)
-  // {
-  //   g_hPerks[client].onRemove();
-  //   delete g_hPerks[client];
-  //   g_hPerks[client] = null;
-  // }
+  if (g_hPerks[client] != null)
+  {
+    g_hPerks[client].onRemove();
+    delete g_hPerks[client];
+    g_hPerks[client] = null;
+  }
 
   resetClient(client);
 }
@@ -1746,9 +1761,9 @@ public void perk_OnGraceEnd()
 {
   for(int i = 1; i <= MaxClients; i++)
   {
-    // if (g_hPerks[i] != null) {
-    //     g_hPerks[i].onGraceEnd();
-    // }
+    if (g_hPerks[i] != null) {
+        g_hPerks[i].onGraceEnd();
+    }
     //
     // Handle survivor logic.
     // Survivors must be alive, otherwise they will respawn as a zombie.
@@ -1773,12 +1788,12 @@ public void perk_OnRoundEnd()
   // Destroy all perk objects
   for (int i = 1; i <= MaxClients; i++)
   {
-    // if (g_hPerks[i] != null)
-    // {
-    //   g_hPerks[i].onRemove();
-    //   delete g_hPerks[i];
-    //   g_hPerks[i] = null;
-    // }
+    if (g_hPerks[i] != null)
+    {
+      g_hPerks[i].onRemove();
+      delete g_hPerks[i];
+      g_hPerks[i] = null;
+    }
   }
   
   resetAllClients();
@@ -1803,9 +1818,9 @@ public void perk_OnEntitySpawn(int entity)
 
 public Action perk_OnSetTransmit(int entity, int client)
 {
-  // if (g_hPerks[client] != null) {
-  //   g_hPerks[client].onSetTransmit(entity, client);
-  // }
+  if (g_hPerks[client] != null) {
+    g_hPerks[client].onSetTransmit(entity, client);
+  }
   if(isSur(client))
   {
     
@@ -1871,9 +1886,9 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 {
   int prevButtons = buttons;
 
-  // if (g_hPerks[client] != null) {
-  //   g_hPerks[client].onPlayerRunCmd(buttons, impulse, vel, angles, weapon);
-  // }
+  if (g_hPerks[client] != null) {
+    g_hPerks[client].onPlayerRunCmd(buttons, impulse, vel, angles, weapon);
+  }
   
   if(isSur(client))
   {
@@ -1896,9 +1911,9 @@ public void perk_OnCalcIsAttackCritical(int client)
   
   if(validLivingSur(client))
   {
-    // if (g_hPerks[client] != null) {
-    //   g_hPerks[client].onCalcIsAttackCritical();
-    // }
+    if (g_hPerks[client] != null) {
+      g_hPerks[client].onCalcIsAttackCritical();
+    }
   }
   
   // Handle general RoF logic.
@@ -1968,9 +1983,9 @@ public Action perk_OnFenceTakeDamage(int victim, int &attacker, int &inflictor, 
 
 public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
-  // if (g_hPerks[victim] != null) {
-  //   g_hPerks[victim].onTakeDamage(victim, attacker, inflictor, damage, damagetype);
-  // }
+  if (g_hPerks[victim] != null) {
+    g_hPerks[victim].onTakeDamage(victim, attacker, inflictor, damage, damagetype);
+  }
   // 修复: 移除了未使用的变量
   // int localAttAdjust = 0;
   // int localDefAdjust = 0;
@@ -2014,9 +2029,9 @@ public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float
 
 public void perk_OnTakeDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype)
 {
-  // if (g_hPerks[victim] != null) {
-  //   g_hPerks[victim].onTakeDamagePost(victim, attacker, inflictor, damage, damagetype);
-  // }
+  if (g_hPerks[victim] != null) {
+    g_hPerks[victim].onTakeDamagePost(victim, attacker, inflictor, damage, damagetype);
+  }
 //   // DEBUG
 //   char inflictorClass[32];
 //   GetEdictClassname(inflictor, inflictorClass, sizeof(inflictorClass));
@@ -2042,9 +2057,9 @@ public void perk_OnTouch(int toucher, int touchee)
 {
   if(validLivingZom(toucher) && validLivingSur(touchee))
   {
-    // if (g_hPerks[toucher] != null) {
-    //   g_hPerks[toucher].onTouch(toucher, touchee);
-    // }
+    if (g_hPerks[toucher] != null) {
+      g_hPerks[toucher].onTouch(toucher, touchee);
+    }
   }
 }
 
@@ -2206,28 +2221,63 @@ public void perk_OnPlayerSpawn(int client)
     //
     if (perkChange)
     {
-            if (g_hPerks[client] != null)
+        if (g_hPerks[client] != null)
+        {
+            g_hPerks[client].onRemove();
+            delete g_hPerks[client];
+            g_hPerks[client] = null;
+        }
+
+        if (nextPerk != ZF_PERK_NONE)
+        {
+            PerkCreator creator;
+            if (isSur(client))
             {
-                dispatch_onRemove(client);
-                delete g_hPerks[client];
-                g_hPerks[client] = null;
+                creator = view_as<PerkCreator>(g_SurPerkCreators.Get(nextPerk));
+            }
+            else
+            {
+                creator = view_as<PerkCreator>(g_ZomPerkCreators.Get(nextPerk));
             }
 
-            // 使用宏来创建新的perk对象
-            char perkName[64];
-            if (isSur(client)) GetSurPerkName(nextPerk, perkName, sizeof(perkName));
-            else if (isZom(client)) GetZomPerkName(nextPerk, perkName, sizeof(perkName));
-            
-            // 调用我们新的创建宏
-            CREATE_PERK_OBJECT(client, perkName);
-    }
-    dispatch_onPlayerSpawn(client);
+            if (creator != null)
+            {
+                BasePerk perk;
+                Call_StartFunction(INVALID_HANDLE, creator);
+                Call_PushCell(client);
+                Call_Finish(perk);
+                g_hPerks[client] = perk;
+                char buffer[64];
+                perk.getName(buffer, sizeof(buffer));
+                LogMessage("[ZF] client %d, choose %s perk", client, buffer);
 
-    // Call perk's onSpawn method
-    // if (g_hPerks[client] != null)
-    // {
-    //     g_hPerks[client].onPlayerSpawn();
-    // }
+                // FX
+                removeAura(client);
+                removeIcon(client);
+                removeItems(client);
+                fxSetClientColor(client, 255, 255, 255, 255);
+                setGlow(client, false);
+                      
+                // Implement new bonuses and effects.
+                resetClientStats(client);
+                resetClientConds(client);
+                updateClientPermStats(client);
+                updateClientPermEffects(client);
+            }
+            else
+            {
+                LogError("[ZF] Failed to create perk instance for client %d with perk index %d. Creator function is null.", client, nextPerk);
+                g_hPerks[client] = new BasePerk(client); // Fallback to BasePerk
+            }
+        }
+    }
+
+    
+    // Call the spawn event on the new/existing perk
+    if (g_hPerks[client] != null)
+    {
+        g_hPerks[client].onPlayerSpawn();
+    }
     
     // Reset legacy state
     zf_lastAttack[client] = 0;
@@ -2249,17 +2299,17 @@ public void perk_OnPlayerDeath(int victim, int killer, int assist, int inflictor
   
   if(validClient(victim))
   {
-    // if (g_hPerks[victim] != null)
-    // {
-    //     g_hPerks[victim].onPlayerDeath(victim, killer, assist, inflictor, damagetype);
-    // }
-    // // Destroy perk object
-    // if (g_hPerks[victim] != null)
-    // {
-    //     g_hPerks[victim].onRemove();
-    //     delete g_hPerks[victim];
-    //     g_hPerks[victim] = null;
-    // }
+    if (g_hPerks[victim] != null)
+    {
+        g_hPerks[victim].onPlayerDeath(victim, killer, assist, inflictor, damagetype);
+    }
+    // Destroy perk object on death
+    if (g_hPerks[victim] != null)
+    {
+        g_hPerks[victim].onRemove();
+        delete g_hPerks[victim];
+        g_hPerks[victim] = null;
+    }
     
     //
     // Set last killer.
@@ -2329,9 +2379,9 @@ public Action perk_OnCallForMedic(int client)
 {
   if(validLivingSur(client))
   {
-    // if (g_hPerks[client] != null) {
-    //   g_hPerks[client].onCallForMedic();
-    // }
+    if (g_hPerks[client] != null) {
+      g_hPerks[client].onCallForMedic();
+    }
 
     return Plugin_Handled;
   }
@@ -2343,9 +2393,9 @@ public void perk_OnAmmoPickup(int client, int pickup)
 {
   if(validLivingSur(client))
   {
-    // if (g_hPerks[client] != null) {
-    //   g_hPerks[client].onAmmoPickup(pickup);
-    // }
+    if (g_hPerks[client] != null) {
+      g_hPerks[client].onAmmoPickup(pickup);
+    }
   }
 }
 
@@ -2353,9 +2403,9 @@ public void perk_OnMedPickup(int client, int pickup)
 {
   if(validLivingSur(client))
   {
-    // if (g_hPerks[client] != null) {
-    //   g_hPerks[client].onMedPickup(pickup);
-    // }
+    if (g_hPerks[client] != null) {
+      g_hPerks[client].onMedPickup(pickup);
+    }
     // Handle general survivor logic
     // subCond(client, ZFCondPoisoned, ZF_POISON_HEAL_MEDPACK);
     

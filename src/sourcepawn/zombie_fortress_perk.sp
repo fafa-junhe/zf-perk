@@ -302,7 +302,6 @@ public void OnTouch(int entity, int other)
 public void OnPreThinkPost(int client)
 {
     if (!zf_bEnabled) return;
-
     //
     // Handle speed bonuses.
     //

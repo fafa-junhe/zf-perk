@@ -11,6 +11,20 @@ def camel_to_snake(name: str) -> str:
     name = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", name)
     return re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name).upper()
 
+def generate_defines(tree: ast.Module) -> str:
+    """从AST的顶层提取符合命名约定的常量赋值作为 #define。"""
+    defines = ""
+    visitor = PawnExpressionVisitor(None, {}) # A simple visitor is enough
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+                var_name = node.targets[0].id
+                # Convention: ALL_CAPS_WITH_UNDERSCORES are constants
+                if var_name.isupper() and '_' in var_name:
+                    value_str = visitor.visit(node.value)
+                    defines += f"#define {var_name} {value_str}\n"
+    return defines + "\n" if defines else ""
+
 # 将 src/python 添加到 sys.path 以便导入
 sys.path.insert(0, str(Path("src/python").resolve()))
 
@@ -21,14 +35,15 @@ SOURCEPAWN_DIR = ROOT_DIR / "src" / "sourcepawn"
 OUTPUT_DIR = ROOT_DIR / "src" / "sourcepawn"
 PERKS_OUTPUT_DIR = OUTPUT_DIR / "perks"
 
-
 # --- 类型映射 ---
 TYPE_MAP = {
     "int": "int",
     "float": "float",
     "str": "char[]",
     "bool": "bool",
-    "void": "void"
+    "void": "void",
+    "None": "void",  # Add the mapping for Python's 'None' type hint
+    "list[float]": "float[]"
 }
 
 def map_type(py_type: str) -> str:
@@ -71,35 +86,35 @@ class PawnExpressionVisitor(ast.NodeVisitor):
 
     def visit_Attribute(self, node: ast.Attribute):
         """
-        *** UPDATED: Handles attributes that need getter calls. ***
+        *** UPDATED: Now handles enum-style access correctly. ***
         """
-        # Check if this attribute access is part of an assignment target
-        # A bit of a hack to determine context: ast.Store is for writing.
-        is_write_context = isinstance(node.ctx, ast.Store)
+        value_str = self.visit(node.value)
         
-        sp_type = self._get_sp_type(node.attr)
+        # --- ENUM SIMPLIFICATION LOGIC ---
+        # If the attribute name starts with the object/class name,
+        # it's likely an enum access like `MyEnum.MyEnumMember`.
+        # In SourcePawn, we just want `MyEnumMember`.
+        if node.attr.startswith(value_str):
+            return node.attr
 
-        # If it's a string/array, we need to handle it specially.
+        # --- Standard attribute access for everything else ---
+        # This handles cases like `_inst.health` or method calls.
+        # We still need the logic for string/array getters from before.
+        sp_type = self._get_sp_type(node.attr)
+        is_write_context = isinstance(node.ctx, ast.Store)
+
         if sp_type and (sp_type == 'char[]' or '[]' in sp_type):
-            instance_str = self.visit(node.value)
             capitalized_name = node.attr[0].upper() + node.attr[1:]
-            
             if is_write_context:
-                # Return the setter call structure
-                # The visit_Assign method will handle providing the value.
-                return f"{instance_str}.set{capitalized_name}"
+                return f"{value_str}.set{capitalized_name}"
             else:
-                # This is a read. We can't return a value directly.
-                # We generate a buffer, call the getter, and return the buffer name.
                 buffer_name = f"__buf_{node.attr}"
                 getter_name = f"get{capitalized_name}"
-                
-                # Add setup code to the list
                 self.pre_expression_code.append(f"char {buffer_name}[256];")
-                self.pre_expression_code.append(f"{instance_str}.{getter_name}({buffer_name}, sizeof({buffer_name}));")
-                
-                # Return the name of the buffer that now holds the value
+                self.pre_expression_code.append(f"{value_str}.{getter_name}({buffer_name}, sizeof({buffer_name}));")
                 return buffer_name
+                
+        return f"{value_str}.{node.attr}"
         
         # For simple properties (int, bool, float), direct access is fine.
         return f"{self.visit(node.value)}.{node.attr}"
@@ -127,7 +142,8 @@ class PawnExpressionVisitor(ast.NodeVisitor):
         args = [self.visit(arg) for arg in node.args]
 
         if isinstance(node.func, ast.Name) and node.func.id in self.class_db:
-            return f"new {callee_str}({', '.join(args)})"
+            # Instead of `new Class(...)`, we call the stock helper `Class_new(...)`
+            return f"{callee_str}_new({', '.join(args)})"
 
         return f"{callee_str}({', '.join(args)})"
 
@@ -170,31 +186,40 @@ class PawnClassGenerator:
     def __init__(self, class_db: dict):
         self.class_db = class_db
         self.expression_visitor = PawnExpressionVisitor(None, class_db)
+        self.source_lines = []
 
+    def _generate_dunder_global_function(self, class_name: str, assign_node: ast.Assign) -> str:
+        """
+        *** NEW: Generates the global function for a dunder-getter. ***
+        e.g., public void BasePerk_getName(...) { strcopy(...); }
+        """
+        dunder_name = assign_node.targets[0].id
+        method_name = "get" + "".join(p.capitalize() for p in dunder_name.strip("_").split("_"))
+        
+        value_str = '""' # Default to empty string
+        if isinstance(assign_node.value, ast.Constant) and isinstance(assign_node.value.value, str):
+            value_str = f'"{assign_node.value.value}"'
+
+        # Signature must match what a string-returning method stub expects
+        signature = f"public void {class_name}_{method_name}({class_name} _inst, char[] buffer, int maxlen)"
+        
+        code = f"{signature} {{\n"
+        code += f"    strcopy(buffer, maxlen, {value_str});\n"
+        code += "}\n\n"
+        return code
+    
     def generate_for_class(self, class_name: str) -> tuple[str, str]:
         class_node, _ = self.class_db[class_name]
         base_name, _ = self._get_base_class_info(class_node)
 
-        # 1. *** NEW: Get the unified layout for both methods and properties ***
+        # 1. Get the unified layout
         class_layout = self._get_class_layout(class_name)
 
-        # 2. Generate constructor to initialize the DataPack
+        # 2. Generate constructor
         constructor_code = self._generate_constructor(class_name, class_layout)
 
-        # 3. Generate method stubs and property accessors
-        parent_layout = OrderedDict()
-        if base_name != "DataPack":
-            parent_layout = self._get_class_layout(base_name)
-        
-        members_code = ""
-        for name, info in class_layout.items():
-            if name in parent_layout:
-                continue # Inherited, no need to generate stub/accessor again
-            
-            if info['type'] == 'method':
-                members_code += self._generate_method_stub(info['node'], info['index'])
-            elif info['type'] == 'property':
-                members_code += self._generate_property_accessor(info['node'], info['index'])
+        # 3. Generate all member stubs and accessors
+        members_code = self._generate_members(class_name, class_layout)
 
         # 4. Assemble the methodmap
         methodmap_code = f"methodmap {class_name} < {base_name} {{\n"
@@ -202,13 +227,20 @@ class PawnClassGenerator:
         methodmap_code += members_code
         methodmap_code += "}\n"
 
-        # 5. Generate global functions for methods defined in *this* class
+        # 5. Generate global functions for methods and dunder-getters
         global_functions_code = ""
         for item in class_node.body:
             if isinstance(item, ast.FunctionDef) and not item.name.startswith("__"):
-                global_functions_code += self._generate_global_function(class_name, item)
+                global_functions_code += self._generate_global_function(item, class_name=class_name)
+            elif (isinstance(item, ast.Assign) and len(item.targets) == 1 and 
+                isinstance(item.targets[0], ast.Name) and
+                item.targets[0].id.startswith("__") and item.targets[0].id.endswith("__")):
+                global_functions_code += self._generate_dunder_global_function(class_name, item)
+        
+        # *** NEW: Generate the constructor helper function ***
+        constructor_helper_code = self._generate_constructor_helper(class_name)
 
-        return methodmap_code, global_functions_code
+        return methodmap_code, global_functions_code, constructor_helper_code
 
     def _get_base_class_info(self, class_node: ast.ClassDef) -> tuple[str, Path | None]:
         # ... (This function is unchanged) ...
@@ -221,42 +253,144 @@ class PawnClassGenerator:
 
     def _get_class_layout(self, class_name: str) -> OrderedDict:
         """
-        *** NEW: The core logic for layout management. ***
-        Recursively collects all members (properties and methods)
-        and assigns a unique DataPack index to each.
+        *** FINAL VERSION: Treats dunders as overridable methods. ***
+        Ensures properties are indexed before methods to create a stable layout.
         """
         class_node, _ = self.class_db[class_name]
-        
         layout = OrderedDict()
         
-        # First, inherit layout from parent
+        # Inherit layout from parent first
         base_name, _ = self._get_base_class_info(class_node)
         if base_name != "DataPack":
             layout = self._get_class_layout(base_name)
 
-        # Then, add/overwrite with members from the current class
+        # Pass 1: Add/overwrite properties from the current class
+        for item in class_node.body:
+            if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name):
+                name = item.target.id
+                member_info = {'type': 'property', 'node': item}
+                if name not in layout:
+                    new_index = len(layout)
+                    layout[name] = {**member_info, 'index': new_index}
+                else:
+                    # Overwriting, keep index but update info
+                    index = layout[name]['index']
+                    layout[name] = {**member_info, 'index': index}
+
+        # Pass 2: Add/overwrite methods from the current class
         for item in class_node.body:
             member_info = None
-            if isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name):
-                member_info = {'type': 'property', 'node': item}
-                name = item.target.id
+            name = ""
+
+            # Dunder assignments treated as methods
+            if (isinstance(item, ast.Assign) and len(item.targets) == 1 and
+                isinstance(item.targets[0], ast.Name) and
+                item.targets[0].id.startswith("__") and item.targets[0].id.endswith("__")):
+                
+                dunder_name = item.targets[0].id
+                method_name = "get" + "".join(p.capitalize() for p in dunder_name.strip("_").split("_"))
+                
+                fake_func_node = ast.FunctionDef(name=method_name, args=ast.arguments(args=[ast.arg(arg='self')], defaults=[], posonlyargs=[], kwonlyargs=[], kw_defaults=[]), body=[], decorator_list=[], returns=ast.Name(id='str'))
+                
+                member_info = {'type': 'method', 'node': fake_func_node, 'owner': class_name, 'dunder_source': item}
+                name = method_name
+
+            # Regular methods
             elif isinstance(item, ast.FunctionDef) and not item.name.startswith("__"):
                 member_info = {'type': 'method', 'node': item, 'owner': class_name}
                 name = item.name
 
             if member_info:
                 if name not in layout:
-                    # New member, assign a new index
                     new_index = len(layout)
                     layout[name] = {**member_info, 'index': new_index}
                 else:
-                    # Overwriting a member (e.g., a method), keep the index
-                    # but update the node and owner info.
+                    # Overwriting, keep index but update info
                     index = layout[name]['index']
                     layout[name] = {**member_info, 'index': index}
         
         return layout
 
+
+    def _generate_members(self, class_name: str, layout: OrderedDict) -> str:
+        """
+        *** NEW HELPER FUNCTION ***
+        Generates method stubs and all types of property accessors based on the layout.
+        """
+        code = ""
+        base_name, _ = self._get_base_class_info(self.class_db[class_name][0])
+        parent_layout = OrderedDict()
+        if base_name != "DataPack":
+            parent_layout = self._get_class_layout(base_name)
+        
+        for name, info in layout.items():
+            if name in parent_layout:
+                continue # Inherited member, no need to generate again.
+            
+            if info['type'] == 'method':
+                code += self._generate_method_stub(info['node'], info['index'])
+            elif info['type'] == 'property':
+                code += self._generate_property_accessor(info['node'], info['index'])
+            elif info['type'] == 'readonly_property':
+                # *** NEW: Call a dedicated generator for readonly properties ***
+                code += self._generate_readonly_property_accessor(info['node'])
+                
+        return code
+
+    def _generate_readonly_property_accessor(self, assign_node: ast.Assign) -> str:
+        """
+        *** NEW: Generates a getter-only method for a __dunder__ attribute. ***
+        """
+        dunder_name = assign_node.targets[0].id
+        prop_name = "".join(p.capitalize() for p in dunder_name.strip("_").split("_"))
+        getter_name = f"get{prop_name}"
+        
+        value_str = ""
+        if isinstance(assign_node.value, ast.Constant) and isinstance(assign_node.value.value, str):
+            value_str = f'"{assign_node.value.value}"'
+        else:
+            # If it's not a simple string, we can try to visit it, but it might be complex.
+            visitor = PawnExpressionVisitor(None, self.class_db)
+            value_str = visitor.visit(assign_node.value)
+
+        code = f"\n    public void {getter_name}(char[] buffer, int maxlen) {{\n"
+        code += f"        strcopy(buffer, maxlen, {value_str});\n"
+        code +=  "    }\n"
+        return code
+    
+    def _generate_constructor_helper(self, class_name: str) -> str:
+        """
+        Generates a stock factory function for creating an instance of the class.
+        e.g., stock BasePerk AthleticPerk_new(int client) { ... }
+        """
+        class_node, _ = self.class_db[class_name]
+        
+        # Determine the return type. It should be the base class if it exists,
+        # otherwise, it's the class itself.
+        base_name, _ = self._get_base_class_info(class_node)
+        return_type = base_name if base_name != "DataPack" else class_name
+
+        # Find the __init__ method to get its arguments.
+        init_node = next((item for item in class_node.body if isinstance(item, ast.FunctionDef) and item.name == "__init__"), None)
+
+        init_args_list = []
+        forwarded_args_list = []
+        if init_node:
+            # We can reuse our existing signature parser.
+            _, _, args_dict, _ = self._parse_function_signature(init_node)
+            for name, sp_type in args_dict.items():
+                init_args_list.append(f"{sp_type} {name}")
+                forwarded_args_list.append(name) # The names to pass to `new`
+        
+        args_str = ", ".join(init_args_list)
+        forwarded_args_str = ", ".join(forwarded_args_list)
+        
+        # Assemble the function.
+        code = f"stock {return_type} {class_name}_new({args_str}) {{\n"
+        code += f"    return new {class_name}({forwarded_args_str});\n"
+        code += "}\n\n"
+        
+        return code
     def _generate_constructor(self, class_name: str, layout: OrderedDict) -> str:
         """
         *** FINAL & CORRECTED VERSION ***
@@ -300,36 +434,43 @@ class PawnClassGenerator:
         code += f"        {class_name} sm = view_as<{class_name}>(sm_base);\n\n"
 
         # 3. *** Apply this class's specific modifications (overrides and new members) ***
-        visitor = PawnExpressionVisitor(None, self.class_db)
+        visitor = PawnExpressionVisitor(self.class_db, layout)
+        init_assignments = {}
         if init_node:
-            # Process assignments like 'self.test = "okkk"'
+            # Pre-scan __init__ for property assignments to get their values
             for stmt in init_node.body:
                 if isinstance(stmt, ast.Assign) and len(stmt.targets) == 1 and \
-                isinstance(stmt.targets[0], ast.Attribute) and \
-                isinstance(stmt.targets[0].value, ast.Name) and stmt.targets[0].value.id == 'self':
-                    
+                   isinstance(stmt.targets[0], ast.Attribute) and \
+                   isinstance(stmt.targets[0].value, ast.Name) and stmt.targets[0].value.id == 'self':
                     attr_name = stmt.targets[0].attr
-                    # Find the layout info for this attribute to get its index and type
-                    if attr_name in layout:
-                        info = layout[attr_name]
-                        index = info['index']
-                        value_str = visitor.visit(stmt.value)
-                        
-                        if info['type'] == 'property':
-                            _, sp_type = self._get_type_info(info['node'].annotation)
-                            code += f"        sm.Position = DP({index});\n"
-                            if sp_type == "int" or sp_type == "bool": code += f"        sm.WriteCell({value_str});\n"
-                            elif sp_type == "float": code += f"        sm.WriteFloat({value_str});\n"
-                            elif sp_type == "char[]": code += f"        sm.WriteString({value_str});\n"
-                            else: code += f"        sm.WriteCell({value_str});\n"
+                    if attr_name in layout and layout[attr_name]['type'] == 'property':
+                         init_assignments[attr_name] = stmt.value
 
-        # Override any methods defined in this class
+        # Iterate through the unified layout to write properties and methods in order
         for name, info in layout.items():
+            index = info['index']
+            
+            # Handle methods defined/overridden in the current class
             if info['type'] == 'method' and info.get('owner') == class_name:
-                index = info['index']
                 func_name = f"{class_name}_{name}"
                 code += f"        sm.Position = DP({index});\n"
                 code += f"        sm.WriteFunction({func_name});\n"
+            
+            # Handle properties that are assigned in __init__
+            elif info['type'] == 'property' and name in init_assignments:
+                value_node = init_assignments[name]
+                value_str = visitor.visit(value_node)
+                _, sp_type = self._get_type_info(info['node'].annotation)
+                
+                code += f"        sm.Position = DP({index});\n"
+                if sp_type == "int" or sp_type == "bool":
+                    code += f"        sm.WriteCell({value_str});\n"
+                elif sp_type == "float":
+                    code += f"        sm.WriteFloat({value_str});\n"
+                elif sp_type == "char[]":
+                    code += f"        sm.WriteString({value_str});\n"
+                else:
+                    code += f"        sm.WriteCell({value_str});\n"
 
         code += f"\n        return sm;\n"
         code += f"    }}\n"
@@ -403,13 +544,28 @@ class PawnClassGenerator:
         return py_type_str, sp_type
 
     def _generate_method_stub(self, func_node: ast.FunctionDef, index: int) -> str:
-        """为 methodmap 生成方法存根（包装器）"""
-        return_type, args_list, _ = self._parse_function_signature(func_node)
-        args_str = ", ".join(f"{atype} {aname}" for aname, atype in args_list.items())
+        """
+        *** FINAL & CORRECTED VERSION of the method stub generator. ***
+        """
+        py_return_type, sp_return_type, args_list, has_self = self._parse_function_signature(func_node)
         
-        code = f"\n    public {return_type} {func_node.name}({args_str}) {{\n"
-        if return_type != "void":
-            code += f"        {return_type} __retval;\n"
+        stub_args = [f"{atype} {aname}" for aname, atype in args_list.items()]
+        
+        # KEY FIX: Handle string/array return types by modifying the signature
+        if sp_return_type == "char[]" or "[]" in sp_return_type:
+            stub_return_type = "void"
+            stub_args.append(f"{sp_return_type} buffer")
+            stub_args.append("int maxlen")
+        else:
+            stub_return_type = sp_return_type
+
+        args_str = ", ".join(stub_args)
+        
+        code = f"\n    public {stub_return_type} {func_node.name}({args_str}) {{\n"
+        
+        # Prepare for return value if not void
+        if stub_return_type != "void":
+            code += f"        {stub_return_type} __retval;\n"
         
         code += f"        this.Position = DP({index});\n"
         code += f"        Function func = this.ReadFunction();\n"
@@ -417,7 +573,11 @@ class PawnClassGenerator:
         
         code += f"        Call_StartFunction(INVALID_HANDLE, func);\n"
         
-        # Push arguments to the call
+        # Push 'self'/'_inst' argument
+        if has_self:
+            code += f"        Call_PushCell(this);\n"
+
+        # Push regular arguments
         for arg_name, arg_type in args_list.items():
             if arg_type == "int" or arg_type == "bool" or arg_type == "any":
                 code += f"        Call_PushCell({arg_name});\n"
@@ -428,32 +588,52 @@ class PawnClassGenerator:
             else: # Arrays
                 code += f"        Call_PushArray({arg_name}, sizeof({arg_name}));\n"
 
-        if return_type != "void":
-             code += f"        Call_Finish(__retval);\n"
-             code += f"        return __retval;\n"
+        if sp_return_type == "char[]" or "[]" in sp_return_type:
+            # We use SM_PARAM_COPYBACK to tell the VM to copy data back into our buffer
+            code += f"        Call_PushStringEx(buffer, maxlen, SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);\n"
+            code += f"        Call_PushCell(maxlen);\n"
+            code += f"        Call_Finish();\n" # No return value needed
         else:
-             code += f"        Call_Finish();\n"
+            if stub_return_type != "void":
+                 code += f"        Call_Finish(__retval);\n"
+                 code += f"        return __retval;\n"
+            else:
+                 code += f"        Call_Finish();\n"
 
         code += f"    }}\n"
         return code
     
-    def _generate_global_function(self, class_name: str, func_node: ast.FunctionDef) -> str:
+    def _generate_global_function(self, func_node: ast.FunctionDef, class_name: str | None = None) -> str:
         """
-        *** UPDATED: Generates global functions with a safe instance parameter name. ***
+        *** UPDATED: Generates global functions for class methods OR standalone functions. ***
         """
-        return_type, args_list, has_self = self._parse_function_signature(func_node)
+        # Correctly unpack all four return values.
+        # We use '_' to ignore the python return type string, which we don't need here.
+        _, sp_return_type, args_list, has_self = self._parse_function_signature(func_node)
         
-        # *** KEY CHANGE: Use a safe parameter name instead of 'this' ***
         instance_param_name = "_inst"
         
         global_args = []
         if has_self:
-            # The first parameter is the object instance itself
-            global_args.append(f"{class_name} {instance_param_name}")
+            if not class_name:
+                # This is an error or unexpected. Standalone functions shouldn't have 'self'.
+                # We'll skip adding it to the signature and the visitor won't replace it.
+                pass
+            else:
+                global_args.append(f"{class_name} {instance_param_name}")
         
+        # The return type of the global function is based on the SourcePawn type
+        # and must handle string/array buffers.
+        global_return_type = sp_return_type
+        if sp_return_type == "char[]" or "[]" in sp_return_type:
+            global_return_type = "void" # Functions that "return" strings actually return void
+            global_args.append(f"{sp_return_type} buffer")
+            global_args.append("int maxlen")
+
         global_args.extend([f"{atype} {aname}" for aname, atype in args_list.items()])
         
-        signature = f"public {return_type} {class_name}_{func_node.name}({', '.join(global_args)})"
+        func_prefix = f"{class_name}_" if class_name else ""
+        signature = f"public {global_return_type} {func_prefix}{func_node.name}({', '.join(global_args)})"
         
         code = f"{signature} {{\n"
         
@@ -478,8 +658,14 @@ class PawnClassGenerator:
             body_stmts = func_node.body[1:]
 
         # Create a visitor with the correct context for this function
-        class_layout = self._get_class_layout(class_name)
-        self.expression_visitor = PawnExpressionVisitor(self.class_db, class_layout, self_replacement=instance_param_name)
+        class_layout = None
+        self_replacement = None
+        if class_name:
+            class_layout = self._get_class_layout(class_name)
+            if has_self:
+                self_replacement = instance_param_name
+        
+        self.expression_visitor = PawnExpressionVisitor(self.class_db, class_layout, self_replacement=self_replacement)
         
         known_locals = set(args_list.keys())
         code += self._convert_function_body(body_stmts, "    ", known_locals)
@@ -491,18 +677,21 @@ class PawnClassGenerator:
         for stmt in body:
             code += self._convert_statement(stmt, indent, known_locals)
         return code
+    
     def _parse_function_signature(self, node: ast.FunctionDef) -> tuple[str, dict, bool]:
         """解析函数签名，返回 (返回类型, 参数字典, 是否有self)"""
         # 1. Return Type
-        return_type = "void"
-        if node.returns:
-            try:
-                py_type_str = ast.unparse(node.returns)
-                return_type = map_type(py_type_str)
-            except AttributeError:
-                 if isinstance(node.returns, ast.Name):
-                    return_type = map_type(node.returns.id)
-        
+        # return_type = "void"
+        # if node.returns:
+        #     try:
+        #         py_type_str = ast.unparse(node.returns)
+        #         return_type = map_type(py_type_str)
+        #     except AttributeError:
+        #          if isinstance(node.returns, ast.Name):
+        #             return_type = map_type(node.returns.id)
+        py_return_type, sp_return_type = self._get_type_info(node.returns)
+
+
         # 2. Arguments
         args_list = OrderedDict()
         has_self = False
@@ -510,19 +699,22 @@ class PawnClassGenerator:
             if arg.arg == "self":
                 has_self = True
                 continue
+
+            _, sp_arg_type = self._get_type_info(arg.annotation)
+            args_list[arg.arg] = sp_arg_type
+
+            # arg_type = "any"
+            # if arg.annotation:
+            #     try:
+            #         py_type_str = ast.unparse(arg.annotation)
+            #         arg_type = map_type(py_type_str)
+            #     except AttributeError:
+            #         if isinstance(arg.annotation, ast.Name):
+            #             arg_type = map_type(arg.annotation.id)
             
-            arg_type = "any"
-            if arg.annotation:
-                try:
-                    py_type_str = ast.unparse(arg.annotation)
-                    arg_type = map_type(py_type_str)
-                except AttributeError:
-                    if isinstance(arg.annotation, ast.Name):
-                        arg_type = map_type(arg.annotation.id)
-            
-            args_list[arg.arg] = arg_type
+            # args_list[arg.arg] = arg_type
         
-        return return_type, args_list, has_self
+        return py_return_type, sp_return_type, args_list, has_self
 
     def _convert_statement(self, stmt: ast.stmt, indent="    ", known_locals: set = None) -> str:
         if known_locals is None:
@@ -535,6 +727,15 @@ class PawnClassGenerator:
             return f"{indent}return;\n"
         
         if isinstance(stmt, ast.Expr):
+            # --- NEW: Handle #P: overrides ---
+            line_index = stmt.lineno - 1
+            if line_index < len(self.source_lines):
+                line = self.source_lines[line_index]
+                match = re.search(r'#\s*P:(.*)', line)
+                if match:
+                    pawn_code = match.group(1).strip().rstrip(';')
+                    return f"{indent}{pawn_code};\n"
+
             value_str = self.expression_visitor.visit(stmt.value)
             return f"{indent}{value_str};\n"
 
@@ -634,12 +835,18 @@ def main():
 
             try:
                 with open(source_path, "r", encoding="utf-8") as f:
-                    tree = ast.parse(f.read())
+                    source_code = f.read()
                 
+                tree = ast.parse(source_code, filename=str(source_path))
+                source_lines = source_code.splitlines()
+                generator.source_lines = source_lines
+
                 include_set = set()
                 all_methodmaps_code = ""
                 all_globals_code = ""
-                
+                all_helpers_code = "" # <-- NEW
+                file_level_defines = generate_defines(tree)
+
                 relative_current_py_path = source_path.relative_to(SOURCE_DIR)
                 current_output_path = (PERKS_OUTPUT_DIR / relative_current_py_path).with_suffix(".inc")
 
@@ -654,12 +861,22 @@ def main():
                         include_path_str = str(Path(include_path)).replace("\\", "/")
                         include_set.add(f'"{include_path_str}"')
 
+                # --- NEW: AST-based dependency resolution for perks ---
                 for node in ast.walk(tree):
+                    if isinstance(node, ast.Name) and node.id in class_db:
+                        class_name = node.id
+                        _, dep_path = class_db[class_name]
+                        if dep_path.resolve() != source_path.resolve():
+                            relative_dep_py_path = dep_path.relative_to(SOURCE_DIR)
+                            dep_output_path = (PERKS_OUTPUT_DIR / relative_dep_py_path).with_suffix(".inc")
+                            include_path = os.path.relpath(dep_output_path, current_output_path.parent)
+                            include_path_str = str(Path(include_path)).replace("\\", "/")
+                            include_set.add(f'"{include_path_str}"')
+
+                for node in tree.body:
                     if isinstance(node, ast.ClassDef):
                         _, base_path = generator._get_base_class_info(node)
                         if base_path:
-                            # *** THE FIX IS HERE ***
-                            # Only include if the dependency is in a DIFFERENT file.
                             if base_path.resolve() != source_path.resolve():
                                 relative_base_py_path = base_path.relative_to(SOURCE_DIR)
                                 base_output_path = (PERKS_OUTPUT_DIR / relative_base_py_path).with_suffix(".inc")
@@ -667,14 +884,19 @@ def main():
                                 include_path_str = str(Path(include_path)).replace("\\", "/")
                                 include_set.add(f'"{include_path_str}"')
                         
-                        methodmap_code, globals_code = generator.generate_for_class(node.name)
+                        methodmap_code, globals_code, helper_code = generator.generate_for_class(node.name)
                         all_methodmaps_code += methodmap_code + "\n"
                         all_globals_code += globals_code
-
+                        all_helpers_code += helper_code
+                    elif isinstance(node, ast.FunctionDef):
+                        if not node.name.startswith("__"):
+                            all_globals_code += generator._generate_global_function(node)
+                
+                generator.source_lines = [] # Clear for next file
                 # Always include datapack for the new structure
                 include_set.add('<datapack>')
 
-                if all_methodmaps_code or all_globals_code:
+                if all_methodmaps_code or all_globals_code or all_helpers_code:
                     output_path = current_output_path
                     output_path.parent.mkdir(parents=True, exist_ok=True)
                     
@@ -684,16 +906,20 @@ def main():
                         f.write("#endinput\n")
                         f.write("#endif\n")
                         f.write(f"#define __{relative_current_py_path.stem}_included\n\n")
-                        
-                        # Add the user-provided macros
-                        f.write("#define DP(%1) view_as<DataPackPos>(%1)\n")
 
                         if include_set:
                             for inc in sorted(list(include_set)):
                                 f.write(f"#include {inc}\n")
                             f.write("\n")
-                        
+                            
+                        if file_level_defines:
+                            f.write(file_level_defines)
+
                         f.write(all_methodmaps_code)
+
+                        if all_helpers_code:
+                            f.write(all_helpers_code)
+                            
                         if all_globals_code:
                             f.write("\n")
                             f.write(all_globals_code)

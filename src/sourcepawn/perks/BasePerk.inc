@@ -5,7 +5,6 @@
 #endif
 #define __BasePerk_included
 
-#define DP(%1) view_as<DataPackPos>(%1)
 #include <datapack>
 
 methodmap BasePerk < DataPack {
@@ -16,42 +15,46 @@ methodmap BasePerk < DataPack {
         sm.Position = DP(0);
         sm.WriteCell(client);
         sm.Position = DP(1);
-        sm.WriteString("orrrrr");
+        sm.WriteFunction(BasePerk_getName);
         sm.Position = DP(2);
-        sm.WriteFunction(BasePerk_onPlayerRunCmd);
+        sm.WriteFunction(BasePerk_getShortdesc);
         sm.Position = DP(3);
-        sm.WriteFunction(BasePerk_onAmmoPickup);
+        sm.WriteFunction(BasePerk_getDesc);
         sm.Position = DP(4);
-        sm.WriteFunction(BasePerk_onCalcIsAttackCritical);
+        sm.WriteFunction(BasePerk_onPlayerRunCmd);
         sm.Position = DP(5);
-        sm.WriteFunction(BasePerk_onCallForMedic);
+        sm.WriteFunction(BasePerk_onAmmoPickup);
         sm.Position = DP(6);
-        sm.WriteFunction(BasePerk_onGameFrame);
+        sm.WriteFunction(BasePerk_onCalcIsAttackCritical);
         sm.Position = DP(7);
-        sm.WriteFunction(BasePerk_onGraceEnd);
+        sm.WriteFunction(BasePerk_onCallForMedic);
         sm.Position = DP(8);
-        sm.WriteFunction(BasePerk_onMedPickup);
+        sm.WriteFunction(BasePerk_onGameFrame);
         sm.Position = DP(9);
-        sm.WriteFunction(BasePerk_onPeriodic);
+        sm.WriteFunction(BasePerk_onGraceEnd);
         sm.Position = DP(10);
-        sm.WriteFunction(BasePerk_onPlayerDeath);
+        sm.WriteFunction(BasePerk_onMedPickup);
         sm.Position = DP(11);
-        sm.WriteFunction(BasePerk_onPlayerSpawn);
+        sm.WriteFunction(BasePerk_onPeriodic);
         sm.Position = DP(12);
-        sm.WriteFunction(BasePerk_onRemove);
+        sm.WriteFunction(BasePerk_onPlayerDeath);
         sm.Position = DP(13);
-        sm.WriteFunction(BasePerk_onSetTransmit);
+        sm.WriteFunction(BasePerk_onPlayerSpawn);
         sm.Position = DP(14);
-        sm.WriteFunction(BasePerk_onTakeDamage);
+        sm.WriteFunction(BasePerk_onRemove);
         sm.Position = DP(15);
-        sm.WriteFunction(BasePerk_onTakeDamagePost);
+        sm.WriteFunction(BasePerk_onSetTransmit);
         sm.Position = DP(16);
-        sm.WriteFunction(BasePerk_onTouch);
+        sm.WriteFunction(BasePerk_onTakeDamage);
         sm.Position = DP(17);
-        sm.WriteFunction(BasePerk_updateClientPermStats);
+        sm.WriteFunction(BasePerk_onTakeDamagePost);
         sm.Position = DP(18);
-        sm.WriteFunction(BasePerk_updateCondStats);
+        sm.WriteFunction(BasePerk_onTouch);
         sm.Position = DP(19);
+        sm.WriteFunction(BasePerk_updateClientPermStats);
+        sm.Position = DP(20);
+        sm.WriteFunction(BasePerk_updateCondStats);
+        sm.Position = DP(21);
         sm.WriteFunction(BasePerk_doItemThrow);
 
         return sm;
@@ -68,20 +71,45 @@ methodmap BasePerk < DataPack {
         }
     }
 
-    public void getTest(char[] buffer, int maxlen) {
+    public void getName(char[] buffer, int maxlen) {
         this.Position = DP(1);
-        this.ReadString(buffer, maxlen);
-    }
-    public void setTest(const char[] value) {
-        this.Position = DP(1);
-        this.WriteString(value);
+        Function func = this.ReadFunction();
+        this.Reset();
+        Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
+        Call_PushStringEx(buffer, maxlen, SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
+        Call_PushCell(maxlen);
+        Call_Finish();
     }
 
-    public void onPlayerRunCmd(int buttons, int impulse, any vel, any angles, int weapon) {
+    public void getShortdesc(char[] buffer, int maxlen) {
         this.Position = DP(2);
         Function func = this.ReadFunction();
         this.Reset();
         Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
+        Call_PushStringEx(buffer, maxlen, SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
+        Call_PushCell(maxlen);
+        Call_Finish();
+    }
+
+    public void getDesc(char[] buffer, int maxlen) {
+        this.Position = DP(3);
+        Function func = this.ReadFunction();
+        this.Reset();
+        Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
+        Call_PushStringEx(buffer, maxlen, SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
+        Call_PushCell(maxlen);
+        Call_Finish();
+    }
+
+    public void onPlayerRunCmd(int buttons, int impulse, any vel, any angles, int weapon) {
+        this.Position = DP(4);
+        Function func = this.ReadFunction();
+        this.Reset();
+        Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
         Call_PushCell(buttons);
         Call_PushCell(impulse);
         Call_PushCell(vel);
@@ -91,68 +119,76 @@ methodmap BasePerk < DataPack {
     }
 
     public void onAmmoPickup(int pickup) {
-        this.Position = DP(3);
+        this.Position = DP(5);
         Function func = this.ReadFunction();
         this.Reset();
         Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
         Call_PushCell(pickup);
         Call_Finish();
     }
 
     public void onCalcIsAttackCritical() {
-        this.Position = DP(4);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_Finish();
-    }
-
-    public void onCallForMedic() {
-        this.Position = DP(5);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_Finish();
-    }
-
-    public void onGameFrame() {
         this.Position = DP(6);
         Function func = this.ReadFunction();
         this.Reset();
         Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
         Call_Finish();
     }
 
-    public void onGraceEnd() {
+    public void onCallForMedic() {
         this.Position = DP(7);
         Function func = this.ReadFunction();
         this.Reset();
         Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
         Call_Finish();
     }
 
-    public void onMedPickup(int pickup) {
+    public void onGameFrame() {
         this.Position = DP(8);
         Function func = this.ReadFunction();
         this.Reset();
         Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
+        Call_Finish();
+    }
+
+    public void onGraceEnd() {
+        this.Position = DP(9);
+        Function func = this.ReadFunction();
+        this.Reset();
+        Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
+        Call_Finish();
+    }
+
+    public void onMedPickup(int pickup) {
+        this.Position = DP(10);
+        Function func = this.ReadFunction();
+        this.Reset();
+        Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
         Call_PushCell(pickup);
         Call_Finish();
     }
 
     public void onPeriodic() {
-        this.Position = DP(9);
+        this.Position = DP(11);
         Function func = this.ReadFunction();
         this.Reset();
         Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
         Call_Finish();
     }
 
     public void onPlayerDeath(int victim, int killer, int assist, int inflictor, int damagetype) {
-        this.Position = DP(10);
+        this.Position = DP(12);
         Function func = this.ReadFunction();
         this.Reset();
         Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
         Call_PushCell(victim);
         Call_PushCell(killer);
         Call_PushCell(assist);
@@ -162,36 +198,40 @@ methodmap BasePerk < DataPack {
     }
 
     public void onPlayerSpawn() {
-        this.Position = DP(11);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_Finish();
-    }
-
-    public void onRemove() {
-        this.Position = DP(12);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_Finish();
-    }
-
-    public void onSetTransmit(int entity, int client) {
         this.Position = DP(13);
         Function func = this.ReadFunction();
         this.Reset();
         Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
+        Call_Finish();
+    }
+
+    public void onRemove() {
+        this.Position = DP(14);
+        Function func = this.ReadFunction();
+        this.Reset();
+        Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
+        Call_Finish();
+    }
+
+    public void onSetTransmit(int entity, int client) {
+        this.Position = DP(15);
+        Function func = this.ReadFunction();
+        this.Reset();
+        Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
         Call_PushCell(entity);
         Call_PushCell(client);
         Call_Finish();
     }
 
     public void onTakeDamage(int victim, int attacker, int inflictor, float damage, int damagetype) {
-        this.Position = DP(14);
+        this.Position = DP(16);
         Function func = this.ReadFunction();
         this.Reset();
         Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
         Call_PushCell(victim);
         Call_PushCell(attacker);
         Call_PushCell(inflictor);
@@ -201,10 +241,11 @@ methodmap BasePerk < DataPack {
     }
 
     public void onTakeDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype) {
-        this.Position = DP(15);
+        this.Position = DP(17);
         Function func = this.ReadFunction();
         this.Reset();
         Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
         Call_PushCell(victim);
         Call_PushCell(attacker);
         Call_PushCell(inflictor);
@@ -214,36 +255,40 @@ methodmap BasePerk < DataPack {
     }
 
     public void onTouch(int toucher, int touchee) {
-        this.Position = DP(16);
+        this.Position = DP(18);
         Function func = this.ReadFunction();
         this.Reset();
         Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
         Call_PushCell(toucher);
         Call_PushCell(touchee);
         Call_Finish();
     }
 
     public void updateClientPermStats() {
-        this.Position = DP(17);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_Finish();
-    }
-
-    public void updateCondStats() {
-        this.Position = DP(18);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_Finish();
-    }
-
-    public void doItemThrow(char[] model, float force, any color) {
         this.Position = DP(19);
         Function func = this.ReadFunction();
         this.Reset();
         Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
+        Call_Finish();
+    }
+
+    public void updateCondStats() {
+        this.Position = DP(20);
+        Function func = this.ReadFunction();
+        this.Reset();
+        Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
+        Call_Finish();
+    }
+
+    public void doItemThrow(char[] model, float force, any color) {
+        this.Position = DP(21);
+        Function func = this.ReadFunction();
+        this.Reset();
+        Call_StartFunction(INVALID_HANDLE, func);
+        Call_PushCell(this);
         Call_PushString(model);
         Call_PushFloat(force);
         Call_PushCell(color);
@@ -251,6 +296,22 @@ methodmap BasePerk < DataPack {
     }
 }
 
+stock BasePerk BasePerk_new(int client) {
+    return new BasePerk(client);
+}
+
+
+public void BasePerk_getName(BasePerk _inst, char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, "Unselected");
+}
+
+public void BasePerk_getShortdesc(BasePerk _inst, char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, "Unselected");
+}
+
+public void BasePerk_getDesc(BasePerk _inst, char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, "Please select one perk to check info");
+}
 
 public void BasePerk_onPlayerRunCmd(BasePerk _inst, int buttons, int impulse, any vel, any angles, int weapon) {
     /**

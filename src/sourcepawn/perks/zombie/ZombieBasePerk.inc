@@ -5,7 +5,6 @@
 #endif
 #define __ZombieBasePerk_included
 
-#define DP(%1) view_as<DataPackPos>(%1)
 #include "../BasePerk.inc"
 #include <datapack>
 
@@ -15,9 +14,30 @@ methodmap ZombieBasePerk < BasePerk {
         ZombieBasePerk sm = view_as<ZombieBasePerk>(sm_base);
 
         sm.Position = DP(1);
-        sm.WriteString("zooooooo");
+        sm.WriteFunction(ZombieBasePerk_getName);
+        sm.Position = DP(2);
+        sm.WriteFunction(ZombieBasePerk_getShortdesc);
+        sm.Position = DP(3);
+        sm.WriteFunction(ZombieBasePerk_getDesc);
 
         return sm;
     }
+}
+
+stock BasePerk ZombieBasePerk_new(int client) {
+    return new ZombieBasePerk(client);
+}
+
+
+public void ZombieBasePerk_getName(ZombieBasePerk _inst, char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, "Unselected");
+}
+
+public void ZombieBasePerk_getShortdesc(ZombieBasePerk _inst, char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, "Without perks");
+}
+
+public void ZombieBasePerk_getDesc(ZombieBasePerk _inst, char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, "Please select one perk to check info");
 }
 
