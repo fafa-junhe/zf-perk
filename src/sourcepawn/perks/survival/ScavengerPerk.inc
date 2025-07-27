@@ -1,0 +1,68 @@
+#if defined _zf_perk_scavenger_inc
+  #endinput
+#endif
+#define _zf_perk_scavenger_inc
+
+#include "SurvivorBasePerk.inc"
+
+// --- Constants
+#define ZF_PERK_SCAVENGER_ID 9
+#define SCAVENGER_CRIT_CHANCE 25
+#define SCAVENGER_METAL_CHANCE 50
+#define SCAVENGER_CRIT_DURATION 5
+#define SCAVENGER_METAL_AMOUNT 50
+
+// --- Methodmap
+methodmap ScavengerPerk < SurvivorBasePerk
+{
+    public ScavengerPerk(int client)
+    {
+        SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
+        ScavengerPerk sm = view_as<ScavengerPerk>(sm_base);
+
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, ScavengerPerkFgetName);
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, ScavengerPerkFgetShortdesc);
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, ScavengerPerkFgetDesc);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_AMMO_PICKUP, ScavengerPerkFonAmmoPickup);
+
+        return sm;
+    }
+}
+
+stock SurvivorBasePerk ScavengerPerkFnew(int client)
+{
+    return new ScavengerPerk(client);
+}
+
+FUNCTION(ScavengerPerk, getName), char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, "Scavenger");
+}
+
+FUNCTION(ScavengerPerk, getShortdesc), char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, "Chance for bonus on ammo pickup.");
+}
+
+FUNCTION(ScavengerPerk, getDesc), char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, "When you pick up an ammo pack, you have a chance to gain crits or metal.");
+}
+
+// --- Vtable Functions
+FUNCTION(ScavengerPerk, onAmmoPickup), int pickup)
+{
+    int client = _inst.client;
+    if (!validLivingSur(client))
+        return;
+
+    if (GetRandomInt(1, 100) <= SCAVENGER_CRIT_CHANCE)
+    {
+        addCondKritz(client, float(SCAVENGER_CRIT_DURATION));
+        fxKritzStart(client);
+        PrintHintText(client, "You found crits!");
+    }
+    else if (GetRandomInt(1, 100) <= SCAVENGER_METAL_CHANCE)
+    {
+        int currentMetal = getMetal(client);
+        setMetal(client, currentMetal + SCAVENGER_METAL_AMOUNT);
+        PrintHintText(client, "You found metal!");
+    }
+}

@@ -209,6 +209,7 @@ stock char ZFSND_PAINSHARP[10][] = { // Index with TFClassType
 // ZF Sprite Objects
 //
 stock char ZFSPR_EXCLAMATION[] = "materials/sprites/minimap_icons/voiceicon.vmt";
+stock char ZFSPR_HEART[]       = "materials/sprites/hud_medic_heart.vmt";
 stock char ZFSPR_DEATH[]       = "materials/sprites/minimap_icons/death.vmt";
 stock char ZFSPR_DOMINATED[]   = "materials/HUD/leaderboard_dominated.vmt";
 stock char ZFSPR_CROSSHAIR[]   = "materials/HUD/leaderboard_class_sniper.vmt";

@@ -1,5 +1,3 @@
-// Generated from /mnt/d/workspace/code/tf2/zf/src/python/perks/zombie/ZombieBasePerk.py
-
 #if defined __ZombieBasePerk_included
 #endinput
 #endif
@@ -7,37 +5,43 @@
 
 #include "../BasePerk.inc"
 #include <datapack>
+#include "../../perk_vtable.inc"
+#include "../../perk_macros.inc"
 
 methodmap ZombieBasePerk < BasePerk {
     public ZombieBasePerk(int client) {
         BasePerk sm_base = new BasePerk(client);
         ZombieBasePerk sm = view_as<ZombieBasePerk>(sm_base);
 
-        sm.Position = DP(1);
-        sm.WriteFunction(ZombieBasePerk_getName);
-        sm.Position = DP(2);
-        sm.WriteFunction(ZombieBasePerk_getShortdesc);
-        sm.Position = DP(3);
-        sm.WriteFunction(ZombieBasePerk_getDesc);
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, ZombieBasePerkFgetName);
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, ZombieBasePerkFgetShortdesc);
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, ZombieBasePerkFgetDesc);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEAL_DAMAGE_POST, ZombieBasePerkFonDealDamagePost);
 
         return sm;
     }
 }
 
-stock BasePerk ZombieBasePerk_new(int client) {
+stock BasePerk ZombieBasePerkFnew(int client) {
     return new ZombieBasePerk(client);
 }
 
 
-public void ZombieBasePerk_getName(ZombieBasePerk _inst, char[] buffer, int maxlen) {
+FUNCTION(ZombieBasePerk, getName), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "Unselected");
 }
 
-public void ZombieBasePerk_getShortdesc(ZombieBasePerk _inst, char[] buffer, int maxlen) {
+FUNCTION(ZombieBasePerk, getShortdesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "Without perks");
 }
 
-public void ZombieBasePerk_getDesc(ZombieBasePerk _inst, char[] buffer, int maxlen) {
+FUNCTION(ZombieBasePerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "Please select one perk to check info");
+}
+
+FUNCTION(ZombieBasePerk, onDealDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype) {
+    /**
+     * 当玩家造成伤害时触发。
+     */
 }
 

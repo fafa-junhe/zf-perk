@@ -1,5 +1,3 @@
-// Generated from /mnt/d/workspace/code/tf2/zf/src/python/perks/survival/SurvivorBasePerk.py
-
 #if defined __SurvivorBasePerk_included
 #endinput
 #endif
@@ -8,55 +6,52 @@
 #include "../BasePerk.inc"
 #include <datapack>
 
+#define VTABLE_ON_CHARITABLE_GIFT_TOUCHED (PERK_DATA_START_INDEX + 0)
+
 methodmap SurvivorBasePerk < BasePerk {
     public SurvivorBasePerk(int client) {
         BasePerk sm_base = new BasePerk(client);
         SurvivorBasePerk sm = view_as<SurvivorBasePerk>(sm_base);
 
-        sm.Position = DP(1);
-        sm.WriteFunction(SurvivorBasePerk_getName);
-        sm.Position = DP(2);
-        sm.WriteFunction(SurvivorBasePerk_getShortdesc);
-        sm.Position = DP(3);
-        sm.WriteFunction(SurvivorBasePerk_getDesc);
-        sm.Position = DP(22);
-        sm.WriteFunction(SurvivorBasePerk_onCharitableGiftTouched);
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, SurvivorBasePerkFgetName);
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, SurvivorBasePerkFgetShortdesc);
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, SurvivorBasePerkFgetDesc);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_CHARITABLE_GIFT_TOUCHED, SurvivorBasePerkFonCharitableGiftTouched);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEAL_DAMAGE_POST, SurvivorBasePerkFonDealDamagePost);
 
         return sm;
     }
 
     public void onCharitableGiftTouched(int entity, int other) {
-        this.Position = DP(22);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_PushCell(entity);
-        Call_PushCell(other);
-        Call_Finish();
+        PERK_IMPL_EVENT_CELL_CELL(VTABLE_ON_CHARITABLE_GIFT_TOUCHED, entity, other);
     }
 }
 
-stock BasePerk SurvivorBasePerk_new(int client) {
+stock BasePerk SurvivorBasePerkFnew(int client) {
     return new SurvivorBasePerk(client);
 }
 
 
-public void SurvivorBasePerk_getName(SurvivorBasePerk _inst, char[] buffer, int maxlen) {
+FUNCTION(SurvivorBasePerk, getName), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "Unselected");
 }
 
-public void SurvivorBasePerk_getShortdesc(SurvivorBasePerk _inst, char[] buffer, int maxlen) {
+FUNCTION(SurvivorBasePerk, getShortdesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "Without perks");
 }
 
-public void SurvivorBasePerk_getDesc(SurvivorBasePerk _inst, char[] buffer, int maxlen) {
+FUNCTION(SurvivorBasePerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "Please select one perk to check info");
 }
 
-public void SurvivorBasePerk_onCharitableGiftTouched(SurvivorBasePerk _inst, int entity, int other) {
+FUNCTION(SurvivorBasePerk, onCharitableGiftTouched), int entity, int other) {
     /**
      * 当慈善家扔出的礼物被触摸时触发。
      */
 }
 
+FUNCTION(SurvivorBasePerk, onDealDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype) {
+    /**
+     * 当玩家造成伤害时触发。
+     */
+}

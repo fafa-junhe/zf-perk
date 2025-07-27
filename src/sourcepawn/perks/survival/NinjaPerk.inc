@@ -1,0 +1,289 @@
+
+#if defined __NinjaPerk_included
+#endinput
+#endif
+#define __NinjaPerk_included
+
+#include "../../../../include/core.inc"
+#include "../../../../include/entity.inc"
+#include "../../../../include/entity_prop_stocks.inc"
+#include "../../../../include/sdktools_functions.inc"
+#include "../../../../include/sourcemod.inc"
+#include "../../../../include/string.inc"
+#include "../../../../include/tf2_stocks.inc"
+#include "../../perk_structs.inc"
+#include "../../zf_perk.inc"
+#include "../../zf_util_base.inc"
+#include "../../zf_util_fx.inc"
+#include "SurvivorBasePerk.inc"
+#include <datapack>
+#include "../../perk_vtable.inc"
+#include "../../perk_macros.inc"
+
+#define ZF_NINJA_ATTACK -(40)
+#define ZF_NINJA_SPEED 50
+#define ZF_NINJA_DURATION_DECOY_ACTIVE 15
+#define ZF_NINJA_DURATION_DECOY_DECAY 5
+#define ZF_NINJA_DURATION_COOLDOWN 30
+#define ZF_NINJA_FALLDMG_RESIST 50
+#define ZF_NINJA_FORCE 600.0
+
+#define NINJA_DATA_TIMER                (PERK_DATA_START_INDEX + 0)
+#define NINJA_DATA_DECOY_ACTIVE_TIMER   (PERK_DATA_START_INDEX + 1)
+#define NINJA_DATA_DECOY_POOF_TIMER     (PERK_DATA_START_INDEX + 2)
+#define NINJA_DATA_PERK_STATE           (PERK_DATA_START_INDEX + 3)
+#define NINJA_DATA_DECOY_POS            (PERK_DATA_START_INDEX + 4) // Size: 3
+#define NINJA_DATA_DECOY_ANG            (PERK_DATA_START_INDEX + 7) // Size: 3
+#define NINJA_DATA_DECOY_ENT            (PERK_DATA_START_INDEX + 10)
+#define VTABLE_DO_NINJA_DECOY_PLACE     (PERK_DATA_START_INDEX + 11)
+#define VTABLE_DO_NINJA_DECOY_POOF      (PERK_DATA_START_INDEX + 12)
+
+methodmap NinjaPerk < SurvivorBasePerk {
+    public NinjaPerk(int client) {
+        SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
+        NinjaPerk sm = view_as<NinjaPerk>(sm_base);
+
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, NinjaPerkFgetName);
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, NinjaPerkFgetShortdesc);
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, NinjaPerkFgetDesc);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_RUN_CMD, NinjaPerkFonPlayerRunCmd);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, NinjaPerkFonCallForMedic);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, NinjaPerkFonPeriodic);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, NinjaPerkFonTakeDamage);
+        PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, NinjaPerkFupdateClientPermStats);
+        PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, NinjaPerkFupdateCondStats);
+
+        sm.Position = view_as<DataPackPos>(NINJA_DATA_TIMER);
+        sm.WriteCell(0);
+        sm.Position = view_as<DataPackPos>(NINJA_DATA_DECOY_ACTIVE_TIMER);
+        sm.WriteCell(0);
+        sm.Position = view_as<DataPackPos>(NINJA_DATA_DECOY_POOF_TIMER);
+        sm.WriteCell(0);
+        sm.Position = view_as<DataPackPos>(NINJA_DATA_PERK_STATE);
+        sm.WriteCell(0);
+        sm.Position = view_as<DataPackPos>(NINJA_DATA_DECOY_POS);
+        float empty_vec[3];
+        sm.WriteCellArray(empty_vec, 3);
+        sm.Position = view_as<DataPackPos>(NINJA_DATA_DECOY_ANG);
+        sm.WriteCellArray(empty_vec, 3);
+        sm.Position = view_as<DataPackPos>(NINJA_DATA_DECOY_ENT);
+        sm.WriteCell(0);
+
+        PERK_REGISTER_VTABLE(sm, VTABLE_DO_NINJA_DECOY_PLACE, NinjaPerkFdoNinjaDecoyPlace);
+        PERK_REGISTER_VTABLE(sm, VTABLE_DO_NINJA_DECOY_POOF, NinjaPerkFdoNinjaDecoyPoof);
+
+        return sm;
+    }
+
+    property int perk_timer {
+        public get() {
+            this.Position = view_as<DataPackPos>(NINJA_DATA_TIMER);
+            return this.ReadCell();
+        }
+        public set(int value) {
+            this.Position = view_as<DataPackPos>(NINJA_DATA_TIMER);
+            this.WriteCell(value);
+        }
+    }
+
+    property int decoy_active_timer {
+        public get() {
+            this.Position = view_as<DataPackPos>(NINJA_DATA_DECOY_ACTIVE_TIMER);
+            return this.ReadCell();
+        }
+        public set(int value) {
+            this.Position = view_as<DataPackPos>(NINJA_DATA_DECOY_ACTIVE_TIMER);
+            this.WriteCell(value);
+        }
+    }
+
+    property int decoy_poof_timer {
+        public get() {
+            this.Position = view_as<DataPackPos>(NINJA_DATA_DECOY_POOF_TIMER);
+            return this.ReadCell();
+        }
+        public set(int value) {
+            this.Position = view_as<DataPackPos>(NINJA_DATA_DECOY_POOF_TIMER);
+            this.WriteCell(value);
+        }
+    }
+
+    property int perk_state {
+        public get() {
+            this.Position = view_as<DataPackPos>(NINJA_DATA_PERK_STATE);
+            return this.ReadCell();
+        }
+        public set(int value) {
+            this.Position = view_as<DataPackPos>(NINJA_DATA_PERK_STATE);
+            this.WriteCell(value);
+        }
+    }
+
+    public void getDecoyPos(float buffer[3]) {
+        this.Position = view_as<DataPackPos>(NINJA_DATA_DECOY_POS);
+        this.ReadCellArray(buffer, 3);
+    }
+    public void setDecoyPos(const float value[3]) {
+        this.Position = view_as<DataPackPos>(NINJA_DATA_DECOY_POS);
+        this.WriteCellArray(value, 3);
+    }
+
+    public void getDecoyAng(float buffer[3]) {
+        this.Position = view_as<DataPackPos>(NINJA_DATA_DECOY_ANG);
+        this.ReadCellArray(buffer, 3);
+    }
+    public void setDecoyAng(const float value[3]) {
+        this.Position = view_as<DataPackPos>(NINJA_DATA_DECOY_ANG);
+        this.WriteCellArray(value, 3);
+    }
+
+    property int decoy_ent {
+        public get() {
+            this.Position = view_as<DataPackPos>(NINJA_DATA_DECOY_ENT);
+            return this.ReadCell();
+        }
+        public set(int value) {
+            this.Position = view_as<DataPackPos>(NINJA_DATA_DECOY_ENT);
+            this.WriteCell(value);
+        }
+    }
+
+    public void doNinjaDecoyPlace() {
+        PERK_IMPL_EVENT_VOID(VTABLE_DO_NINJA_DECOY_PLACE);
+    }
+
+    public void doNinjaDecoyPoof() {
+        PERK_IMPL_EVENT_VOID(VTABLE_DO_NINJA_DECOY_POOF);
+    }
+}
+
+stock SurvivorBasePerk NinjaPerkFnew(int client) {
+    return new NinjaPerk(client);
+}
+
+
+FUNCTION(NinjaPerk, getName), char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, "Ninja");
+}
+
+FUNCTION(NinjaPerk, getShortdesc), char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, "Place a retreat decoy");
+}
+
+FUNCTION(NinjaPerk, getDesc), char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, "Your mobility is greatly increased, but your attack power is reduced.\nCall for a medic to place a retreat point. When you are attacked, you will be teleported to the retreat point.\nThe retreat point lasts for 15 seconds, and the ability has a 30-second cooldown after the point expires or is used.");
+}
+
+FUNCTION(NinjaPerk, updateClientPermStats)) {
+    addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, ZF_NINJA_ATTACK);
+    addStat(_inst.client, ZFStatSpeed, ZFStatTypePerm, ZF_NINJA_SPEED);
+}
+
+FUNCTION(NinjaPerk, onPlayerRunCmd), int buttons, int impulse, float vel[3], float[] angles, int weapon) {
+    if ((buttons & IN_JUMP)) {
+        if ((GetEntityFlags(_inst.client) & FL_ONGROUND)) {
+            GetEntPropVector(_inst.client, Prop_Data, "m_vecVelocity", vel);
+            vel[2] = ZF_NINJA_FORCE;
+            TeleportEntity(_inst.client, NULL_VECTOR, NULL_VECTOR, vel);
+        }
+    }
+}
+
+FUNCTION(NinjaPerk, updateCondStats), char[] perk_str, int maxlen_perk_str) {
+    if ((_inst.perk_state == 1)) {
+        Format(perk_str, maxlen_perk_str, "Decoy Active: %ds", _inst.decoy_active_timer);
+    }
+    else {
+        if ((_inst.perk_timer > 0)) {
+            Format(perk_str, maxlen_perk_str, "Cooldown: %ds", _inst.perk_timer);
+        }
+        else {
+            Format(perk_str, maxlen_perk_str, "Decoy Ready");
+        }
+    }
+}
+
+FUNCTION_FLOAT(NinjaPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype) {
+    if ((victim != _inst.client)) {
+        return damage;
+    }
+    if ((damagetype & DMG_FALL)) {
+        return (damage * (1.0 - (ZF_NINJA_FALLDMG_RESIST / 100.0)));
+    }
+    if (((_inst.perk_state == 1)) && (validClient(attacker)) && (validZom(attacker)) && ((damagetype & DMG_CLUB))) {
+        _inst.doNinjaDecoyPlace();
+        _inst.decoy_poof_timer = ZF_NINJA_DURATION_DECOY_DECAY;
+        return 0.0;
+    }
+    return damage;
+}
+
+FUNCTION(NinjaPerk, onCallForMedic)) {
+    if (((_inst.perk_timer == 0)) && ((GetEntityFlags(_inst.client) & FL_ONGROUND))) {
+        _inst.perk_timer = ZF_NINJA_DURATION_COOLDOWN;
+        _inst.decoy_active_timer = ZF_NINJA_DURATION_DECOY_ACTIVE;
+        _inst.perk_state = 1;
+        float __temp_decoy_pos[3];
+        GetEntPropVector(_inst.client, Prop_Send, "m_vecOrigin", __temp_decoy_pos);
+        _inst.setDecoyPos(__temp_decoy_pos);
+        float __temp_decoy_ang[3];
+        GetClientEyeAngles(_inst.client, __temp_decoy_ang);
+        _inst.setDecoyAng(__temp_decoy_ang);
+        createAura(_inst.client, "particles/medic_heal_blu.pcf", AttachBase);
+        PrintHintText(_inst.client, "Retreat point placed! It will last for %d seconds.", ZF_NINJA_DURATION_DECOY_ACTIVE);
+    }
+}
+
+FUNCTION(NinjaPerk, onPeriodic)) {
+    if ((_inst.perk_timer > 0)) {
+        _inst.perk_timer -= 1;
+        if ((_inst.perk_timer == 0)) {
+            PrintHintText(_inst.client, "Ninja ability is ready.");
+        }
+    }
+    if ((_inst.decoy_active_timer > 0)) {
+        _inst.decoy_active_timer -= 1;
+        if (((_inst.decoy_active_timer == 0)) && ((_inst.perk_state == 1))) {
+            _inst.perk_state = 0;
+            if (validAura(_inst.client)) {
+                removeAura(_inst.client);
+            }
+            PrintHintText(_inst.client, "Your retreat point has expired.");
+        }
+    }
+    if ((_inst.decoy_poof_timer > 0)) {
+        _inst.decoy_poof_timer -= 1;
+        if ((_inst.decoy_poof_timer == 0)) {
+            _inst.doNinjaDecoyPoof();
+        }
+    }
+}
+
+FUNCTION(NinjaPerk, doNinjaDecoyPlace)) {
+    /**
+     * Places a decoy at the current position and teleports the player to the retreat point.
+     */
+   _inst.decoy_ent = doItemPlace(_inst.client, ZFMDL_CUTOUT[TF2_GetPlayerClass(_inst.client)]);
+   float __vec_decoy_pos[3];
+   _inst.getDecoyPos(__vec_decoy_pos);
+   float __vec_decoy_ang[3];
+   _inst.getDecoyAng(__vec_decoy_ang);
+   TeleportEntity(_inst.client, __vec_decoy_pos, __vec_decoy_ang, NULL_VECTOR);
+   if (validAura(_inst.client)) {
+       removeAura(_inst.client);
+   }
+   _inst.perk_state = 0;
+   _inst.decoy_active_timer = 0;
+   PrintHintText(_inst.client, "You escaped using your decoy!");
+}
+
+FUNCTION(NinjaPerk, doNinjaDecoyPoof)) {
+    /**
+     * Removes the decoy model after a delay.
+     */
+   if ((_inst.decoy_ent != -(1))) {
+       removeItem(_inst.client, _inst.decoy_ent);
+       _inst.decoy_ent = -(1);
+   }
+}
+

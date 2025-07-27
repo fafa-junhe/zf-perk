@@ -1,4 +1,4 @@
-// Generated from /mnt/d/workspace/code/tf2/zf/src/python/perks/BasePerk.py
+// Generated from D:\workspace\code\tf2\zf\src\pythons\perks\BasePerk.py
 
 #if defined __BasePerk_included
 #endinput
@@ -6,293 +6,143 @@
 #define __BasePerk_included
 
 #include <datapack>
+#include "../perk_vtable.inc"
+#include "../perk_macros.inc"
 
 methodmap BasePerk < DataPack {
     public BasePerk(int client) {
         DataPack sm_base = new DataPack();
+        for (int i = 0; i < PERK_VTABLE_SIZE; i++) {
+            sm_base.WriteCell(0);
+        }
+        sm_base.Reset();
         BasePerk sm = view_as<BasePerk>(sm_base);
 
-        sm.Position = DP(0);
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, BasePerk_getName);
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, BasePerk_getShortdesc);
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, BasePerk_getDesc);
+        sm.Position = view_as<DataPackPos>(PERK_DATA_CLIENT);
         sm.WriteCell(client);
-        sm.Position = DP(1);
-        sm.WriteFunction(BasePerk_getName);
-        sm.Position = DP(2);
-        sm.WriteFunction(BasePerk_getShortdesc);
-        sm.Position = DP(3);
-        sm.WriteFunction(BasePerk_getDesc);
-        sm.Position = DP(4);
-        sm.WriteFunction(BasePerk_onPlayerRunCmd);
-        sm.Position = DP(5);
-        sm.WriteFunction(BasePerk_onAmmoPickup);
-        sm.Position = DP(6);
-        sm.WriteFunction(BasePerk_onCalcIsAttackCritical);
-        sm.Position = DP(7);
-        sm.WriteFunction(BasePerk_onCallForMedic);
-        sm.Position = DP(8);
-        sm.WriteFunction(BasePerk_onGameFrame);
-        sm.Position = DP(9);
-        sm.WriteFunction(BasePerk_onGraceEnd);
-        sm.Position = DP(10);
-        sm.WriteFunction(BasePerk_onMedPickup);
-        sm.Position = DP(11);
-        sm.WriteFunction(BasePerk_onPeriodic);
-        sm.Position = DP(12);
-        sm.WriteFunction(BasePerk_onPlayerDeath);
-        sm.Position = DP(13);
-        sm.WriteFunction(BasePerk_onPlayerSpawn);
-        sm.Position = DP(14);
-        sm.WriteFunction(BasePerk_onRemove);
-        sm.Position = DP(15);
-        sm.WriteFunction(BasePerk_onSetTransmit);
-        sm.Position = DP(16);
-        sm.WriteFunction(BasePerk_onTakeDamage);
-        sm.Position = DP(17);
-        sm.WriteFunction(BasePerk_onTakeDamagePost);
-        sm.Position = DP(18);
-        sm.WriteFunction(BasePerk_onTouch);
-        sm.Position = DP(19);
-        sm.WriteFunction(BasePerk_updateClientPermStats);
-        sm.Position = DP(20);
-        sm.WriteFunction(BasePerk_updateCondStats);
-        sm.Position = DP(21);
-        sm.WriteFunction(BasePerk_doItemThrow);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_RUN_CMD, BasePerk_onPlayerRunCmd);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_AMMO_PICKUP, BasePerk_onAmmoPickup);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALC_IS_ATTACK_CRITICAL, BasePerk_onCalcIsAttackCritical);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, BasePerk_onCallForMedic);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_GAME_FRAME, BasePerk_onGameFrame);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_GRACE_END, BasePerk_onGraceEnd);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_MED_PICKUP, BasePerk_onMedPickup);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, BasePerk_onPeriodic);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_DEATH, BasePerk_onPlayerDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, BasePerk_onPlayerSpawn);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, BasePerk_onRemove);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_SET_TRANSMIT, BasePerk_onSetTransmit);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, BasePerk_onTakeDamage);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE_POST, BasePerk_onTakeDamagePost);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TOUCH, BasePerk_onTouch);
+        PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, BasePerk_updateClientPermStats);
+        PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, BasePerk_updateCondStats);
+        PERK_REGISTER_VTABLE(sm, VTABLE_DO_ITEM_THROW, BasePerk_doItemThrow);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEAL_DAMAGE_POST, BasePerk_onDealDamagePost);
 
         return sm;
     }
 
+    public void getName(char[] buffer, int maxlen) {
+        PERK_IMPL_GET_STRING(VTABLE_GET_NAME, buffer, maxlen);
+    }
+
+    public void getShortdesc(char[] buffer, int maxlen) {
+        PERK_IMPL_GET_STRING(VTABLE_GET_SHORT_DESC, buffer, maxlen);
+    }
+
+    public void getDesc(char[] buffer, int maxlen) {
+        PERK_IMPL_GET_STRING(VTABLE_GET_LONG_DESC, buffer, maxlen);
+    }
+
     property int client {
         public get() {
-            this.Position = DP(0);
+            this.Position = view_as<DataPackPos>(PERK_DATA_CLIENT);
             return this.ReadCell();
         }
         public set(int value) {
-            this.Position = DP(0);
+            this.Position = view_as<DataPackPos>(PERK_DATA_CLIENT);
             this.WriteCell(value);
         }
     }
 
-    public void getName(char[] buffer, int maxlen) {
-        this.Position = DP(1);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_PushStringEx(buffer, maxlen, SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
-        Call_PushCell(maxlen);
-        Call_Finish();
-    }
-
-    public void getShortdesc(char[] buffer, int maxlen) {
-        this.Position = DP(2);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_PushStringEx(buffer, maxlen, SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
-        Call_PushCell(maxlen);
-        Call_Finish();
-    }
-
-    public void getDesc(char[] buffer, int maxlen) {
-        this.Position = DP(3);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_PushStringEx(buffer, maxlen, SM_PARAM_STRING_UTF8, SM_PARAM_COPYBACK);
-        Call_PushCell(maxlen);
-        Call_Finish();
-    }
-
-    public void onPlayerRunCmd(int buttons, int impulse, any vel, any angles, int weapon) {
-        this.Position = DP(4);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_PushCell(buttons);
-        Call_PushCell(impulse);
-        Call_PushCell(vel);
-        Call_PushCell(angles);
-        Call_PushCell(weapon);
-        Call_Finish();
+    public void onPlayerRunCmd(int buttons, int impulse, float vel[3], float angles[3], int weapon) {
+        PERK_IMPL_onPlayerRunCmd(buttons, impulse, vel, angles, weapon);
     }
 
     public void onAmmoPickup(int pickup) {
-        this.Position = DP(5);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_PushCell(pickup);
-        Call_Finish();
+        PERK_IMPL_EVENT_CELL(VTABLE_ON_AMMO_PICKUP, pickup);
     }
 
     public void onCalcIsAttackCritical() {
-        this.Position = DP(6);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_Finish();
+        PERK_IMPL_EVENT_VOID(VTABLE_ON_CALC_IS_ATTACK_CRITICAL);
     }
 
     public void onCallForMedic() {
-        this.Position = DP(7);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_Finish();
+        PERK_IMPL_EVENT_VOID(VTABLE_ON_CALL_FOR_MEDIC);
     }
 
     public void onGameFrame() {
-        this.Position = DP(8);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_Finish();
+        PERK_IMPL_EVENT_VOID(VTABLE_ON_GAME_FRAME);
     }
 
     public void onGraceEnd() {
-        this.Position = DP(9);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_Finish();
+        PERK_IMPL_EVENT_VOID(VTABLE_ON_GRACE_END);
     }
 
     public void onMedPickup(int pickup) {
-        this.Position = DP(10);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_PushCell(pickup);
-        Call_Finish();
+        PERK_IMPL_EVENT_CELL(VTABLE_ON_MED_PICKUP, pickup);
     }
 
     public void onPeriodic() {
-        this.Position = DP(11);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_Finish();
+        PERK_IMPL_EVENT_VOID(VTABLE_ON_PERIODIC);
     }
 
     public void onPlayerDeath(int victim, int killer, int assist, int inflictor, int damagetype) {
-        this.Position = DP(12);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_PushCell(victim);
-        Call_PushCell(killer);
-        Call_PushCell(assist);
-        Call_PushCell(inflictor);
-        Call_PushCell(damagetype);
-        Call_Finish();
+        PERK_IMPL_onPlayerDeath(victim, killer, assist, inflictor, damagetype);
     }
 
     public void onPlayerSpawn() {
-        this.Position = DP(13);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_Finish();
+        PERK_IMPL_EVENT_VOID(VTABLE_ON_PLAYER_SPAWN);
     }
 
     public void onRemove() {
-        this.Position = DP(14);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_Finish();
+        PERK_IMPL_EVENT_VOID(VTABLE_ON_REMOVE);
     }
 
     public void onSetTransmit(int entity, int client) {
-        this.Position = DP(15);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_PushCell(entity);
-        Call_PushCell(client);
-        Call_Finish();
+        PERK_IMPL_EVENT_CELL_CELL(VTABLE_ON_SET_TRANSMIT, entity, client);
     }
 
-    public void onTakeDamage(int victim, int attacker, int inflictor, float damage, int damagetype) {
-        this.Position = DP(16);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_PushCell(victim);
-        Call_PushCell(attacker);
-        Call_PushCell(inflictor);
-        Call_PushFloat(damage);
-        Call_PushCell(damagetype);
-        Call_Finish();
+    public float onTakeDamage(int victim, int attacker, int inflictor, float damage, int damagetype) {
+        PERK_IMPL_onTakeDamage(victim, attacker, inflictor, damage, damagetype);
     }
 
     public void onTakeDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype) {
-        this.Position = DP(17);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_PushCell(victim);
-        Call_PushCell(attacker);
-        Call_PushCell(inflictor);
-        Call_PushFloat(damage);
-        Call_PushCell(damagetype);
-        Call_Finish();
+        PERK_IMPL_onTakeDamagePost(victim, attacker, inflictor, damage, damagetype);
     }
 
     public void onTouch(int toucher, int touchee) {
-        this.Position = DP(18);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_PushCell(toucher);
-        Call_PushCell(touchee);
-        Call_Finish();
+        PERK_IMPL_EVENT_CELL_CELL(VTABLE_ON_TOUCH, toucher, touchee);
     }
 
     public void updateClientPermStats() {
-        this.Position = DP(19);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_Finish();
+        PERK_IMPL_EVENT_VOID(VTABLE_UPDATE_CLIENT_PERM_STATS);
     }
 
-    public void updateCondStats() {
-        this.Position = DP(20);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_Finish();
+    public void updateCondStats(char[] perk_str, int maxlen_perk_str) {
+        PERK_IMPL_updateCondStats(perk_str, maxlen_perk_str);
     }
 
-    public void doItemThrow(char[] model, float force, any color) {
-        this.Position = DP(21);
-        Function func = this.ReadFunction();
-        this.Reset();
-        Call_StartFunction(INVALID_HANDLE, func);
-        Call_PushCell(this);
-        Call_PushString(model);
-        Call_PushFloat(force);
-        Call_PushCell(color);
-        Call_Finish();
+    public void doItemThrow(char[] model, float force, float color[3]) {
+        PERK_IMPL_doItemThrow(model, force, color);
+    }
+
+    public void onDealDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype) {
+        PERK_IMPL_onTakeDamagePost(victim, attacker, inflictor, damage, damagetype);
     }
 }
 
@@ -313,7 +163,7 @@ public void BasePerk_getDesc(BasePerk _inst, char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "Please select one perk to check info");
 }
 
-public void BasePerk_onPlayerRunCmd(BasePerk _inst, int buttons, int impulse, any vel, any angles, int weapon) {
+public void BasePerk_onPlayerRunCmd(BasePerk _inst, int buttons, int impulse, float vel[3], float angles[3], int weapon) {
     /**
      * 在玩家执行指令（如跳跃、攻击）时触发。
      */
@@ -385,10 +235,11 @@ public void BasePerk_onSetTransmit(BasePerk _inst, int entity, int client) {
      */
 }
 
-public void BasePerk_onTakeDamage(BasePerk _inst, int victim, int attacker, int inflictor, float damage, int damagetype) {
+public float BasePerk_onTakeDamage(BasePerk _inst, int victim, int attacker, int inflictor, float damage, int damagetype) {
     /**
      * 在伤害事件发生时（伤害计算前）触发。
      */
+    return damage;
 }
 
 public void BasePerk_onTakeDamagePost(BasePerk _inst, int victim, int attacker, int inflictor, float damage, int damagetype) {
@@ -409,15 +260,20 @@ public void BasePerk_updateClientPermStats(BasePerk _inst) {
      */
 }
 
-public void BasePerk_updateCondStats(BasePerk _inst) {
+public void BasePerk_updateCondStats(BasePerk _inst, char[] perk_str, int maxlen_perk_str) {
     /**
      * 周期性（通常每秒）更新玩家的状态、冷却时间和HUD。
      */
 }
 
-public void BasePerk_doItemThrow(BasePerk _inst, char[] model, float force, any color) {
+public void BasePerk_doItemThrow(BasePerk _inst, char[] model, float force, float color[3]) {
     /**
      * 执行投掷物品的逻辑。
      */
 }
 
+public void BasePerk_onDealDamagePost(BasePerk _inst, int victim, int attacker, int inflictor, float damage, int damagetype) {
+    /**
+     * 在伤害事件发生后（伤害计算后）触发。
+     */
+}
