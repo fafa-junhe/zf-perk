@@ -235,6 +235,8 @@ stock void utilFxPrecache()
   PrecacheModel(ZFMDL_HAYBALE, true);
   PrecacheModel(ZFMDL_FLAG, true);
   PrecacheModel(ZFMDL_FENCE, true);
+  PrecacheModel("models/props_junk/garbage_milkcarton002a.mdl", true);
+
   for(int i = 0; i < 1; i++)
     PrecacheModel(ZFMDL_TOTEM[i], true);
   for(int i = 0; i < 1; i++)    

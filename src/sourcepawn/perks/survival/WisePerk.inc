@@ -28,7 +28,8 @@ methodmap WisePerk < SurvivorBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, WisePerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, WisePerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, WisePerkFonTakeDamage);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_DEATH, WisePerkFonPlayerDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, WisePerkFonKill);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_ASSIST_KILL, WisePerkFonAssistKill);
 
         return sm;
     }
@@ -60,14 +61,16 @@ FUNCTION_FLOAT(WisePerk, onTakeDamage), int victim, int attacker, int inflictor,
     return damage;
 }
 
-FUNCTION(WisePerk, onPlayerDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
+FUNCTION(WisePerk, onKill), int victim, int killer, int assist, int inflictor, int damagetype) {
     int client = _inst.client;
     if (validZom(victim)) {
-        if (killer == client) {
-            addStat(client, ZFStatAtt, ZFStatTypePerm, ZF_WISE_ATTACK_KILL);
-        }
-        if (assist == client) {
-            addStat(client, ZFStatAtt, ZFStatTypePerm, ZF_WISE_ATTACK_ASSIST);
-        }
+        addStat(client, ZFStatAtt, ZFStatTypePerm, ZF_WISE_ATTACK_KILL);
+    }
+}
+
+FUNCTION(WisePerk, onAssistKill), int victim, int killer, int assist, int inflictor, int damagetype) {
+    int client = _inst.client;
+    if (validZom(victim)) {
+        addStat(client, ZFStatAtt, ZFStatTypePerm, ZF_WISE_ATTACK_ASSIST);
     }
 }

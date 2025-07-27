@@ -110,7 +110,14 @@ Handle zf_menuZomPerkList;
 //
 ////////////////////////////////////////////////////////////
 
-
+stock void ZF_LogDebug(const char[] format, any...)
+{
+#if defined ZF_DEBUG
+    char buffer[256];
+    VFormat(buffer, sizeof(buffer), format, 2);
+    LogMessage("[ZF DEBUG] %s", buffer);
+#endif
+}
 
 stock void GetPerkInfoString(ArrayList typeList, int index, const char[] key, char[] buffer, int maxLen)
 {
@@ -921,6 +928,16 @@ stock bool zomPerkAtLimit(int client, int perk)
 // Perk HUD Logic
 //
 ////////////////////////////////////////////////////////////
+void clearHud(int client)
+{
+  if (IsClientInGame(client))
+  {
+    ShowSyncHudText(client, zf_hudLine0, "");
+    ShowSyncHudText(client, zf_hudLine1, "");
+    ShowSyncHudText(client, zf_hudLine2, "");
+  }
+}
+
 void updateHud(int client)
 {
   char strHudPerk[48];
@@ -1489,19 +1506,6 @@ stock void updateClientPermStats(int client)
   }
 }
 
-stock void updateClientPermEffects(int client)
-{
-  // 此函数当前为空，但为将来的扩展保留。
-  // Handle survivor effects.
-  if(validLivingSur(client))
-  {
-  }
-  // Handle zombie effects.
-  else if(validZom(client))
-  {
-  }
-}
-
 stock void updateCondStats()
 {  
   // 修复: 移除了未使用的变量 j 和 k
@@ -2018,25 +2022,27 @@ public Action perk_OnFenceTakeDamage(int victim, int &attacker, int &inflictor, 
 
 public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
-  ZF_LogDebug("perk_OnTakeDamage: START - victim=%d, attacker=%d, inflictor=%d, damage=%.2f, damagetype=%d", victim, attacker, inflictor, damage, damagetype);
+  float originalDamage = damage; // 保存原始伤害
 
   // 增加更严格的检查：确保受害者是有效、存活的玩家，并且其Perk对象存在
   if (validLivingClient(victim) && g_hPerks[victim] != null)
   {
     char perkName[64];
     g_hPerks[victim].getName(perkName, sizeof(perkName));
-    ZF_LogDebug("perk_OnTakeDamage: Calling perk-specific onTakeDamage for client %d with perk '%s'", victim, perkName);
     
-    g_hPerks[victim].onTakeDamage(victim, attacker, inflictor, damage, damagetype);
+    damage = g_hPerks[victim].onTakeDamage(victim, attacker, inflictor, damage, damagetype);
     
-    ZF_LogDebug("perk_OnTakeDamage: Returned from perk-specific onTakeDamage for client %d", victim);
   }
 
   // 忽略对无敌玩家的伤害事件
   if(validClient(victim) && isUbered(victim))
   {
-    ZF_LogDebug("perk_OnTakeDamage: Victim %d is ubered, ignoring.", victim);
     return Plugin_Continue;
+  }
+  
+  if (damage != originalDamage) {
+      // Perk 已经修改了伤害，我们信任 perk 的计算，直接返回
+      return Plugin_Changed;
   }
 
   // 处理毒药伤害归属
@@ -2045,7 +2051,6 @@ public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float
     if(validClient(victim) && (validSur(zf_lastPoison[victim]) || validZom(zf_lastPoison[victim])))
     {
       attacker = zf_lastPoison[victim];
-      ZF_LogDebug("perk_OnTakeDamage: Poison damage, attacker changed to %d", attacker);
     }
     return Plugin_Changed;
   }
@@ -2060,13 +2065,11 @@ public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float
   if(validLivingClient(victim) && (victim != attacker))
     def_bonus = float(getStat(victim, ZFStatDef));
   
-  ZF_LogDebug("perk_OnTakeDamage: att_bonus=%.2f, def_bonus=%.2f", att_bonus, def_bonus);
 
   // 步哨枪的攻击加成减半
   if(entIsSentry(inflictor))
   {
     att_bonus /= 2.0;
-    ZF_LogDebug("perk_OnTakeDamage: Sentry damage, att_bonus halved to %.2f", att_bonus);
   }
     
   // 应用攻击和防御加成
@@ -2078,16 +2081,13 @@ public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float
       fDamage = 0.0;
   }
 
-  ZF_LogDebug("perk_OnTakeDamage: Original damage=%.2f, Final damage=%.2f", damage, fDamage);
   damage = fDamage;
 
-  ZF_LogDebug("perk_OnTakeDamage: END");
   return Plugin_Changed;
 }
 
 public void perk_OnTakeDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype)
 {
-  ZF_LogDebug("perk_OnTakeDamagePost: victim=%d, attacker=%d, damage=%.2f", victim, attacker, damage);
   if (g_hPerks[victim] != null) {
     g_hPerks[victim].onTakeDamagePost(victim, attacker, inflictor, damage, damagetype);
   }
@@ -2112,7 +2112,6 @@ public void perk_OnTakeDamagePost(int victim, int attacker, int inflictor, float
 
 public void perk_OnDealDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype)
 {
-  ZF_LogDebug("perk_OnDealDamagePost: attacker=%d, victim=%d, damage=%.2f", attacker, victim, damage);
   if (g_hPerks[attacker] != null)
   {
     g_hPerks[attacker].onDealDamagePost(victim, attacker, inflictor, damage, damagetype);
@@ -2303,6 +2302,7 @@ public void perk_OnPlayerSpawn(int client)
     //
     if (perkChange)
     {
+        // Destroy the old perk object first
         if (g_hPerks[client] != null)
         {
             g_hPerks[client].onRemove();
@@ -2310,6 +2310,18 @@ public void perk_OnPlayerSpawn(int client)
             g_hPerks[client] = null;
         }
 
+        // Reset all player-specific states for a clean slate, this is crucial when changing teams/perks.
+        resetClientStats(client);
+        resetClientConds(client);
+        removeAura(client);
+        removeIcon(client);
+        removeItems(client);
+        setGlow(client, false);
+        fxSetClientColor(client, 255, 255, 255, 255);
+        zf_perkStr[client] = "";
+        clearHud(client);
+
+        // Create the new perk instance if one is selected
         if (nextPerk != ZF_PERK_NONE)
         {
             PerkCreator creator;
@@ -2331,27 +2343,17 @@ public void perk_OnPlayerSpawn(int client)
                 g_hPerks[client] = perk;
                 char buffer[64];
                 perk.getName(buffer, sizeof(buffer));
-                ZF_LogDebug("client %d, choose %s perk", client, buffer);
-
-                // FX
-                removeAura(client);
-                removeIcon(client);
-                removeItems(client);
-                fxSetClientColor(client, 255, 255, 255, 255);
-                setGlow(client, false);
-                      
-                // Implement new bonuses and effects.
-                resetClientStats(client);
-                resetClientConds(client);
-                updateClientPermStats(client);
-                updateClientPermEffects(client);
+                ZF_LogDebug("client %d, chose %s perk", client, buffer);
             }
             else
             {
-                ZF_LogDebug("Failed to create perk instance for client %d with perk index %d. Creator function is null.", client, nextPerk);
+                ZF_LogDebug("Failed to create perk instance for client %d with perk index %d. Creator function is null. Falling back to BasePerk.", client, nextPerk);
                 g_hPerks[client] = new BasePerk(client); // Fallback to BasePerk
             }
         }
+        
+        // Apply permanent stats from the new perk (or reset to zero if no perk is selected)
+        updateClientPermStats(client);
     }
 
     
@@ -2384,14 +2386,20 @@ public void perk_OnPlayerDeath(int victim, int killer, int assist, int inflictor
   {
     if (g_hPerks[victim] != null)
     {
-        g_hPerks[victim].onPlayerDeath(victim, killer, assist, inflictor, damagetype);
+        g_hPerks[victim].onDeath(victim, killer, assist, inflictor, damagetype);
     }
     // Destroy perk object on death
-    if (g_hPerks[victim] != null)
+    
+    // 幸存者死亡后会变成僵尸，所以他们的技能对象必须被清除。
+    // 僵尸死亡后仍然是僵尸，所以他们的技能对象被保留以便重生。
+    if (isSur(victim))
     {
-        g_hPerks[victim].onRemove();
-        delete g_hPerks[victim];
-        g_hPerks[victim] = null;
+        if (g_hPerks[victim] != null)
+        {
+            g_hPerks[victim].onRemove();
+            delete g_hPerks[victim];
+            g_hPerks[victim] = null;
+        }
     }
     
     //
@@ -2413,43 +2421,14 @@ public void perk_OnPlayerDeath(int victim, int killer, int assist, int inflictor
     setGlow(victim, false);
   }
 
-  //
-  // Survivor killed.
-  //
-  if(validSur(victim))
+
+  if (validClient(killer) && g_hPerks[killer] != null)
   {
-    //
-    // Survivor killed by zombie.
-    //
-    if(validZom(killer))
-    {
-    }
-    
-    //
-    // Survivor killed, assisted by zombie.
-    //
-    if(validZom(assist))
-    {
-    }
+      g_hPerks[killer].onKill(victim, killer, assist, inflictor, damagetype);
   }
-  //
-  // Zombie killed.
-  //
-  else if(validZom(victim))
+  if (validClient(assist) && assist != killer && g_hPerks[assist] != null)
   {
-    //
-    // Zombie killed by survivor.
-    //
-    if(validSur(killer))
-    {
-    }
-    
-    //
-    // Zombie killed, assisted by survivor.
-    //
-    if(validSur(assist))
-    {
-    }
+      g_hPerks[assist].onAssistKill(victim, killer, assist, inflictor, damagetype);
   }
 }
 
@@ -2457,6 +2436,14 @@ public Action perk_OnCallForMedic(int client)
 {
   ZF_LogDebug("perk_OnCallForMedic: client=%d", client);
   if(validLivingSur(client))
+  {
+    if (g_hPerks[client] != null) {
+      g_hPerks[client].onCallForMedic();
+    }
+
+    return Plugin_Handled;
+  }
+  if(validLivingZom(client))
   {
     if (g_hPerks[client] != null) {
       g_hPerks[client].onCallForMedic();

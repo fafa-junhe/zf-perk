@@ -27,7 +27,8 @@ methodmap CharitablePerk < SurvivorBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, CharitablePerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, CharitablePerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, CharitablePerkFupdateCondStats);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_DEATH, CharitablePerkFonPlayerDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, CharitablePerk_onKill);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_ASSIST_KILL, CharitablePerk_onAssistKill);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, CharitablePerkFonCallForMedic);
 
         return sm;
@@ -55,14 +56,14 @@ FUNCTION(CharitablePerk, updateCondStats), char[] buffer, int maxlen) {
     Format(buffer, maxlen, "(Gifts: %d)", gifts);
 }
 
-FUNCTION(CharitablePerk, onPlayerDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
+public void CharitablePerk_onKill(CharitablePerk _inst, int victim, int killer, int assist, int inflictor, int damagetype) {
     int client = _inst.client;
-    if (killer == client) {
-        zf_perkState[client] += ZF_CHARITABLE_POINTS_KILL;
-    }
-    if (assist == client) {
-        zf_perkState[client] += ZF_CHARITABLE_POINTS_ASSIST;
-    }
+    zf_perkState[client] += ZF_CHARITABLE_POINTS_KILL;
+}
+
+public void CharitablePerk_onAssistKill(CharitablePerk _inst, int victim, int killer, int assist, int inflictor, int damagetype) {
+    int client = _inst.client;
+    zf_perkState[client] += ZF_CHARITABLE_POINTS_ASSIST;
 }
 
 FUNCTION(CharitablePerk, onCallForMedic)) {

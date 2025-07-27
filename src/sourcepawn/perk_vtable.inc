@@ -34,9 +34,11 @@
 #define VTABLE_ON_FENCE_TAKE_DAMAGE         22
 #define VTABLE_ON_DEATH                     23
 #define VTABLE_ON_PLAYER_TOUCH              24
+#define VTABLE_ON_ASSIST_KILL               26
 #define VTABLE_ON_DEAL_DAMAGE_POST          35
+#define VTABLE_ON_KILL                      36
 
-#define PERK_VTABLE_SIZE                    36
+#define PERK_VTABLE_SIZE                    37
 
 
 // =================================================================================

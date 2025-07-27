@@ -1502,9 +1502,19 @@ stock void subClipAmmoPct(int client, int slot, float ammoPct)
 stock void addResAmmoPct(int client, int slot, float ammoPct, float ammoLimitPct = 1.0)
 {
   int curAmmo = getResAmmo(client, slot);
-  int maxAmmo = GetSlotMaxAmmo(client, slot);
+  // 使用与 setResAmmo 相同的函数来获取最大值，确保逻辑一致
+  int maxAmmo = maxResAmmo(client, slot); 
+  
+  // 如果最大弹药为0，直接返回，防止除零或无效计算
+  if (maxAmmo == 0) return;
+  
   int ammo = RoundToCeil(maxAmmo * ammoPct);
-  setResAmmo(client, slot, min((curAmmo + ammo), RoundToCeil(maxAmmo * ammoLimitPct)));
+  
+  // 计算新的弹药量，并确保它不超过由 ammoLimitPct 定义的上限
+  int newAmmo = min((curAmmo + ammo), RoundToCeil(maxAmmo * ammoLimitPct));
+  
+  // 调用修正后的 setResAmmo
+  setResAmmo(client, slot, newAmmo);
 }
 
 stock void subResAmmoPct(int client, int slot, float ammoPct)
@@ -1575,7 +1585,12 @@ stock int getClipAmmo(int client, int slot)
 stock void setClipAmmo(int client, int slot, int ammo)
 {
   int weapon = GetPlayerWeaponSlot(client, slot);
-  if(weapon > 0) SetEntData(weapon, oClipAmmo, min(ammo, 255), true);
+  if (weapon > 0) {
+      // 获取该武器的真实最大弹匣容量
+      int maxClip = maxClipAmmo(client, slot);
+      // 确保设置的值不超过真实上限
+      SetEntData(weapon, oClipAmmo, min(ammo, maxClip), true);
+  }
 }
 
 stock int getResAmmo(int client, int slot)
@@ -1585,7 +1600,11 @@ stock int getResAmmo(int client, int slot)
 
 stock void setResAmmo(int client, int slot, int ammo)
 {
-  SetEntData(client, oResAmmo[slot], min(ammo, 255), true);
+  // 获取该武器的真实最大备弹量
+  // 注意：这里应该用 maxResAmmo 而不是 GetSlotMaxAmmo，以保持一致性
+  int maxReserve = maxResAmmo(client, slot);
+  // 确保设置的值不超过真实上限
+  SetEntData(client, oResAmmo[slot], min(ammo, maxReserve), true);
 }
 
 ////////////////////////////////////////////////////////////

@@ -30,7 +30,7 @@ methodmap VindictivePerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, VindictivePerkFgetName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, VindictivePerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, VindictivePerkFgetDesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_DEATH, VindictivePerkFonPlayerDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, VindictivePerkFonDeath);
 
         return sm;
     }
@@ -52,8 +52,8 @@ FUNCTION(VindictivePerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "死后对杀死你的敌人造成一次伤害。");
 }
 
-FUNCTION(VindictivePerk, onPlayerDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
-    if (victim == _inst.client && validLivingSur(killer)) {
+FUNCTION(VindictivePerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
+    if (validLivingSur(killer)) {
         SDKHooks_TakeDamage(killer, _inst.client, _inst.client, ZF_VINDICTIVE_DAMAGE, DMG_BLAST);
     }
 }

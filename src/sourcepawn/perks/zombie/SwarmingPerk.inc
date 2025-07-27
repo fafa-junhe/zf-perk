@@ -35,7 +35,7 @@ methodmap SwarmingPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, SwarmingPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, SwarmingPerkFupdatePermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, SwarmingPerkFonPlayerSpawn);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_DEATH, SwarmingPerkFonPlayerDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, SwarmingPerkFonDeath);
 
         return sm;
     }
@@ -68,7 +68,7 @@ FUNCTION(SwarmingPerk, onPlayerSpawn)) {
     createAura(_inst.client, ZFPART_AURAFLIES, AttachBase);
 }
 
-FUNCTION(SwarmingPerk, onPlayerDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
+FUNCTION(SwarmingPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
     int client = _inst.client;
     // Self-respawn
     if (victim == client) {

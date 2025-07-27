@@ -31,7 +31,9 @@ methodmap BasePerk < DataPack {
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_GRACE_END, BasePerk_onGraceEnd);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_MED_PICKUP, BasePerk_onMedPickup);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, BasePerk_onPeriodic);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_DEATH, BasePerk_onPlayerDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, BasePerk_onDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, BasePerk_onKill);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_ASSIST_KILL, BasePerk_onAssistKill);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, BasePerk_onPlayerSpawn);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, BasePerk_onRemove);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_SET_TRANSMIT, BasePerk_onSetTransmit);
@@ -101,8 +103,16 @@ methodmap BasePerk < DataPack {
         PERK_IMPL_EVENT_VOID(VTABLE_ON_PERIODIC);
     }
 
-    public void onPlayerDeath(int victim, int killer, int assist, int inflictor, int damagetype) {
-        PERK_IMPL_onPlayerDeath(victim, killer, assist, inflictor, damagetype);
+    public void onDeath(int victim, int killer, int assist, int inflictor, int damagetype) {
+        PERK_IMPL_onDeath(victim, killer, assist, inflictor, damagetype);
+    }
+
+    public void onKill(int victim, int killer, int assist, int inflictor, int damagetype) {
+        PERK_IMPL_onKill(victim, killer, assist, inflictor, damagetype);
+    }
+
+    public void onAssistKill(int victim, int killer, int assist, int inflictor, int damagetype) {
+        PERK_IMPL_onAssistKill(victim, killer, assist, inflictor, damagetype);
     }
 
     public void onPlayerSpawn() {
@@ -144,6 +154,7 @@ methodmap BasePerk < DataPack {
     public void onDealDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype) {
         PERK_IMPL_onTakeDamagePost(victim, attacker, inflictor, damage, damagetype);
     }
+
 }
 
 stock BasePerk BasePerk_new(int client) {
@@ -211,9 +222,21 @@ public void BasePerk_onPeriodic(BasePerk _inst) {
      */
 }
 
-public void BasePerk_onPlayerDeath(BasePerk _inst, int victim, int killer, int assist, int inflictor, int damagetype) {
+public void BasePerk_onDeath(BasePerk _inst, int victim, int killer, int assist, int inflictor, int damagetype) {
     /**
-     * 当任何玩家或僵尸死亡时触发。
+     * 当拥有此技能的玩家死亡时触发。
+     */
+}
+
+public void BasePerk_onKill(BasePerk _inst, int victim, int killer, int assist, int inflictor, int damagetype) {
+    /**
+     * 当此职业的玩家造成击杀时触发。
+     */
+}
+
+public void BasePerk_onAssistKill(BasePerk _inst, int victim, int killer, int assist, int inflictor, int damagetype) {
+    /**
+     * 当此职业的玩家造成助攻时触发。
      */
 }
 
@@ -247,6 +270,7 @@ public void BasePerk_onTakeDamagePost(BasePerk _inst, int victim, int attacker, 
      * 在伤害事件发生后（伤害计算后）触发。
      */
 }
+
 
 public void BasePerk_onTouch(BasePerk _inst, int toucher, int touchee) {
     /**

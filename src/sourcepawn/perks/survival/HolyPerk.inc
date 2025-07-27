@@ -28,7 +28,6 @@ methodmap HolyPerk < SurvivorBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, HolyPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, HolyPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, HolyPerkFupdateCondStats);
-        // TODO: PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_EFFECTS, HolyPerkFupdateClientPermEffects);
 
         return sm;
     }
@@ -36,10 +35,6 @@ methodmap HolyPerk < SurvivorBasePerk {
 
 stock SurvivorBasePerk HolyPerkFnew(int client) {
     return new HolyPerk(client);
-}
-
-FUNCTION(HolyPerk, updateClientPermEffects)) {
-    createAura(_inst.client, ZFPART_AURAGLOWBEAMS, AttachBase);
 }
 
 FUNCTION(HolyPerk, getName), char[] buffer, int maxlen) {
@@ -56,6 +51,7 @@ FUNCTION(HolyPerk, getDesc), char[] buffer, int maxlen) {
 
 FUNCTION(HolyPerk, updateClientPermStats)) {
     addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, ZF_HOLY_ATTACK);
+    createAura(_inst.client, ZFPART_AURAGLOWBEAMS, AttachBase);
 }
 
 FUNCTION(HolyPerk, updateCondStats), char[] buffer, int maxlen) {

@@ -71,32 +71,25 @@ FUNCTION(ScorchingPerk, onPeriodic)) {
 }
 
 FUNCTION_FLOAT(ScorchingPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype) {
-    ZF_LogDebug("ScorchingPerk::onTakeDamage: START - victim=%d, attacker=%d, inst.client=%d, damage=%.2f", victim, attacker, _inst.client, damage);
 
     // Case 1: This perk's owner is the attacker. Apply damage modification.
     if (attacker == _inst.client) {
         float new_damage = damage * (100.0 + float(ZF_SCORCHING_ATTACK)) / 100.0;
-        ZF_LogDebug("ScorchingPerk::onTakeDamage: Owner is attacker. Damage adjusted from %.2f to %.2f", damage, new_damage);
         return new_damage;
     }
     // Case 2: This perk's owner is the victim and is taking fire damage. Grant immunity.
     else if (victim == _inst.client && (damagetype & DMG_BURN)) {
-        ZF_LogDebug("ScorchingPerk::onTakeDamage: Owner is victim, fire immunity applied. Damage becomes 0.0");
         return 0.0;
     }
 
     // Default case: Do not interfere with the damage event.
-    ZF_LogDebug("ScorchingPerk::onTakeDamage: END - No special conditions met. Returning original damage %.2f", damage);
     return damage;
 }
 
 FUNCTION(ScorchingPerk, onTakeDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype) {
-    ZF_LogDebug("ScorchingPerk::onTakeDamagePost: START - victim=%d, attacker=%d, inst.client=%d", victim, attacker, _inst.client);
     if (attacker == _inst.client && isSur(victim) && (damagetype & DMG_CLUB)) {
         TF2_IgnitePlayer(victim, _inst.client, ZF_SCORCH_DURATION);
-        ZF_LogDebug("ScorchingPerk::onTakeDamagePost: Ignited victim %d.", victim);
     }
-    ZF_LogDebug("ScorchingPerk::onTakeDamagePost: END");
 }
 
 FUNCTION(ScorchingPerk, onPlayerTouch), int other) {

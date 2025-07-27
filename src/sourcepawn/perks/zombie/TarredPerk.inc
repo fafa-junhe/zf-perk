@@ -89,7 +89,7 @@ FUNCTION(TarredPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "发医生语音来吐出焦油。焦油能降低幸存者的移动速度与攻击速度,持续30秒或直到你死亡。你的近战攻击附带焦油效果。");
 }
 
-FUNCTION(TarredPerk, onDeath)) {
+FUNCTION(TarredPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
     DataPack pools = _inst.pools;
     if (pools != null) {
         pools.Reset();
@@ -193,8 +193,8 @@ FUNCTION(TarredPerk, onPeriodic)) {
                 float sur_pos[3];
                 GetClientAbsOrigin(j, sur_pos);
                 if (GetVectorDistance(pool_pos, sur_pos) <= ZF_TARRED_RADIUS) {
-                    addStat(j, ZFStatSpeed, ZFStatTypePerm, ZF_TARRED_SPEED_SLICK);
-                    addStat(j, ZFStatRof, ZFStatTypePerm, ZF_TARRED_ROF);
+                    addStat(j, ZFStatSpeed, ZFStatTypeCond, ZF_TARRED_SPEED_SLICK);
+                    addStat(j, ZFStatRof, ZFStatTypeCond, ZF_TARRED_ROF);
                 }
             }
         }
@@ -210,4 +210,5 @@ FUNCTION(TarredPerk, updateCondStats), char[] buffer, int maxlen) {
         Format(buffer, maxlen, "Spit Ready");
     }
 }
+
 

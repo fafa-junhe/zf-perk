@@ -32,7 +32,7 @@ methodmap ResourcefulPerk < SurvivorBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, ResourcefulPerkFgetName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, ResourcefulPerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, ResourcefulPerkFgetDesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_DEATH, ResourcefulPerkFonPlayerDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, ResourcefulPerkFonKill);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_AMMO_PICKUP, ResourcefulPerkFonAmmoPickup);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_MED_PICKUP, ResourcefulPerkFonMedPickup);
 
@@ -56,8 +56,8 @@ FUNCTION(ResourcefulPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "Your kills give you ammo, health, and metal. Ammo packs give you a temporary attack bonus, and medkits give you a temporary defense bonus.");
 }
 
-FUNCTION(ResourcefulPerk, onPlayerDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
-    if (killer == _inst.client && validZom(victim)) {
+FUNCTION(ResourcefulPerk, onKill), int victim, int killer, int assist, int inflictor, int damagetype) {
+    if (validClient(victim)) {
         addHealth(_inst.client, ZF_RESOURCEFUL_HEALTH, ZF_RESOURCEFUL_HEALTH_OVERHEAL);
         addResAmmoPct(_inst.client, 0, ZF_RESOURCEFUL_AMMOPCT);
         addResAmmoPct(_inst.client, 1, ZF_RESOURCEFUL_AMMOPCT);

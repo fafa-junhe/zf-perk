@@ -37,8 +37,8 @@ methodmap LeaderPerk < SurvivorBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, LeaderPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, LeaderPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, LeaderPerkFonCallForMedic);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_DEATH, LeaderPerkFonPlayerDeath);
-        // TODO: PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_EFFECTS, LeaderPerkFupdateClientPermEffects);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, LeaderPerkFonDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, LeaderPerkFonPeriodic); // 新增这一行
 
         return sm;
     }
@@ -60,12 +60,19 @@ FUNCTION(LeaderPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "You have a crit bonus and provide a passive attack bonus to nearby survivors. Call for a medic to place a banner that gives attack and defense to nearby survivors. Banner lasts 90s, 150s cooldown.");
 }
 
-FUNCTION(LeaderPerk, updateClientPermEffects)) {
-    createAura(_inst.client, ZFPART_AURAINRED, AttachBase);
+FUNCTION(LeaderPerk, onPeriodic))
+{
+    int client = _inst.client;
+    // 如果战旗冷却计时器正在运行，就每秒减1
+    if (zf_perkTimer[client] > 0)
+    {
+        zf_perkTimer[client]--;
+    }
 }
 
 FUNCTION(LeaderPerk, updateClientPermStats)) {
     addStat(_inst.client, ZFStatCrit, ZFStatTypePerm, ZF_LEADER_SELF_CRIT);
+    createAura(_inst.client, ZFPART_AURAINRED, AttachBase);
 }
 
 FUNCTION(LeaderPerk, updateCondStats), char[] buffer, int maxlen) {
@@ -141,8 +148,6 @@ FUNCTION(LeaderPerk, onCallForMedic)) {
     }
 }
 
-FUNCTION(LeaderPerk, onPlayerDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
-    if (victim == _inst.client) {
-        removeItem(_inst.client, 0);
-    }
+FUNCTION(LeaderPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
+    removeItem(_inst.client, 0);
 }

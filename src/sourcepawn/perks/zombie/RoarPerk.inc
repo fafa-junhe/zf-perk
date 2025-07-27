@@ -41,7 +41,6 @@ methodmap RoarPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, RoarPerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, RoarPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, RoarPerkFonCallForMedic);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE_POST, RoarPerkFonTakeDamagePost);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, RoarPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, RoarPerkFupdateCondStats);
 
@@ -88,37 +87,45 @@ FUNCTION(RoarPerk, onCallForMedic)) {
 
     _inst.perk_timer = ZF_ROAR_COOLDOWN;
     
-    applyDamageRadialAtClient(client, 1, RoundFloat(ZF_ROAR_RADIUS));
+    // --- 播放特效和音效 ---
     fxPuffBig(client);
     ClientCommand(client, "voicemenu 2 1");
-}
-
-FUNCTION(RoarPerk, onTakeDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype) {
-    if (attacker != _inst.client || !validLivingSur(victim) || inflictor != attacker) {
-        return;
-    }
-
-    int client = _inst.client;
-    bool isHeavyAttacker = TF2_GetPlayerClass(client) == TFClass_Heavy;
-    float force = isHeavyAttacker ? ZF_ROAR_FORCE_HEAVY : ZF_ROAR_FORCE;
-    int duration = isHeavyAttacker ? ZF_ROAR_DURATION_HEAVY : ZF_ROAR_DURATION;
-
-    float pos[3];
-    GetClientAbsOrigin(client, pos);
-    float sur_pos[3];
-    GetClientAbsOrigin(victim, sur_pos);
-
-    float knockback_dir[3];
-    MakeVectorFromPoints(pos, sur_pos, knockback_dir);
-    NormalizeVector(knockback_dir, knockback_dir);
-    ScaleVector(knockback_dir, force);
     
-    float current_vel[3];
-    GetEntPropVector(victim, Prop_Data, "m_vecVelocity", current_vel);
-    AddVectors(current_vel, knockback_dir, current_vel);
-    TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, current_vel);
+    // --- 计算数值 ---
+    float force = isHeavy(client) ? ZF_ROAR_FORCE_HEAVY : ZF_ROAR_FORCE;
+    int duration = isHeavy(client) ? ZF_ROAR_DURATION_HEAVY : ZF_ROAR_DURATION;
+    
+    float roar_pos[3];
+    GetClientAbsOrigin(client, roar_pos);
 
-    addStatTempStack(victim, ZFStatDef, ZF_ROAR_DEFEND, duration);
+    // --- 遍历范围内的幸存者 ---
+    for (int i = 1; i <= MaxClients; i++) {
+        if (validLivingSur(i)) {
+            float sur_pos[3];
+            GetClientAbsOrigin(i, sur_pos);
+
+            if (GetVectorDistance(roar_pos, sur_pos) <= ZF_ROAR_RADIUS) {
+                // --- 对范围内的每个幸存者施加效果 ---
+                
+                // 1. 施加防御力减益
+                addStatTempStack(i, ZFStatDef, ZF_ROAR_DEFEND, duration);
+
+                // 2. 计算并施加击退
+                float knockback_dir[3];
+                SubtractVectors(sur_pos, roar_pos, knockback_dir); // 正确方向：目标 - 源头
+                NormalizeVector(knockback_dir, knockback_dir);
+                
+                // 给予一个向上的力，防止玩家被推到地里
+                knockback_dir[2] = 0.5;
+                NormalizeVector(knockback_dir, knockback_dir);
+                
+                ScaleVector(knockback_dir, force);
+                
+                // 直接设置速度，而不是相加，效果更可控
+                TeleportEntity(i, NULL_VECTOR, NULL_VECTOR, knockback_dir);
+            }
+        }
+    }
 }
 
 

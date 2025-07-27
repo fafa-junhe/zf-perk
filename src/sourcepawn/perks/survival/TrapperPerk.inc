@@ -32,7 +32,7 @@ methodmap TrapperPerk < SurvivorBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, TrapperPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, TrapperPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, TrapperPerkFonCallForMedic);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_DEATH, TrapperPerkFonPlayerDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, TrapperPerkFonDeath);
 
         return sm;
     }
@@ -53,7 +53,6 @@ FUNCTION(TrapperPerk, getShortdesc), char[] buffer, int maxlen) {
 FUNCTION(TrapperPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "Call for a medic to place a mine that explodes when a zombie gets near. Max 5 mines. 20s cooldown.");
 }
-
 FUNCTION(TrapperPerk, updateCondStats), char[] buffer, int maxlen) {
     int client = _inst.client;
 
@@ -62,30 +61,46 @@ FUNCTION(TrapperPerk, updateCondStats), char[] buffer, int maxlen) {
         if (mine > 0 && IsValidEntity(mine)) {
             float mine_pos[3];
             GetEntPropVector(mine, Prop_Send, "m_vecOrigin", mine_pos);
-            bool triggered = false;
+            
+            int firstTarget = -1; // 用来记录第一个触发地雷的僵尸
+            bool magneticTriggered = false;
 
+            // 第一次循环：检查是否有僵尸触发了地雷
             for (int j = 1; j <= MaxClients; j++) {
                 if (validLivingZom(j)) {
                     float zom_pos[3];
                     GetClientAbsOrigin(j, zom_pos);
                     if (GetVectorDistance(mine_pos, zom_pos, true) <= ZF_TRAPPER_RADIUSSQ) {
+                        // 磁力僵尸优先触发
                         if (isMagnetic(j)) {
-                            fxSpark(mine);
-                            removeItem(client, i);
-                            triggered = true;
-                            break;
+                            magneticTriggered = true;
+                            break; 
                         }
-
-                        TF2_IgnitePlayer(j, client);
-                        applyDamageRadial(client, ZF_TRAPPER_DAMAGE, mine_pos, ZF_TRAPPER_RADIUS, true);
-                        removeItem(client, i);
-                        triggered = true;
-                        break;
+                        // 记录第一个普通触发者
+                        if (firstTarget == -1) {
+                            firstTarget = j;
+                        }
                     }
                 }
             }
-            if (!triggered) {
-                // Play idle sound? The doc mentions ZFSND_TICK.
+
+            // 处理触发结果
+            if (magneticTriggered) {
+                fxSpark(mine); // 磁力触发
+                removeItem(client, i);
+                continue; // 处理下一个地雷
+            }
+            
+            if (firstTarget != -1) {
+                // 普通爆炸触发
+                // 此时我们不再需要循环，因为 applyDamageRadial 会处理范围内的所有敌人
+                
+                // applyDamageRadial 本身会创建爆炸特效，所以 doFx 设为 true
+                // 你需要在 applyDamageRadial 内部让 env_explosion 实体也造成点燃
+                applyDamageRadial(client, ZF_TRAPPER_DAMAGE, mine_pos, ZF_TRAPPER_RADIUS, true);
+                
+                // 移除地雷模型
+                removeItem(client, i);
             }
         }
     }
@@ -100,33 +115,80 @@ FUNCTION(TrapperPerk, updateCondStats), char[] buffer, int maxlen) {
         }
     }
 }
+public bool TraceFilter_JustWorld(int entity, int contentsMask) {
+    // entity 0 is the world
+    return entity == 0;
+}
+
+FUNCTION(TrapperPerk, onPeriodic)) {
+    int client = _inst.client;
+    if (zf_perkTimer[client] > 0 && zf_perkTimer[client] == 0) {
+        zf_perkTimer[client]--;
+    }
+}
 
 FUNCTION(TrapperPerk, onCallForMedic)) {
     int client = _inst.client;
 
     if (zf_perkTimer[client] > 0) {
-        return;
-    }
-    if (!isGrounded(client) || !isCrouching(client)) {
-        return;
-    }
-    int itemIndex = getFreeItemIndex(client, ZF_TRAPPER_MAX_ITEMS);
-    if (itemIndex == -1) {
+        PrintHintText(client, "地雷正在冷却中: %d秒", zf_perkTimer[client]);
         return;
     }
 
-    float pos[3], ang[3];
-    GetClientEyePosition(client, pos);
+    if (!isGrounded(client)) {
+        PrintHintText(client, "你必须站在地上才能放置地雷。");
+        return;
+    }
+    if (!isCrouching(client)) {
+        PrintHintText(client, "你必须蹲下才能放置地雷。");
+        return;
+    }
+
+    int itemIndex = getFreeItemIndex(client, ZF_TRAPPER_MAX_ITEMS);
+    if (itemIndex == -1) {
+        // HUD 已经显示了 "(Mines Full)"，但一个即时提示更好
+        PrintHintText(client, "你放置的地雷已达上限！");
+        return;
+    }
+    
+
+    float startPos[3];
+    float ang[3];
+    GetClientAbsOrigin(client, startPos); // 从玩家脚底开始
     GetClientEyeAngles(client, ang);
     
     float fwd[3];
     GetAngleVectors(ang, fwd, NULL_VECTOR, NULL_VECTOR);
-    pos[0] += fwd[0] * 30.0;
-    pos[1] += fwd[1] * 30.0;
-    pos[2] -= 30.0; // Place it on the ground
-    ang[0] = 90.0; // Lay flat
+    
+    // 在玩家前方一段距离处开始向下追踪
+    startPos[0] += fwd[0] * 50.0;
+    startPos[1] += fwd[1] * 50.0;
+    startPos[2] += 20.0; // 稍微抬高一点，以防玩家卡在斜坡里
+    
+    float endPos[3];
+    endPos[0] = startPos[0];
+    endPos[1] = startPos[1];
+    endPos[2] = startPos[2];
+    
+    endPos[2] -= 100.0; // 向下追踪100个单位
 
-    int entity = fxCreateModelStatic(ZFMDL_MINE, client, true, true, pos, ang);
+    // 创建一个只与世界（地面）碰撞的过滤器
+    Handle trace = TR_TraceRayFilterEx(startPos, endPos, MASK_SOLID_BRUSHONLY, RayType_EndPoint, TraceFilter_JustWorld);
+
+    float finalPos[3];
+    if (TR_DidHit(trace)) {
+        TR_GetEndPosition(finalPos, trace); // 获取精确的地面位置
+    } else {
+        // 如果没有找到地面（比如玩家在悬崖边），可以给个提示或取消放置
+        CloseHandle(trace);
+        PrintHintText(client, "无法在这里放置地雷。");
+        return;
+    }
+    CloseHandle(trace);
+
+    float mineAng[3] = {0.0, 0.0, 0.0}; // 让地雷平躺，并朝向玩家看的方向
+    mineAng[1] = ang[1];
+    int entity = fxCreateModelStatic(ZFMDL_MINE, client, true, true, finalPos, mineAng);
     if (entity != -1) {
         zf_item[client][itemIndex] = entity;
         zf_perkTimer[client] = ZF_TRAPPER_TIMER;
@@ -134,10 +196,8 @@ FUNCTION(TrapperPerk, onCallForMedic)) {
     }
 }
 
-FUNCTION(TrapperPerk, onPlayerDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
-    if (victim == _inst.client) {
-        removeItems(_inst.client);
-    }
+FUNCTION(TrapperPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
+    removeItems(_inst.client);
 }
 
 stock bool isMagnetic(int client) {

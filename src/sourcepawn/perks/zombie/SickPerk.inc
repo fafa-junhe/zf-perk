@@ -25,7 +25,6 @@
 #define ZF_SICK_SPIT_INTERVAL 0.2
 #define ZF_SICK_PROJECTILE_SPEED 900.0
 #define ZF_SICK_PROJECTILE_MODEL "models/props_junk/garbage_milkcarton002a.mdl"
-
 // Data slots
 #define SICK_DATA_COOLDOWN (PERK_DATA_START_INDEX + 0)
 #define SICK_DATA_POOLS_HANDLE (PERK_DATA_START_INDEX + 1)
@@ -44,6 +43,7 @@ methodmap SickPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, SickPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, SickPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, SickPerkFonDeath);
+PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, SickPerkFonPlayerSpawn);
 
         sm.cooldown = 0.0;
         sm.pools = new DataPack();
@@ -105,21 +105,33 @@ FUNCTION(SickPerk, updatePermStats)) {
     addStat(_inst.client, ZFStatDef, ZFStatTypePerm, ZF_SICK_DEFEND);
 }
 
-FUNCTION(SickPerk, onDeath)) {
+// 实现函数
+FUNCTION(SickPerk, onPlayerSpawn)) {
+    // 如果 pools 句柄是 null (因为死亡被删除了)，就重新创建一个
+    if (_inst.pools == null) {
+        _inst.pools = new DataPack();
+    }
+    // 重置吐痰计数器
+    _inst.spit_count = 0;
+}
+
+FUNCTION(SickPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
     DataPack pools = _inst.pools;
     if (pools != null) {
         pools.Reset();
-        DataPackPos total_bytes = pools.Position;
-        pools.Reset();
-        while (pools.Position < total_bytes) {
+        // 直接清空 DataPack 的内容，但不要 delete 句柄本身
+        while (pools.IsReadable()) {
             int pool_entity = pools.ReadCell();
             if (IsValidEdict(pool_entity)) {
                 AcceptEntityInput(pool_entity, "Kill");
             }
-            pools.ReadFloat(); // Keep pack structure consistent
+            pools.ReadFloat();
         }
+        // 清空内容
+        pools.Close();
         delete pools;
-        _inst.pools = null;
+        _inst.pools = new DataPack(); 
+        // 不要 delete pools 和设置 _inst.pools = null
     }
 }
 

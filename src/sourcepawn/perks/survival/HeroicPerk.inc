@@ -31,7 +31,8 @@ methodmap HeroicPerk < SurvivorBasePerk
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, HeroicPerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, HeroicPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, HeroicPerkFonPlayerSpawn);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_DEATH, HeroicPerkFonPlayerDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, HeroicPerkFonKill);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_ASSIST_KILL, HeroicPerkFonAssistKill);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, HeroicPerkFupdateCondStats);
 
         return sm;
@@ -65,19 +66,18 @@ FUNCTION(HeroicPerk, onPlayerSpawn), int client)
     zf_perkState[client] = 0;
 }
 
-FUNCTION(HeroicPerk, onPlayerDeath), int victim, int killer, int assist, int inflictor, int damagetype)
+FUNCTION(HeroicPerk, onKill), int victim, int killer, int assist, int inflictor, int damagetype)
 {
     int client = _inst.client;
-    if (killer == client)
-    {
-        int time = zf_perkState[client] == 1 ? HEROIC_CRITTIME_KILL_ACTIVE : HEROIC_CRITTIME_KILL;
-        zf_perkTimer[client] += time;
-    }
-    else if (assist == client)
-    {
-        int time = zf_perkState[client] == 1 ? HEROIC_CRITTIME_ASSIST_ACTIVE : HEROIC_CRITTIME_ASSIST;
-        zf_perkTimer[client] += time;
-    }
+    int time = zf_perkState[client] == 1 ? HEROIC_CRITTIME_KILL_ACTIVE : HEROIC_CRITTIME_KILL;
+    zf_perkTimer[client] += time;
+}
+
+FUNCTION(HeroicPerk, onAssistKill), int victim, int killer, int assist, int inflictor, int damagetype)
+{
+    int client = _inst.client;
+    int time = zf_perkState[client] == 1 ? HEROIC_CRITTIME_ASSIST_ACTIVE : HEROIC_CRITTIME_ASSIST;
+    zf_perkTimer[client] += time;
 }
 
 FUNCTION(HeroicPerk, updateCondStats), char[] buffer, int maxlen)

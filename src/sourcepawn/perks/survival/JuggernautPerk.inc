@@ -69,63 +69,91 @@ FUNCTION(JuggernautPerk, updateClientPermStats)) {
     addStat(_inst.client, ZFStatSpeed, ZFStatTypePerm, ZF_JUGGERNAUT_SPEED);
 }
 
-FUNCTION_FLOAT(JuggernautPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype) {
-    if ((victim != _inst.client)) {
-        return damage;
-    }
-    if ((attacker == _inst.client)) {
+FUNCTION_FLOAT(JuggernautPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype)
+{
+    // 如果是剑圣自己受到的摔落伤害
+    if (victim == _inst.client && (damagetype & DMG_FALL))
+    {
+        // 直接将伤害清零，实现免疫
         return 0.0;
     }
-    if ((damagetype & DMG_FALL)) {
-        float client_pos[3] = {0.0, 0.0, 0.0};
-        GetEntPropVector(_inst.client, Prop_Send, "m_vecOrigin", client_pos);
-        fxPuffBig(_inst.client);
-        for (int i = 1; i < (MAXPLAYERS + 1); i += 1)
+
+    // 如果是剑圣自己打自己（比如火箭跳），也免疫伤害
+    if (attacker == _inst.client && victim == _inst.client)
+    {
+        return 0.0;
+    }
+    
+    return damage; // 其他情况，返回原始伤害
+}
+
+FUNCTION(JuggernautPerk, onTakeDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype)
+{
+    int client = _inst.client;
+
+    // --- 1. 处理地面冲击效果 ---
+    // 条件：是剑圣自己受到了摔落伤害（即使伤害为0，这个事件依然会触发）
+    if (victim == client && (damagetype & DMG_FALL))
+    {
+        float juggernautPos[3];
+        GetClientAbsOrigin(client, juggernautPos);
+        fxPuffBig(client); // 播放落地特效
+
+        // 遍历所有玩家，寻找范围内的僵尸
+        for (int i = 1; i <= MaxClients; i++)
         {
-            if ((validClient(i)) && (IsPlayerAlive(i)) && (isZom(i))) {
-                float target_pos[3] = {0.0, 0.0, 0.0};
-                GetEntPropVector(i, Prop_Send, "m_vecOrigin", target_pos);
-                if ((GetVectorDistance(client_pos, target_pos) <= ZF_JUGGERNAUT_RADIUS)) {
-                    SDKHooks_TakeDamage(i, _inst.client, _inst.client, 1.0);
+            if (validLivingZom(i)) // 确保是存活的僵尸
+            {
+                float zombiePos[3];
+                GetClientAbsOrigin(i, zombiePos);
+
+                if (GetVectorDistance(juggernautPos, zombiePos) <= ZF_JUGGERNAUT_RADIUS)
+                {
+                    // a. 造成伤害
+                    SDKHooks_TakeDamage(i, client, client, 1.0, DMG_CLUB); // 造成1点钝器伤害
+
+                    // b. 施加减速
                     addStatTempExtend(i, ZFStatSpeed, ZF_JUGGERNAUT_STUN_SLOWDOWN, ZF_JUGGERNAUT_STUN_DURATION);
-                    float knockback_dir[3] = {0.0, 0.0, 0.0};
-                    ScaleVector(client_pos, -(1.0));
-                    AddVectors(target_pos, client_pos, knockback_dir);
+
+                    // c. 计算并施加击退 (正确的计算方式)
+                    float knockback_dir[3];
+                    SubtractVectors(zombiePos, juggernautPos, knockback_dir); // 正确方向：目标 - 源头
                     NormalizeVector(knockback_dir, knockback_dir);
-                    float current_velocity[3] = {0.0, 0.0, 0.0};
-                    GetEntPropVector(i, Prop_Data, "m_vecVelocity", current_velocity);
-                    float knockback_velocity[3] = {0.0, 0.0, 0.0};
+                    
+                    // 给予一个向上的力，让击退效果更明显
+                    knockback_dir[2] += 0.5;
+                    NormalizeVector(knockback_dir, knockback_dir);
+
                     ScaleVector(knockback_dir, ZF_JUGGERNAUT_FORCE);
-                    AddVectors(current_velocity, knockback_dir, knockback_velocity);
-                    TeleportEntity(i, NULL_VECTOR, NULL_VECTOR, knockback_velocity);
+                    
+                    TeleportEntity(i, NULL_VECTOR, NULL_VECTOR, knockback_dir);
                 }
             }
         }
-        return 0.0;
     }
-    return damage;
-}
 
+    // --- 2. 处理近战攻击击退 ---
+    // 条件：攻击者是剑圣，受害者是僵尸，伤害类型是近战
+    if (attacker == client && validZom(victim) && (damagetype & DMG_CLUB))
+    {
+        float attackerPos[3];
+        GetClientAbsOrigin(attacker, attackerPos);
+        
+        float victimPos[3];
+        GetClientAbsOrigin(victim, victimPos);
 
-FUNCTION(JuggernautPerk, onTakeDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype) {
-    if (((attacker != _inst.client)) || (!(validZom(victim)))) {
-        return;
-    }
-    if ((damagetype & DMG_CLUB)) {
-        float attacker_pos[3] = {0.0, 0.0, 0.0};
-        GetEntPropVector(attacker, Prop_Send, "m_vecOrigin", attacker_pos);
-        float victim_pos[3] = {0.0, 0.0, 0.0};
-        GetEntPropVector(victim, Prop_Send, "m_vecOrigin", victim_pos);
-        ScaleVector(attacker_pos, -(1.0));
-        float result_pos[3] = {0.0, 0.0, 0.0};
-        AddVectors(victim_pos, attacker_pos, result_pos);
-        NormalizeVector(result_pos, result_pos);
-        float current_velocity[3] = {0.0, 0.0, 0.0};
-        GetEntPropVector(victim, Prop_Data, "m_vecVelocity", current_velocity);
-        ScaleVector(result_pos, ZF_JUGGERNAUT_FORCE);
-        float knockback_velocity[3] = {0.0, 0.0, 0.0};
-        AddVectors(current_velocity, result_pos, knockback_velocity);
-        TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, knockback_velocity);
+        // 计算并施加击退
+        float knockback_dir[3];
+        SubtractVectors(victimPos, attackerPos, knockback_dir); // 正确方向：目标 - 源头
+        NormalizeVector(knockback_dir, knockback_dir);
+
+        // 同样给予一个向上的力
+        knockback_dir[2] += 0.5;
+        NormalizeVector(knockback_dir, knockback_dir);
+        
+        ScaleVector(knockback_dir, ZF_JUGGERNAUT_FORCE);
+        
+        TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, knockback_dir);
     }
 }
 

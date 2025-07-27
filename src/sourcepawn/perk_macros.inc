@@ -31,29 +31,29 @@
 #define DP_WRITE_VECTOR_PROP(%1,%2,%3) {%1.%2_1 = %3[0]; %1.%2_2 = %3[1]; %1.%2_3 = %3[2];}IsCharAlpha(0)
 
 #define RegisterPerk(%1,%2,%3,%4,%5) \
-        { \
-            %1 perk = new %1(-1); \
-            char classname[64]; \
-            perk.getName(classname, sizeof(classname)); \
-            LogMessage("[ZF] Register %s perk with classname %s", %5, classname); \
-            if (%2.ContainsKey(classname)){ \
-                LogError("[ZF] Attempted to register %s perk with duplicate classname: '%s'", %5, classname); \
-            } \
-            else { \
-                StringMap perkInfo = new StringMap(); \
-                char shortDesc[128]; \
-                perk.getShortdesc(shortDesc, sizeof(shortDesc)); \
-                char longDesc[1024]; \
-                perk.getDesc(longDesc, sizeof(longDesc)); \
-                perkInfo.SetString("name", classname); \
-                perkInfo.SetString("shortDesc", shortDesc); \
-                perkInfo.SetString("longDesc", longDesc); \
-                %2.SetValue(classname, perkInfo); \
-                %3.Push(perkInfo); \
-                %4.Push(view_as<Function>(%1Fnew)); \
-                LogMessage("[ZF] %s perk: classname %s shortDesc %s longDesc", %5, classname, shortDesc, longDesc); \
-            } \
-        } LogMessage("[ZF] register successed.")
+    { \
+        %1 perk = new %1(-1); \
+        char classname[64]; \
+        perk.getName(classname, sizeof(classname)); \
+        LogMessage("[ZF] Register %s perk with classname %s", %5, classname); \
+        if (%2.ContainsKey(classname)){ \
+            LogError("[ZF] Attempted to register %s perk with duplicate classname: '%s'", %5, classname); \
+        } \
+        else { \
+            StringMap perkInfo = new StringMap(); \
+            char shortDesc[128]; \
+            perk.getShortdesc(shortDesc, sizeof(shortDesc)); \
+            char longDesc[1024]; \
+            perk.getDesc(longDesc, sizeof(longDesc)); \
+            perkInfo.SetString("name", classname); \
+            perkInfo.SetString("shortDesc", shortDesc); \
+            perkInfo.SetString("longDesc", longDesc); \
+            %2.SetValue(classname, perkInfo); \
+            %3.Push(perkInfo); \
+            %4.Push(view_as<Function>(%1Fnew)); \
+            LogMessage("[ZF] %s perk: classname %s shortDesc %s", %5, classname, shortDesc); \
+        } \
+    } IsCharAlpha(0)
 
 #define RegisterSurvivorPerk(%1) RegisterPerk(%1, g_SurPerkRegistry, g_SurPerkTypes, g_SurPerkCreators, "survivor")
 #define RegisterZombiePerk(%1) RegisterPerk(%1, g_ZomPerkRegistry, g_ZomPerkTypes, g_ZomPerkCreators, "zombie")
@@ -100,8 +100,17 @@
     Call_PushCell(%4); \
     Call_Finish()
 
-#define PERK_IMPL_onPlayerDeath(%0,%1,%2,%3,%4) \
-    START_VTABLE_CALL(VTABLE_ON_PLAYER_DEATH); \
+#define PERK_IMPL_onKill(%0,%1,%2,%3,%4) \
+    START_VTABLE_CALL(VTABLE_ON_KILL); \
+    Call_PushCell(%0); \
+    Call_PushCell(%1); \
+    Call_PushCell(%2); \
+    Call_PushCell(%3); \
+    Call_PushCell(%4); \
+    Call_Finish()
+
+#define PERK_IMPL_onAssistKill(%0,%1,%2,%3,%4) \
+    START_VTABLE_CALL(VTABLE_ON_ASSIST_KILL); \
     Call_PushCell(%0); \
     Call_PushCell(%1); \
     Call_PushCell(%2); \
@@ -126,6 +135,15 @@
     Call_PushCell(%1); \
     Call_PushCell(%2); \
     Call_PushFloat(%3); \
+    Call_PushCell(%4); \
+    Call_Finish()
+
+#define PERK_IMPL_onDeath(%0,%1,%2,%3,%4) \
+    START_VTABLE_CALL(VTABLE_ON_DEATH); \
+    Call_PushCell(%0); \
+    Call_PushCell(%1); \
+    Call_PushCell(%2); \
+    Call_PushCell(%3); \
     Call_PushCell(%4); \
     Call_Finish()
 

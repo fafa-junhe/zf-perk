@@ -9,6 +9,10 @@
 #include "../../perk_vtable.inc"
 #include "../../perk_macros.inc"
 
+#include <sdkhooks>
+#include "../../zf_perk.inc"
+#include "../../zf_util_base.inc"
+#include "../../zf_util_fx.inc"
 #define CARPENTER_ATTACK -40
 #define CARPENTER_DEFEND 25
 #define CARPENTER_BARRICADE_HEALTH 500

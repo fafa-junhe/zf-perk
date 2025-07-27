@@ -36,9 +36,9 @@ methodmap CombustiblePerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, CombustiblePerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, CombustiblePerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, CombustiblePerkFupdateClientPermStats);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_DEATH, CombustiblePerkFonPlayerDeath);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_RUN_CMD, CombustiblePerkFonPlayerRunCmd);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, CombustiblePerkFonTakeDamage);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, CombustiblePerkFupdateCondStats);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, CombustiblePerkFonPlayerSpawn);
 
         return sm;
     }
@@ -64,26 +64,25 @@ FUNCTION(CombustiblePerk, updateClientPermStats)) {
     addStat(_inst.client, ZFStatDef, ZFStatTypePerm, ZF_COMBUSTIBLE_DEFEND);
 }
 
-FUNCTION(CombustiblePerk, onPlayerDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
-    if (victim != _inst.client || !isSur(killer)) {
-        return;
-    }
+FUNCTION_FLOAT(CombustiblePerk, onTakeDamage), int victim, int attacker,  int inflictor, float damage, int damagetype) {
+    int client = _inst.client;
+    if (victim != client) return damage;
 
-    // Explode if killed by a non-melee weapon
-    if (!(damagetype & DMG_CLUB)) {
-        int damage = (TF2_GetPlayerClass(victim) == TFClass_Heavy) ? ZF_COMBUSTIBLE_DAMAGE_HEAVY : ZF_COMBUSTIBLE_DAMAGE;
-        
-        float pos[3];
-        GetClientAbsOrigin(victim, pos);
-        
-        // Create an explosion at the player's location
-        applyDamageRadialAtClient(victim, damage, ZF_COMBUSTIBLE_RADIUS, true);             
-        
-        fxExplosionBig(victim);
-        
-        // Force respawn
-        CreateTimer(ZF_COMBUSTIBLE_RESPAWNTIME, Timer_RespawnClient, victim, TIMER_FLAG_NO_MAPCHANGE);
+    // 检查是否是来自幸存者的非近战致命一击
+    if (isSur(attacker) && !(damagetype & DMG_CLUB)) {
+        if (damage >= GetClientHealth(client)) {
+            // 是致命一击，触发爆炸
+            int explosionDamage = (TF2_GetPlayerClass(victim) == TFClass_Heavy) ? ZF_COMBUSTIBLE_DAMAGE_HEAVY : ZF_COMBUSTIBLE_DAMAGE;
+            
+            // 此刻 victim 仍然有效，可以作为 attacker
+            applyDamageRadialAtClient(victim, explosionDamage, ZF_COMBUSTIBLE_RADIUS, true);
+            fxExplosionBig(victim);
+            
+            // 设置重生计时器
+            CreateTimer(ZF_COMBUSTIBLE_RESPAWNTIME, Timer_RespawnClient, victim, TIMER_FLAG_NO_MAPCHANGE);
+        }
     }
+    return damage; // 返回原始伤害，让玩家正常死亡
 }
 
 public Action Timer_RespawnClient(Handle timer, any client) {
@@ -93,16 +92,28 @@ public Action Timer_RespawnClient(Handle timer, any client) {
     return Plugin_Stop;
 }
 
-FUNCTION(CombustiblePerk, onPlayerRunCmd), int buttons, int impulse, float vel[3], float[] angles, int weapon) {
+// 实现 onPlayerSpawn
+FUNCTION(CombustiblePerk, onPlayerSpawn))
+{
     int client = _inst.client;
-    if (weapon != -1) {
-        char weapon_name[64];
-        GetEdictClassname(weapon, weapon_name, sizeof(weapon_name));
-
-        if (StrContains(weapon_name, "tf_weapon_invis") != -1 || StrContains(weapon_name, "tf_weapon_bonk") != -1) {
-            // Prevent usage by stripping the weapon
-            RemovePlayerItem(client, weapon);
-            TF2_RemoveCondition(client, TFCond_Bonked);
+    // 禁用间谍的PDA2槽（手表通常在这里）
+    if (TF2_GetPlayerClass(client) == TFClass_Spy) {
+        stripWeaponSlot(client, 3); // 2是PDA2槽位
+    }
+    // 禁用侦察兵的副武器槽（Bonk是副武器）
+    if (TF2_GetPlayerClass(client) == TFClass_Scout) {
+        // 你需要找到 Bonk 的武器名或定义，然后针对性禁用
+        // 一个更通用的方法是检查玩家的所有武器
+        for (int i = 0; i < 3; i++) { // 遍历主、副、近战槽
+            int weapon = GetPlayerWeaponSlot(client, i);
+            if (IsValidEntity(weapon)) {
+                char weapon_name[64];
+                GetEdictClassname(weapon, weapon_name, sizeof(weapon_name));
+                if (StrEqual(weapon_name, "tf_weapon_lunchbox_drink")) {
+                    stripWeaponSlot(client, i);
+                    break;
+                }
+            }
         }
     }
 }

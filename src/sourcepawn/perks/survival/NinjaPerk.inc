@@ -258,32 +258,38 @@ FUNCTION(NinjaPerk, onPeriodic)) {
         }
     }
 }
-
+// 修改 doNinjaDecoyPlace，它现在不需要返回任何东西，
+// 因为诱饵实体由 onTakeDamage 创建和管理
 FUNCTION(NinjaPerk, doNinjaDecoyPlace)) {
-    /**
-     * Places a decoy at the current position and teleports the player to the retreat point.
-     */
-   _inst.decoy_ent = doItemPlace(_inst.client, ZFMDL_CUTOUT[TF2_GetPlayerClass(_inst.client)]);
-   float __vec_decoy_pos[3];
-   _inst.getDecoyPos(__vec_decoy_pos);
-   float __vec_decoy_ang[3];
-   _inst.getDecoyAng(__vec_decoy_ang);
-   TeleportEntity(_inst.client, __vec_decoy_pos, __vec_decoy_ang, NULL_VECTOR);
-   if (validAura(_inst.client)) {
-       removeAura(_inst.client);
-   }
-   _inst.perk_state = 0;
-   _inst.decoy_active_timer = 0;
-   PrintHintText(_inst.client, "You escaped using your decoy!");
+    int client = _inst.client;
+    
+    // 1. 在原地创建诱饵
+    // 我们需要一个地方来存储诱饵实体ID，既然 zf_item 没用，就用 perk 自己的数据区
+    int decoy_entity = doItemPlace(client, ZFMDL_CUTOUT[TF2_GetPlayerClass(client)]);
+    _inst.decoy_ent = decoy_entity; // 存储实体ID
+    
+    // 2. 传送玩家
+    float __vec_decoy_pos[3];
+    _inst.getDecoyPos(__vec_decoy_pos);
+    float __vec_decoy_ang[3];
+    _inst.getDecoyAng(__vec_decoy_ang);
+    TeleportEntity(client, __vec_decoy_pos, __vec_decoy_ang, NULL_VECTOR);
+   
+    // 3. 清理状态
+    if (validAura(client)) {
+       removeAura(client);
+    }
+    _inst.perk_state = 0;
+    _inst.decoy_active_timer = 0;
+    PrintHintText(client, "You escaped using your decoy!");
 }
 
+// 修改 doNinjaDecoyPoof 来直接移除实体
 FUNCTION(NinjaPerk, doNinjaDecoyPoof)) {
-    /**
-     * Removes the decoy model after a delay.
-     */
-   if ((_inst.decoy_ent != -(1))) {
-       removeItem(_inst.client, _inst.decoy_ent);
-       _inst.decoy_ent = -(1);
-   }
+    int decoy_entity = _inst.decoy_ent;
+    if (IsValidEntity(decoy_entity)) {
+       fxPuffSmall(decoy_entity); // 使用核心框架的特效函数
+       fxDeleteModel(decoy_entity); // 使用核心框架的删除函数
+       _inst.decoy_ent = -1; // 清空记录
+    }
 }
-

@@ -38,7 +38,7 @@ methodmap HunterPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, HunterPerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, HunterPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, HunterPerkFonPlayerSpawn);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_DEATH, HunterPerkFonPlayerDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, HunterPerkFonDeath);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, HunterPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, HunterPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, HunterPerkFonRemove);
@@ -99,7 +99,6 @@ FUNCTION(HunterPerk, onPlayerSpawn)) {
         _inst.getSpawnPos(spawn_pos);
         TeleportEntity(client, spawn_pos, NULL_VECTOR, NULL_VECTOR);
         addStatTempStack(client, ZFStatAtt, ZF_HUNTER_ATTACK, ZF_HUNTER_DURATION);
-        removeAura(client);
     }
 }
 
@@ -109,13 +108,10 @@ FUNCTION(HunterPerk, onRemove)) {
     }
 }
 
-FUNCTION(HunterPerk, onPlayerDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
-    if (victim != _inst.client) {
-        return;
-    }
-    if (validAura(victim)) {
-        showAura(victim);
-        CreateTimer(ZF_HUNTER_RESPAWNTIME, Timer_RespawnPlayerHunter, GetClientUserId(victim));
+FUNCTION(HunterPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
+    if (validAura(_inst.client)) {
+        showAura(_inst.client);
+        CreateTimer(ZF_HUNTER_RESPAWNTIME, Timer_RespawnPlayerHunter, GetClientUserId(_inst.client));
     }
 }
 
@@ -131,16 +127,31 @@ FUNCTION(HunterPerk, onCallForMedic)) {
     if (_inst.placed_spawn) {
         return;
     }
-
     int client = _inst.client;
+    if(_inst.placed_spawn)
+    {
+        PrintHintText(client, "你已经放过了你的重生点.");
+        ClientCommand(client, "voicemenu 2 5");
+    }
+    else if(!isGrounded(client))
+    {
+        PrintHintText(client, "你必须站在地上才能布置重生点.");
+        ClientCommand(client, "voicemenu 2 5");        
+    }
+    else if(isCrouching(client))
+    {
+        PrintHintText(client, "你不需要蹲着来布置重生点.");
+        ClientCommand(client, "voicemenu 2 5");
+    }  
     float pos[3];
     GetClientAbsOrigin(client, pos);
     
     removeAura(client); // Remove previous aura if any
-    zf_aura[client] = fxCreateParticle(ZFPART_AURAGLOWBEAMS, -1, AttachNone, 0.0, pos);
+    createAura(client, ZFPART_AURAVORTEXBLU, AttachNone);
 
     _inst.setSpawnPos(pos);
     _inst.placed_spawn = true;
+    ClientCommand(client, "voicemenu 0 6");
     PrintHintText(client, "重生点已放置。");
 }
 

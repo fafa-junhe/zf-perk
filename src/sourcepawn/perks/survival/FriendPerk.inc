@@ -27,7 +27,8 @@ methodmap FriendPerk < SurvivorBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, FriendPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_GRACE_END, FriendPerkFonGraceEnd);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, FriendPerkFonCallForMedic);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_DEATH, FriendPerkFonPlayerDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, FriendPerkFonKill);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_ASSIST_KILL, FriendPerkFonAssistKill);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, FriendPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, FriendPerkFonPeriodic);
 
@@ -92,21 +93,29 @@ FUNCTION(FriendPerk, onCallForMedic)) {
     }
 }
 
-FUNCTION(FriendPerk, onPlayerDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
+FUNCTION(FriendPerk, onKill), int victim, int killer, int assist, int inflictor, int damagetype) {
     int client = _inst.client;
     int friend = zf_perkState[client];
-    if (friend <= 0) return; // No friend or friend is dead
+    if (friend <= 0 || !isZom(victim)) return;
 
-    if (isZom(victim)) {
-        bool clientInvolved = (killer == client || assist == client);
-        bool friendInvolved = (killer == friend || assist == friend);
-
-        if (clientInvolved && friendInvolved) {
-            zf_perkTimer[client] += ZF_FRIEND_CRITTIME_KILL;
-        } else if (clientInvolved) {
-            zf_perkTimer[client] += ZF_FRIEND_CRITTIME_ASSIST;
-        }
+    bool friendInvolved = (killer == friend || assist == friend);
+    if (friendInvolved) {
+        zf_perkTimer[client] += ZF_FRIEND_CRITTIME_KILL;
+    } else {
+        zf_perkTimer[client] += ZF_FRIEND_CRITTIME_ASSIST;
     }
+}
+
+FUNCTION(FriendPerk, onAssistKill), int victim, int killer, int assist, int inflictor, int damagetype) {
+    int client = _inst.client;
+    int friend = zf_perkState[client];
+    if (friend <= 0 || !isZom(victim)) return;
+
+    bool friendInvolved = (killer == friend || assist == friend);
+    if (friendInvolved) {
+        zf_perkTimer[client] += ZF_FRIEND_CRITTIME_KILL;
+    }
+    // No points for just assisting a non-friend kill
 }
 
 FUNCTION(FriendPerk, onPeriodic)) {
@@ -116,7 +125,6 @@ FUNCTION(FriendPerk, onPeriodic)) {
         zf_perkTimer[client]--;
     }
 }
-
 FUNCTION(FriendPerk, updateCondStats), char[] buffer, int maxlen) {
     int client = _inst.client;
     int friend = zf_perkState[client];

@@ -52,13 +52,21 @@ FUNCTION(NonlethalPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "When using bullet weapons, your attack power is reduced, but you can cause knockback.");
 }
 
-FUNCTION(NonlethalPerk, onTakeDamage), int victim, int attacker, int inflictor, float &damage, int damagetype) {
-    if (((attacker != _inst.client)) || (!(validZom(victim)))) {
-        return;
+FUNCTION_FLOAT(NonlethalPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype)
+{
+    // 如果攻击者不是自己，或者受害者不是僵尸，直接返回原始伤害
+    if (attacker != _inst.client || !validZom(victim)) {
+        return damage;
     }
-    if ((damagetype & DMG_BULLET)) {
-        damage *= (1.0 + (ZF_NONLETHAL_ATTACK_BULLET / 100.0));
+
+    // 如果是子弹伤害，计算削弱后的伤害并返回
+    if (damagetype & DMG_BULLET) {
+        float modifiedDamage = damage * (1.0 + (ZF_NONLETHAL_ATTACK_BULLET / 100.0));
+        return modifiedDamage;
     }
+
+    // 如果不是子弹伤害，返回原始伤害
+    return damage;
 }
 
 FUNCTION(NonlethalPerk, onTakeDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype) {

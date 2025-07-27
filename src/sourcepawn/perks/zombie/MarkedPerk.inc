@@ -42,6 +42,7 @@ methodmap MarkedPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, MarkedPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, MarkedPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, MarkedPerkFonRemove);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, MarkedPerkFonPlayerSpawn);
 
         // Initialize data
         sm.Position = view_as<DataPackPos>(MARKED_DATA_TARGET);
@@ -91,6 +92,8 @@ FUNCTION(MarkedPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "系统会随机选择一名幸存者作为你的目标。你对目标能造成极高伤害,但是对其他人造成较低伤害。当前目标死亡后,若剩余的幸存者超过1个,10秒后将自动选择一个新目标。");
 }
 
+
+
 FUNCTION(MarkedPerk, onGraceEnd)) {
     doMarkedSelect(_inst);
 }
@@ -111,6 +114,16 @@ FUNCTION_FLOAT(MarkedPerk, onTakeDamage), int victim, int attacker, int inflicto
         }
     }
     return damage;
+}
+
+// onPlayerSpawn
+FUNCTION(MarkedPerk, onPlayerSpawn)) {
+    // 延迟一小段时间，确保其他玩家都已生成
+    // 使用15秒作为你建议的延迟
+    if (_inst.target == 0){
+        _inst.perk_timer = 15;
+    }
+    // 不直接调用 doMarkedSelect，而是让 onPeriodic 在15秒后调用
 }
 
 FUNCTION(MarkedPerk, onPeriodic)) {
@@ -170,11 +183,9 @@ void doMarkedSelect(MarkedPerk inst) {
     if (count > 0) {
         int target = survivors[GetRandomInt(0, count - 1)];
         inst.target = target;
-        // Remove old icon before creating a new one
-        if (validIcon(inst.client)) {
-            removeIcon(inst.client);
-        }
-        createIcon(inst.client, target, ZFSPR_CROSSHAIR);
+        PrintHintText(inst.client, "你标记了一个新的目标, ta是 %N !", target);
+        PrintHintText(target, "你被某个僵尸标记了! 小心行事!");
+        createIcon(inst.client, target, ZFSPR_EXCLAMATION);
     } else {
         inst.target = -1; // No targets available
     }

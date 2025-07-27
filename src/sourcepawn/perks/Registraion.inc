@@ -24,7 +24,6 @@
 #include "survival/LeaderPerk.inc"
 #include "survival/ResourcefulPerk.inc"
 #include "survival/StashPerk.inc"
-#include "survival/SupplierPerk.inc"
 #include "survival/TrapperPerk.inc"
 #include "survival/TurtlePerk.inc"
 #include "survival/WisePerk.inc"
@@ -69,7 +68,6 @@ public void registerSurvivorPerks() {
     RegisterSurvivorPerk(LeaderPerk);
     RegisterSurvivorPerk(ResourcefulPerk);
     RegisterSurvivorPerk(StashPerk);
-    RegisterSurvivorPerk(SupplierPerk);
     RegisterSurvivorPerk(TrapperPerk);
     RegisterSurvivorPerk(TurtlePerk);
     RegisterSurvivorPerk(WisePerk);

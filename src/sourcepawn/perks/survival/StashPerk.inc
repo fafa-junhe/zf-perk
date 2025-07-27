@@ -30,7 +30,7 @@ methodmap StashPerk < SurvivorBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, StashPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, StashPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, StashPerkFonCallForMedic);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_DEATH, StashPerkFonPlayerDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, StashPerkFonDeath);
 
         return sm;
     }
@@ -60,9 +60,9 @@ FUNCTION(StashPerk, updateCondStats), char[] buffer, int maxlen) {
     if (timer > 0) {
         zf_perkTimer[client]--;
         if (timer == STASH_COOLDOWN && validItem(client, 0)) {
-            PrintToChat(client, "[ZF] Your stash is ready.");
+            PrintHintText(client, "[ZF] Your stash is ready.");
         } else if (timer == 1) {
-            PrintToChat(client, "[ZF] You can place a new stash.");
+            PrintHintText(client, "[ZF] You can place a new stash.");
             if (validItem(client, 0)) {
                 removeItem(client, 0);
             }
@@ -83,7 +83,7 @@ FUNCTION(StashPerk, updateCondStats), char[] buffer, int maxlen) {
             addStat(client, ZFStatAtt, ZFStatTypePerm, STASH_GRAB_ATTACK_PERM);
             addStatTempStack(client, ZFStatAtt, STASH_GRAB_ATTACK_TEMP, STASH_GRAB_ATTACK_DURATION);
             removeItem(client, 0);
-            PrintToChat(client, "[ZF] You picked up your stash.");
+            PrintHintText(client, "[ZF] You picked up your stash.");
         }
     }
     
@@ -111,7 +111,7 @@ FUNCTION(StashPerk, onCallForMedic)) {
             float otherPos[3];
             GetClientAbsOrigin(i, otherPos);
             if (GetVectorDistance(pos, otherPos, true) < STASH_DROP_RADSQ_CLIENT) {
-                PrintToChat(client, "[ZF] Too close to other survivors.");
+                PrintHintText(client, "[ZF] Too close to other survivors.");
                 return;
             }
         }
@@ -119,7 +119,7 @@ FUNCTION(StashPerk, onCallForMedic)) {
             float itemPos[3];
             GetEntPropVector(zf_item[i][0], Prop_Send, "m_vecOrigin", itemPos);
             if (GetVectorDistance(pos, itemPos, true) < STASH_DROP_RADSQ_STASH) {
-                PrintToChat(client, "[ZF] Too close to another stash.");
+                PrintHintText(client, "[ZF] Too close to another stash.");
                 return;
             }
         }
@@ -129,12 +129,10 @@ FUNCTION(StashPerk, onCallForMedic)) {
     if (entity != -1) {
         zf_item[client][0] = entity;
         zf_perkTimer[client] = STASH_WARMUP + STASH_COOLDOWN;
-        PrintToChat(client, "[ZF] Stash placed. Warming up...");
+        PrintHintText(client, "[ZF] Stash placed. Warming up...");
     }
 }
 
-FUNCTION(StashPerk, onPlayerDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
-    if (victim == _inst.client) {
-        removeItem(_inst.client, 0);
-    }
+FUNCTION(StashPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
+    removeItem(_inst.client, 0);
 }

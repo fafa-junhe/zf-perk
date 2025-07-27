@@ -35,9 +35,9 @@ methodmap HorrifyingPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, HorrifyingPerkFgetName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, HorrifyingPerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, HorrifyingPerkFgetDesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, HorrifyingPerkFonPlayerSpawn);
+        PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, HorrifyingPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE_POST, HorrifyingPerkFonTakeDamagePost);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_DEATH, HorrifyingPerkFonPlayerDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, HorrifyingPerkFonDeath);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, HorrifyingPerkFonRemove);
 
         return sm;
@@ -60,13 +60,12 @@ FUNCTION(HorrifyingPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "你的攻击力降低,但你的攻击能降低幸存者的攻击力、防御力和攻击速度。减益效果持续15秒。你死亡后,这个效果也随即消失。");
 }
 
-FUNCTION(HorrifyingPerk, onPlayerSpawn)) {
+FUNCTION(HorrifyingPerk, updateClientPermStats)) {
     addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, HORRIFYING_ATTACK);
     createAura(_inst.client, ZFPART_AURAOUTBLU, AttachBase);
 }
 
 FUNCTION(HorrifyingPerk, onRemove)) {
-    addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, -HORRIFYING_ATTACK);
     if (validAura(_inst.client)) {
         removeAura(_inst.client);
     }
@@ -76,7 +75,9 @@ FUNCTION(HorrifyingPerk, onTakeDamagePost), int victim, int attacker, int inflic
     if (attacker != _inst.client || !isSur(victim) || !(damagetype & DMG_CLUB)) {
         return;
     }
-
+    if (victim == attacker) {
+        return;
+    }
     bool isHeavyAttacker = TF2_GetPlayerClass(attacker) == TFClass_Heavy;
     int duration = isHeavyAttacker ? HORRIFYING_DURATION_HEAVY : HORRIFYING_DURATION;
 
@@ -91,12 +92,11 @@ FUNCTION(HorrifyingPerk, onTakeDamagePost), int victim, int attacker, int inflic
     }
 }
 
-FUNCTION(HorrifyingPerk, onPlayerDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
-    if (victim != _inst.client) {
+FUNCTION(HorrifyingPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
+    // When the horrifying zombie dies, scale down the debuffs on the survivors who killed/assisted
+    if (victim == killer) {
         return;
     }
-
-    // When the horrifying zombie dies, scale down the debuffs on the survivors who killed/assisted
     if (validSur(killer)) {
         scaleStatTempPct(killer, ZFStatAtt, HORRIFYING_PENALTYPCT_KILL);
         scaleStatTempPct(killer, ZFStatDef, HORRIFYING_PENALTYPCT_KILL);

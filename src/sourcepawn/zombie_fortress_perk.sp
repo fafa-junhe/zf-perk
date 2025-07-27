@@ -42,14 +42,7 @@
 //
 #define ZF_DEBUG
 
-stock void ZF_LogDebug(const char[] format, any...)
-{
-#if defined ZF_DEBUG
-    char buffer[256];
-    VFormat(buffer, sizeof(buffer), format, 2);
-    LogMessage("[ZF DEBUG] %s", buffer);
-#endif
-}
+
 
 //
 // Includes

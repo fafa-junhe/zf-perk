@@ -97,10 +97,32 @@ FUNCTION(LeapPerk, onCallForMedic)) {
 
     float force = (TF2_GetPlayerClass(client) == TFClass_Scout) ? ZF_LEAP_FORCE_SCOUT : ZF_LEAP_FORCE;
     
-    float vel[3];
-    GetEntPropVector(client, Prop_Data, "m_vecVelocity", vel);
-    vel[2] += force;
-    TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, vel);
+    // 1. 获取玩家当前的视角角度
+    float ang[3];
+    GetClientEyeAngles(client, ang);
+
+    // 2. 将角度转换为前向向量 (Forward Vector)
+    float fwd_vec[3];
+    GetAngleVectors(ang, fwd_vec, NULL_VECTOR, NULL_VECTOR);
+    
+    // 3. 将冲力分解
+    // 假设我们想要一个大约45度的跳跃角
+    // 我们可以把冲力平均分配给前方和上方
+    // (更精确的三角函数是 sin(45)*force 和 cos(45)*force，但直接除以根号2或乘以0.707更简单)
+    float forward_force = force * 0.707;
+    float upward_force = force * 0.707;
+    
+    // 4. 计算最终的速度向量
+    float leap_velocity[3];
+    // 前方分量
+    leap_velocity[0] = fwd_vec[0] * forward_force;
+    leap_velocity[1] = fwd_vec[1] * forward_force;
+    // 上方分量
+    leap_velocity[2] = upward_force;
+    
+    // 5. 将这个力应用到玩家身上
+    // 注意：这不是与当前速度相加，而是直接设置一个新速度，效果更明显
+    TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, leap_velocity);
 
     _inst.perk_timer = ZF_LEAP_COOLDOWN;
 }
