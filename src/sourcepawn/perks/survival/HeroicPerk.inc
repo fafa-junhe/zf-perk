@@ -49,11 +49,11 @@ FUNCTION(HeroicPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(HeroicPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Bonus for the last survivor.");
+    strcopy(buffer, maxlen, "HeroicPerk_shortdesc");
 }
 
 FUNCTION(HeroicPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "You have attack and defense bonuses. Each kill and assist increases your critical time. When you are the last survivor, you will gain critical hits for the corresponding time.");
+    strcopy(buffer, maxlen, "HeroicPerk_desc");
 }
 
 FUNCTION(HeroicPerk, onPlayerSpawn), int client)

@@ -52,6 +52,7 @@ methodmap NinjaPerk < SurvivorBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, NinjaPerkFonTakeDamage);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, NinjaPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, NinjaPerkFupdateCondStats);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, NinjaPerkFonRemove);
 
         sm.Position = view_as<DataPackPos>(NINJA_DATA_TIMER);
         sm.WriteCell(0);
@@ -167,11 +168,11 @@ FUNCTION(NinjaPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(NinjaPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Place a retreat decoy");
+    strcopy(buffer, maxlen, "NinjaPerk_shortdesc");
 }
 
 FUNCTION(NinjaPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Your mobility is greatly increased, but your attack power is reduced.\nCall for a medic to place a retreat point. When you are attacked, you will be teleported to the retreat point.\nThe retreat point lasts for 15 seconds, and the ability has a 30-second cooldown after the point expires or is used.");
+    strcopy(buffer, maxlen, "NinjaPerk_desc");
 }
 
 FUNCTION(NinjaPerk, updateClientPermStats)) {
@@ -264,18 +265,41 @@ FUNCTION(NinjaPerk, doNinjaDecoyPlace)) {
     int client = _inst.client;
     
     // 1. 在原地创建诱饵
-    // 我们需要一个地方来存储诱饵实体ID，既然 zf_item 没用，就用 perk 自己的数据区
     int decoy_entity = doItemPlace(client, ZFMDL_CUTOUT[TF2_GetPlayerClass(client)]);
     _inst.decoy_ent = decoy_entity; // 存储实体ID
     
-    // 2. 传送玩家
+    // 2. 获取传送点并验证
     float __vec_decoy_pos[3];
     _inst.getDecoyPos(__vec_decoy_pos);
+    
+    // 如果传送点无效 (0, 0, z)，则取消传送并重置技能
+    if (__vec_decoy_pos[0] == 0.0 && __vec_decoy_pos[1] == 0.0) {
+        PrintHintText(client, "Retreat point was invalid. Teleport cancelled.");
+        
+        // 清理刚刚创建的诱饵
+        if (IsValidEntity(decoy_entity)) {
+           fxPuffSmall(decoy_entity);
+           fxDeleteModel(decoy_entity);
+           _inst.decoy_ent = -1;
+        }
+        
+        // 重置技能状态，但不进入冷却，允许玩家重新设置
+        _inst.perk_state = 0;
+        _inst.decoy_active_timer = 0;
+        _inst.perk_timer = 0; // 重置冷却时间
+        if (validAura(client)) {
+           removeAura(client);
+        }
+        return;
+    }
+    
+    // 3. 传送玩家
     float __vec_decoy_ang[3];
     _inst.getDecoyAng(__vec_decoy_ang);
-    TeleportEntity(client, __vec_decoy_pos, __vec_decoy_ang, NULL_VECTOR);
+    float vec_zero[3] = {0.0, 0.0, 0.0};
+    TeleportEntity(client, __vec_decoy_pos, __vec_decoy_ang, vec_zero);
    
-    // 3. 清理状态
+    // 4. 清理状态
     if (validAura(client)) {
        removeAura(client);
     }
@@ -291,5 +315,14 @@ FUNCTION(NinjaPerk, doNinjaDecoyPoof)) {
        fxPuffSmall(decoy_entity); // 使用核心框架的特效函数
        fxDeleteModel(decoy_entity); // 使用核心框架的删除函数
        _inst.decoy_ent = -1; // 清空记录
+    }
+}
+
+FUNCTION(NinjaPerk, onRemove)) {
+    // Ensure the decoy is cleaned up when the perk is removed
+    int decoy_entity = _inst.decoy_ent;
+    if (IsValidEntity(decoy_entity)) {
+       fxDeleteModel(decoy_entity);
+       _inst.decoy_ent = -1; // Clear the record
     }
 }

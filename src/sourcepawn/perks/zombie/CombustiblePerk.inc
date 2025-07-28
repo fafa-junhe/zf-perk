@@ -53,11 +53,11 @@ FUNCTION(CombustiblePerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(CombustiblePerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "尸如其名");
+    strcopy(buffer, maxlen, "CombustiblePerk_shortdesc");
 }
 
 FUNCTION(CombustiblePerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "你的防御力大幅降低。被远程武器击杀后,你会爆炸并造成伤害。你不可以使用隐身手表或者原子能饮料。(远程武器包括一切非近战武器)");
+    strcopy(buffer, maxlen, "CombustiblePerk_desc");
 }
 
 FUNCTION(CombustiblePerk, updateClientPermStats)) {

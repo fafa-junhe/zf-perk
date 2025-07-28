@@ -44,11 +44,11 @@ FUNCTION(CharitablePerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(CharitablePerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Kills and assists earn gifts.");
+    strcopy(buffer, maxlen, "CharitablePerk_shortdesc");
 }
 
 FUNCTION(CharitablePerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Each kill/assist adds points. Call for a medic to spend points and drop a gift for others. Gifts give health and a temporary stat boost.");
+    strcopy(buffer, maxlen, "CharitablePerk_desc");
 }
 
 FUNCTION(CharitablePerk, updateCondStats), char[] buffer, int maxlen) {

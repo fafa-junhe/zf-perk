@@ -43,6 +43,7 @@ methodmap MarkedPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, MarkedPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, MarkedPerkFonRemove);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, MarkedPerkFonPlayerSpawn);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, MarkedPerkFonDeath);
 
         // Initialize data
         sm.Position = view_as<DataPackPos>(MARKED_DATA_TARGET);
@@ -85,11 +86,11 @@ FUNCTION(MarkedPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(MarkedPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "瞄准特定目标");
+    strcopy(buffer, maxlen, "MarkedPerk_shortdesc");
 }
 
 FUNCTION(MarkedPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "系统会随机选择一名幸存者作为你的目标。你对目标能造成极高伤害,但是对其他人造成较低伤害。当前目标死亡后,若剩余的幸存者超过1个,10秒后将自动选择一个新目标。");
+    strcopy(buffer, maxlen, "MarkedPerk_desc");
 }
 
 
@@ -137,27 +138,20 @@ FUNCTION(MarkedPerk, onPeriodic)) {
 
 FUNCTION(MarkedPerk, updateCondStats), char[] buffer, int maxlen) {
     int target = _inst.target;
-    if (target > 0) {
-        if (!validLivingSur(target)) {
-            if (validIcon(_inst.client)) {
-                removeIcon(_inst.client);
-            }
-            _inst.target = 0;
-            if (local_getSurCount() > ZF_MARKED_MIN_SURVIVORS) {
-                _inst.perk_timer = ZF_MARKED_TIMER;
-                Format(buffer, maxlen, "New Target in %ds", _inst.perk_timer);
-            } else {
-                Format(buffer, maxlen, "No targets left");
-            }
-        } else {
-            char targetName[MAX_NAME_LENGTH];
-            GetClientName(target, targetName, sizeof(targetName));
-            Format(buffer, maxlen, "Target: %s", targetName);
-        }
+    if (target > 0 && validLivingSur(target)) {
+        char targetName[MAX_NAME_LENGTH];
+        GetClientName(target, targetName, sizeof(targetName));
+        Format(buffer, maxlen, "Target: %s", targetName);
     } else if (_inst.perk_timer > 0) {
         Format(buffer, maxlen, "New Target in %ds", _inst.perk_timer);
     } else {
-        Format(buffer, maxlen, "Selecting target...");
+        // This case handles when a target is dead and timer is not running,
+        // or when there are no targets left.
+        if (local_getSurCount() <= ZF_MARKED_MIN_SURVIVORS && _inst.target != -1) {
+             Format(buffer, maxlen, "No targets left");
+        } else {
+             Format(buffer, maxlen, "Selecting target...");
+        }
     }
 }
 
@@ -183,10 +177,37 @@ void doMarkedSelect(MarkedPerk inst) {
     if (count > 0) {
         int target = survivors[GetRandomInt(0, count - 1)];
         inst.target = target;
+        
+        // Clean up old icon before creating a new one
+        if (validIcon(inst.client)) {
+            removeIcon(inst.client);
+        }
+        
+        // Use the more reliable sprite following method
+        createIcon(inst.client, target, ZFSPR_EXCLAMATION);
+        showIcon(target);
+
         PrintHintText(inst.client, "你标记了一个新的目标, ta是 %N !", target);
         PrintHintText(target, "你被某个僵尸标记了! 小心行事!");
-        createIcon(inst.client, target, ZFSPR_EXCLAMATION);
     } else {
         inst.target = -1; // No targets available
+    }
+}
+
+FUNCTION(MarkedPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
+    if (victim == _inst.target) {
+        // Our target has died.
+        _inst.target = 0;
+        if (validIcon(_inst.client)) {
+            removeIcon(_inst.client);
+        }
+
+        // Check if we should find a new target.
+        if (local_getSurCount() > ZF_MARKED_MIN_SURVIVORS) {
+            _inst.perk_timer = ZF_MARKED_TIMER;
+        } else {
+            // No more valid targets, set to -1 to indicate completion.
+            _inst.target = -1;
+        }
     }
 }

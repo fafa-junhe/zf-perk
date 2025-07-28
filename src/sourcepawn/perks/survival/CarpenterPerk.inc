@@ -21,6 +21,8 @@
 #define CARPENTER_DROP_RADSQ_BARRICADE (250 * 250)
 #define CARPENTER_DROP_RADSQ_CLIENT (150 * 150)
 
+float g_fCarpenterCooldown[MAXPLAYERS+1];
+ 
 methodmap CarpenterPerk < SurvivorBasePerk {
     public CarpenterPerk(int client) {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
@@ -46,11 +48,11 @@ FUNCTION(CarpenterPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(CarpenterPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Builds barricades");
+    strcopy(buffer, maxlen, "CarpenterPerk_shortdesc");
 }
 
 FUNCTION(CarpenterPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Build a 500 HP barricade by calling for a medic. 25s cooldown. Max 4 barricades.");
+    strcopy(buffer, maxlen, "CarpenterPerk_desc");
 }
 
 FUNCTION(CarpenterPerk, updateClientPermStats)) {
@@ -60,9 +62,10 @@ FUNCTION(CarpenterPerk, updateClientPermStats)) {
 
 FUNCTION(CarpenterPerk, updateCondStats), char[] buffer, int maxlen) {
     int client = _inst.client;
-    if (zf_perkTimer[client] > 0) {
-        Format(buffer, maxlen, "(Cooldown: %ds)", zf_perkTimer[client]);
-        zf_perkTimer[client]--;
+    int time_left = RoundFloat(g_fCarpenterCooldown[client] - GetGameTime());
+
+    if (time_left > 0) {
+        Format(buffer, maxlen, "(Cooldown: %ds)", time_left);
     } else {
         if (getFreeItemIndex(client, CARPENTER_MAX_ITEMS) == -1) {
             Format(buffer, maxlen, "(Barricades Full)");
@@ -84,7 +87,7 @@ FUNCTION(CarpenterPerk, onCallForMedic)) {
     int client = _inst.client;
 
 
-    if (zf_perkTimer[client] > 0)
+    if (g_fCarpenterCooldown[client] > GetGameTime())
         return;
 
     if (!isGrounded(client)) {
@@ -142,7 +145,7 @@ FUNCTION(CarpenterPerk, onCallForMedic)) {
     if (itemIndex < 0)
         return;
 
-    zf_perkTimer[client] = CARPENTER_COOLDOWN;
+    g_fCarpenterCooldown[client] = GetGameTime() + float(CARPENTER_COOLDOWN);
 
     removeItem(client, itemIndex);
 

@@ -14,8 +14,6 @@ methodmap SurvivorBasePerk < BasePerk {
         SurvivorBasePerk sm = view_as<SurvivorBasePerk>(sm_base);
 
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, SurvivorBasePerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, SurvivorBasePerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, SurvivorBasePerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CHARITABLE_GIFT_TOUCHED, SurvivorBasePerkFonCharitableGiftTouched);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEAL_DAMAGE_POST, SurvivorBasePerkFonDealDamagePost);
 
@@ -36,13 +34,6 @@ FUNCTION(SurvivorBasePerk, getName), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "Unselected");
 }
 
-FUNCTION(SurvivorBasePerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Without perks");
-}
-
-FUNCTION(SurvivorBasePerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Please select one perk to check info");
-}
 
 FUNCTION(SurvivorBasePerk, onCharitableGiftTouched), int entity, int other) {
     /**

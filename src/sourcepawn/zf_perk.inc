@@ -19,6 +19,8 @@
 #include "zf_util_base.inc"
 #include "zf_util_fx.inc"
 #include "zf_util_pref.inc"
+#include "perks/zombie/MarkedPerk.inc"
+#include "perks/zombie/SwarmingPerk.inc"
 ArrayList g_SurPerkTypes;
 StringMap g_SurPerkRegistry;
 ArrayList g_ZomPerkTypes;
@@ -45,8 +47,8 @@ BasePerk g_hPerks[MAXPLAYERS+1];
 int zf_frameCounter;
 int zf_surPerksEnabled;
 int zf_zomPerksEnabled;
-int zf_surPerksLimit[32];
-int zf_zomPerksLimit[24];
+int zf_surPerksLimit[64];
+int zf_zomPerksLimit[64];
 int zf_perkMode;
 int zf_perkPendingMode;
 int zf_perkRandSurPerk;
@@ -141,10 +143,20 @@ stock void GetPerkInfoString(ArrayList typeList, int index, const char[] key, ch
 stock void GetSurPerkName(int index, char[] buffer, int maxLen) { GetPerkInfoString(g_SurPerkTypes, index, "name", buffer, maxLen); }
 stock void GetSurPerkShortDesc(int index, char[] buffer, int maxLen) { GetPerkInfoString(g_SurPerkTypes, index, "shortDesc", buffer, maxLen); }
 stock void GetSurPerkLongDesc(int index, char[] buffer, int maxLen) { GetPerkInfoString(g_SurPerkTypes, index, "longDesc", buffer, maxLen); }
+stock void GetSurPerkDisplayName(int client, int index, char[] buffer, int maxlen) {
+    char name[64];
+    GetSurPerkName(index, name, sizeof(name));
+    Format(buffer, maxlen, "%T", name, client);
+}
 
 stock void GetZomPerkName(int index, char[] buffer, int maxLen) { GetPerkInfoString(g_ZomPerkTypes, index, "name", buffer, maxLen); }
 stock void GetZomPerkShortDesc(int index, char[] buffer, int maxLen) { GetPerkInfoString(g_ZomPerkTypes, index, "shortDesc", buffer, maxLen); }
 stock void GetZomPerkLongDesc(int index, char[] buffer, int maxLen) { GetPerkInfoString(g_ZomPerkTypes, index, "longDesc", buffer, maxLen); }
+stock void GetZomPerkDisplayName(int client, int index, char[] buffer, int maxlen) {
+    char name[64];
+    GetZomPerkName(index, name, sizeof(name));
+    Format(buffer, maxlen, "%T", name, client);
+}
 
 
 
@@ -156,7 +168,7 @@ stock void GetZomPerkLongDesc(int index, char[] buffer, int maxLen) { GetPerkInf
 ////////////////////////////////////////////////////////////
 public void perkInit()
 {
-  ZF_LogDebug("perkInit: Starting perk system initialization.");
+
   g_SurPerkTypes = new ArrayList();
   g_SurPerkRegistry = new StringMap();
   g_SurPerkCreators = new ArrayList();
@@ -215,7 +227,7 @@ public void perkInit()
   
   // Register CVARS
   CreateConVar("sm_zf_cripple", "0", "0 = Crippling backstab disabled, 1 = Crippling backstab enabled.", FCVAR_REPLICATED|FCVAR_NOTIFY, true, 0.0, true, 1.0);
-  ZF_LogDebug("perkInit: Perk system initialization finished.");
+
 }
 
 ////////////////////////////////////////////////////////////
@@ -225,7 +237,7 @@ public void perkInit()
 ///////////////////////////////////////////////////////////
 public Action command_zfPerkSetMode(int client, int args)
 {
-  ZF_LogDebug("command_zfPerkSetMode: client=%d, args=%d", client, args);
+
   char cmd[32];
   
   if(args == 0)
@@ -278,7 +290,7 @@ public Action command_zfPerkSetMode(int client, int args)
 
 public Action command_zfPerkSetTeamSurPerk(int client, int args)
 {
-  ZF_LogDebug("command_zfPerkSetTeamSurPerk: client=%d, args=%d", client, args);
+
   char cmd[32];
   
   if(args == 1)
@@ -289,7 +301,9 @@ public Action command_zfPerkSetTeamSurPerk(int client, int args)
     {
       char perkName[64];
       GetSurPerkName(i, perkName, sizeof(perkName));
-      if(StrEqual(cmd, perkName, false))
+      char dispalyName[64];
+      GetSurPerkDisplayName(client, i, dispalyName, sizeof(dispalyName));
+      if(StrEqual(cmd, perkName, false) || StrEqual(cmd, dispalyName, false))
       {
         zf_perkTeamSurPerk = i;
         ReplyToCommand(client, "%T", "ZF_Perk_Team_Set_Sur", LANG_SERVER, perkName);
@@ -308,7 +322,7 @@ public Action command_zfPerkSetTeamSurPerk(int client, int args)
 
 public Action command_zfPerkSetTeamZomPerk(int client, int args)
 {
-  ZF_LogDebug("command_zfPerkSetTeamZomPerk: client=%d, args=%d", client, args);
+
   char cmd[32];
   
   if(args == 1)
@@ -319,7 +333,9 @@ public Action command_zfPerkSetTeamZomPerk(int client, int args)
     {
       char perkName[64];
       GetZomPerkName(i, perkName, sizeof(perkName));
-      if(StrEqual(cmd, perkName, false))
+      char dispalyName[64];
+      GetZomPerkDisplayName(client, i, dispalyName, sizeof(dispalyName));
+      if(StrEqual(cmd, perkName, false) || StrEqual(cmd, dispalyName, false))
       {
         zf_perkTeamZomPerk = i;
         ReplyToCommand(client, "%T", "ZF_Perk_Team_Set_Zom", LANG_SERVER, perkName);
@@ -338,7 +354,7 @@ public Action command_zfPerkSetTeamZomPerk(int client, int args)
 
 public Action command_zfPerkList(int client, int args)
 {
-  ZF_LogDebug("command_zfPerkList: client=%d, args=%d", client, args);
+
   char cmd[32];
   
   if(args == 1)
@@ -353,7 +369,7 @@ public Action command_zfPerkList(int client, int args)
       for(int i = 1; i < GetTotalSurPerks(); i++)
       {
         char perkName[64];
-        GetSurPerkName(i, perkName, sizeof(perkName));
+        GetSurPerkDisplayName(client, i, perkName, sizeof(perkName));
         if(surPerkEnabled(i))
           ReplyToCommand(client, "%T", "ZF_Perk_List_Item", LANG_SERVER, perkName, zf_surPerksLimit[i]);
         else
@@ -366,7 +382,7 @@ public Action command_zfPerkList(int client, int args)
       for(int i = 1; i < GetTotalZomPerks(); i++)
       {
         char perkName[64];
-        GetZomPerkName(i, perkName, sizeof(perkName));
+        GetZomPerkDisplayName(client, i, perkName, sizeof(perkName));
         if(zomPerkEnabled(i))
           ReplyToCommand(client, "%T", "ZF_Perk_List_Item", LANG_SERVER, perkName, zf_zomPerksLimit[i]);
         else
@@ -388,21 +404,21 @@ public Action command_zfPerkList(int client, int args)
 
 public Action command_zfPerkEnable(int client, int args)
 {
-  ZF_LogDebug("command_zfPerkEnable: client=%d, args=%d", client, args);
+
   command_perkUpdate(client, args, true);
   return Plugin_Handled;
 }
 
 public Action command_zfPerkDisable(int client, int args)
 {
-  ZF_LogDebug("command_zfPerkDisable: client=%d, args=%d", client, args);
+
   command_perkUpdate(client, args, false);
   return Plugin_Handled;
 }
 
 public Action command_perkUpdate(int client, int args, bool doEnable)
 {
-  ZF_LogDebug("command_perkUpdate: client=%d, args=%d, doEnable=%d", client, args, doEnable);
+
   char cmd[32];
   
   if(args == 1)
@@ -439,7 +455,9 @@ public Action command_perkUpdate(int client, int args, bool doEnable)
     {
       char perkName[64];
       GetSurPerkName(i, perkName, sizeof(perkName));
-      if(StrEqual(cmd, perkName, false))
+      char dispalyName[64];
+      GetSurPerkDisplayName(client, i, dispalyName, sizeof(dispalyName));
+      if(StrEqual(cmd, perkName, false) || StrEqual(cmd, dispalyName, false))
       {
         zf_surPerksEnabled = doEnable ? (zf_surPerksEnabled | (1 << i)) : (zf_surPerksEnabled & ~(1 << i));
         ReplyToCommand(client, "%T", "ZF_Perk_Enable_Single", LANG_SERVER, strState, perkName);
@@ -450,7 +468,9 @@ public Action command_perkUpdate(int client, int args, bool doEnable)
     {
       char perkName[64];
       GetZomPerkName(i, perkName, sizeof(perkName));
-      if(StrEqual(cmd, perkName, false))
+      char dispalyName[64];
+      GetZomPerkDisplayName(client, i, dispalyName, sizeof(dispalyName));
+      if(StrEqual(cmd, perkName, false) || StrEqual(cmd, dispalyName, false))
       {
         zf_zomPerksEnabled = doEnable ? (zf_zomPerksEnabled | (1 << i)) : (zf_zomPerksEnabled & ~(1 << i));
         ReplyToCommand(client, "%T", "ZF_Perk_Enable_Single", LANG_SERVER, strState, perkName);
@@ -472,7 +492,7 @@ public Action command_perkUpdate(int client, int args, bool doEnable)
 
 public Action command_zfPerkLimit(int client, int args)
 {
-  ZF_LogDebug("command_zfPerkLimit: client=%d, args=%d", client, args);
+
   char cmd[32];
   char cmd2[32];
   
@@ -512,7 +532,9 @@ public Action command_zfPerkLimit(int client, int args)
     {
       char perkName[64];
       GetSurPerkName(i, perkName, sizeof(perkName));
-      if(StrEqual(cmd, perkName, false))
+      char dispalyName[64];
+      GetSurPerkDisplayName(client, i, dispalyName, sizeof(dispalyName));
+      if(StrEqual(cmd, perkName, false) || StrEqual(cmd, dispalyName, false))
       {
         zf_surPerksLimit[i] = limit;
         ReplyToCommand(client, "%T", "ZF_Perk_Limit_Single", LANG_SERVER, perkName, limit);
@@ -523,7 +545,9 @@ public Action command_zfPerkLimit(int client, int args)
     {
       char perkName[64];
       GetZomPerkName(i, perkName, sizeof(perkName));
-      if(StrEqual(cmd, perkName, false))
+      char dispalyName[64];
+      GetZomPerkDisplayName(client, i, dispalyName, sizeof(dispalyName));
+      if(StrEqual(cmd, perkName, false) || StrEqual(cmd, dispalyName, false))
       {
         zf_zomPerksLimit[i] = limit;
         ReplyToCommand(client, "%T", "ZF_Perk_Limit_Single", LANG_SERVER, perkName, limit);
@@ -550,7 +574,7 @@ public Action command_zfPerkLimit(int client, int args)
 ///////////////////////////////////////////////////////////
 public Action hook_zfSelectPerk(int client, const char[] command, int argc)
 {
-  ZF_LogDebug("hook_zfSelectPerk: client=%d, command=%s, argc=%d", client, command, argc);
+
   char cmd[32];
 
   //
@@ -564,7 +588,9 @@ public Action hook_zfSelectPerk(int client, const char[] command, int argc)
     {
       char perkName[64];
       GetSurPerkName(i, perkName, sizeof(perkName));
-      if(StrEqual(cmd, perkName, false))
+      char dispalyName[64];
+      GetSurPerkDisplayName(client, i, dispalyName, sizeof(dispalyName));
+      if(StrEqual(cmd, perkName, false) || StrEqual(cmd, dispalyName, false))
       {
         selectSurPerk(client, i);
         return Plugin_Handled;
@@ -575,7 +601,9 @@ public Action hook_zfSelectPerk(int client, const char[] command, int argc)
     {
       char perkName[64];
       GetZomPerkName(i, perkName, sizeof(perkName));
-      if(StrEqual(cmd, perkName, false))
+      char dispalyName[64];
+      GetZomPerkDisplayName(client, i, dispalyName, sizeof(dispalyName));
+      if(StrEqual(cmd, perkName, false) || StrEqual(cmd, dispalyName, false))
       {
         selectZomPerk(client, i);
         return Plugin_Handled;
@@ -592,7 +620,7 @@ public Action hook_zfSelectPerk(int client, const char[] command, int argc)
     }
   }
   
-  ZF_LogDebug("hook_zfSelectPerk: Invalid args for client %d", client);
+
   GetCmdArg(0, cmd, sizeof(cmd));
   ReplyToCommand(client, "%T", "ZF_Perk_Select_Usage", LANG_SERVER, cmd);
   return Plugin_Handled;
@@ -634,7 +662,7 @@ stock void addStatTempStack(int client, ZFStat stat, int newStr, int newDur)
   }
   else
   {
-    ZF_LogDebug("addStatTempStack() - Invalid newStr (%d) or newDur (%d)", newStr, newDur);
+  
   }
 }
 stock void addStatTempExtend(int client, ZFStat stat, int newStr, int newDur)
@@ -658,7 +686,7 @@ stock void addStatTempExtend(int client, ZFStat stat, int newStr, int newDur)
   }
   else
   {
-    ZF_LogDebug("addStatTempExtend() - Invalid newStr (%d) or newDur (%d)", newStr, newDur);
+  
   }
 }
 
@@ -773,7 +801,7 @@ stock bool usingZomPerk(int client, int perk)
 //
 stock void selectSurPerk(int client, int perk)
 {
-  ZF_LogDebug("selectSurPerk: client=%d, perk=%d", client, perk);
+
   // Do not select invalid perk.
   if((perk < 0) || (perk >= GetTotalSurPerks()))
     PrintToChat(client, "%T", "ZF_Perk_Select_Error_Invalid", client);
@@ -781,21 +809,21 @@ stock void selectSurPerk(int client, int perk)
   else if(!surPerkEnabled(perk))
   {
     char perkName[64];
-    GetSurPerkName(perk, perkName, sizeof(perkName));
+    GetSurPerkDisplayName(client, perk, perkName, sizeof(perkName));
     PrintToChat(client, "%T", "ZF_Perk_Select_Error_Disabled_Sur", client, perkName);
   }
   // Do not select perk during non-standard game modes.
   else if(zf_perkMode > 0)
   {
     char perkName[64];
-    GetSurPerkName(perk, perkName, sizeof(perkName));
+    GetSurPerkDisplayName(client, perk, perkName, sizeof(perkName));
     PrintToChat(client, "%T", "ZF_Perk_Select_Error_Gamemode_Sur", client, perkName);
   }
   // Do not select perk if selecting it violate perk limit.
   else if(surPerkAtLimit(client, perk))
   {
     char perkName[64];
-    GetSurPerkName(perk, perkName, sizeof(perkName));
+    GetSurPerkDisplayName(client, perk, perkName, sizeof(perkName));
     PrintToChat(client, "%T", "ZF_Perk_Select_Error_Limit_Sur", client, perkName, zf_surPerksLimit[perk]);
   }
   // Select perk.
@@ -805,7 +833,7 @@ stock void selectSurPerk(int client, int perk)
     prefSet(client, PerkSelectMode, zf_perkMode);
     
     char perkName[64];
-    GetSurPerkName(perk, perkName, sizeof(perkName));
+    GetSurPerkDisplayName(client, perk, perkName, sizeof(perkName));
     // Defer perk selection for non-survivors.
     if(!isSur(client))
       PrintToChat(client, "%T", "ZF_Perk_Select_Success_Sur", client, perkName);
@@ -823,7 +851,7 @@ stock void selectSurPerk(int client, int perk)
 //
 stock void selectZomPerk(int client, int perk)
 {
-  ZF_LogDebug("selectZomPerk: client=%d, perk=%d", client, perk);
+
   // Do not select invalid perk.
   if((perk < 0) || (perk >= GetTotalZomPerks()))
     PrintToChat(client, "%T", "ZF_Perk_Select_Error_Invalid", client);
@@ -831,21 +859,21 @@ stock void selectZomPerk(int client, int perk)
   else if(!zomPerkEnabled(perk))
   {
     char perkName[64];
-    GetZomPerkName(perk, perkName, sizeof(perkName));
+    GetZomPerkDisplayName(client, perk, perkName, sizeof(perkName));
     PrintToChat(client, "%T", "ZF_Perk_Select_Error_Disabled_Zom", client, perkName);
   }
   // Do not select perk during non-standard game modes.
   else if(zf_perkMode > 0)
   {
     char perkName[64];
-    GetZomPerkName(perk, perkName, sizeof(perkName));
+    GetZomPerkDisplayName(client, perk, perkName, sizeof(perkName));
     PrintToChat(client, "%T", "ZF_Perk_Select_Error_Gamemode_Zom", client, perkName);
   }
   // Do not select perk if selecting it violate perk limit.
   else if(zomPerkAtLimit(client, perk))
   {
     char perkName[64];
-    GetZomPerkName(perk, perkName, sizeof(perkName));
+    GetZomPerkDisplayName(client, perk, perkName, sizeof(perkName));
     PrintToChat(client, "%T", "ZF_Perk_Select_Error_Limit_Zom", client, perkName, zf_zomPerksLimit[perk]);
   }
   // Select perk.
@@ -856,7 +884,7 @@ stock void selectZomPerk(int client, int perk)
     
     // Defer perk selection for non-zombies.
     char perkName[64];
-    GetZomPerkName(perk, perkName, sizeof(perkName));
+    GetZomPerkDisplayName(client, perk, perkName, sizeof(perkName));
     if(!isZom(client))
       PrintToChat(client, "%T", "ZF_Perk_Select_Success_Zom", client, perkName);
     // Defer perk selection during active rounds.
@@ -932,8 +960,11 @@ void clearHud(int client)
 {
   if (IsClientInGame(client))
   {
+    SetHudTextParams(0.0, 0.0, 0.01, 0, 0, 0, 0);
     ShowSyncHudText(client, zf_hudLine0, "");
+    SetHudTextParams(0.0, 0.0, 0.01, 0, 0, 0, 0);
     ShowSyncHudText(client, zf_hudLine1, "");
+    SetHudTextParams(0.0, 0.0, 0.01, 0, 0, 0, 0);
     ShowSyncHudText(client, zf_hudLine2, "");
   }
 }
@@ -953,13 +984,13 @@ void updateHud(int client)
         if(isSur(client))
         {
           char perkName[48];
-          GetSurPerkName(prefGet(client, SurPerk), perkName, sizeof(perkName));
+          GetSurPerkDisplayName(client, prefGet(client, SurPerk), perkName, sizeof(perkName));
           Format(strHudPerk, sizeof(strHudPerk), "%T", "ZF_HUD_Perk", client, perkName);
         }
         else if(isZom(client))
         {
           char perkName[48];
-          GetZomPerkName(prefGet(client, ZomPerk), perkName, sizeof(perkName));
+          GetZomPerkDisplayName(client, prefGet(client, ZomPerk), perkName, sizeof(perkName));
           Format(strHudPerk, sizeof(strHudPerk), "%T", "ZF_HUD_Perk", client, perkName);
         }
         else
@@ -967,7 +998,10 @@ void updateHud(int client)
           strHudPerk = "";
         }
         SetHudTextParams(0.15, 0.90, 2.1, 200, 200, 200, 150);
-        ShowSyncHudText(client, zf_hudLine0, "%s %s", strHudPerk, zf_perkStr[client]);
+        if (strcmp(zf_perkStr[client], "") != 0)
+          ShowSyncHudText(client, zf_hudLine0, "%s (%s)", strHudPerk, zf_perkStr[client]);
+        else 
+          ShowSyncHudText(client, zf_hudLine0, strHudPerk);
         
         // HUD Element: Bonuses 1 (Attack, Defense)
         Format(strHudBonuses, sizeof(strHudBonuses), "%T", "ZF_HUD_Bonuses1", client, getStat(client, ZFStatAtt), getStat(client, ZFStatDef));
@@ -988,13 +1022,13 @@ void updateHud(int client)
           if(isSur(killer))
           {
             char perkName[48];
-            GetSurPerkName(prefGet(killer, SurPerk), perkName, sizeof(perkName));
+            GetSurPerkDisplayName(client, prefGet(killer, SurPerk), perkName, sizeof(perkName));
             Format(strHudPerk, sizeof(strHudPerk), "%T", "ZF_HUD_KilledBy", client, perkName);
           }
           else if(isZom(killer))
           {
             char perkName[48];
-            GetZomPerkName(prefGet(killer, ZomPerk), perkName, sizeof(perkName));
+            GetZomPerkDisplayName(client, prefGet(killer, ZomPerk), perkName, sizeof(perkName));
             Format(strHudPerk, sizeof(strHudPerk), "%T", "ZF_HUD_KilledBy", client, perkName);
           }
           else
@@ -1015,13 +1049,13 @@ void updateHud(int client)
         if(isSur(spectate))
         {
           char perkName[48];
-          GetSurPerkName(prefGet(spectate, SurPerk), perkName, sizeof(perkName));
+          GetSurPerkDisplayName(client, prefGet(spectate, SurPerk), perkName, sizeof(perkName));
           Format(strHudPerk, sizeof(strHudPerk), "%T", "ZF_HUD_Spectating", client, perkName);
         }
         else if(isZom(spectate))
         {
           char perkName[48];
-          GetZomPerkName(prefGet(spectate, ZomPerk), perkName, sizeof(perkName));
+          GetZomPerkDisplayName(client, prefGet(spectate, ZomPerk), perkName, sizeof(perkName));
           Format(strHudPerk, sizeof(strHudPerk), "%T", "ZF_HUD_Spectating", client, perkName);
         }
         else
@@ -1047,7 +1081,7 @@ void updateHud(int client)
 //
 Handle perk_buildSurPerkListMenu()
 {
-  ZF_LogDebug("perk_buildSurPerkListMenu: Building survivor perk list menu.");
+
   Handle menu = CreateMenu(perk_menuSurPerkList);
   if(menu != INVALID_HANDLE)
   {
@@ -1058,28 +1092,26 @@ Handle perk_buildSurPerkListMenu()
 
     // Perks
     int perkCount = GetTotalSurPerks();
-    ZF_LogDebug("perk_buildSurPerkListMenu: Found %d survivor perks to add.", perkCount);
+  
     for(int i = 0; i < perkCount; i++)
     {
-      char name[128], shortDesc[128];
-      GetSurPerkName(i, name, sizeof(name));
-      GetSurPerkShortDesc(i, shortDesc, sizeof(shortDesc));
-      StrCat(name, sizeof(name), " - ");
-      StrCat(name, sizeof(name), shortDesc);
-      AddMenuItem(menu, name, name);
+      char name[128], shortDescKey[128], shortDescTranslated[128];
+      GetSurPerkShortDesc(i, shortDescKey, sizeof(shortDescKey));
+      Format(shortDescTranslated, sizeof(shortDescTranslated), "%T", shortDescKey, LANG_SERVER);
+      AddMenuItem(menu, name, shortDescTranslated);
     }
   }
   else
   {
-    ZF_LogDebug("perk_buildSurPerkListMenu: Failed to create menu handle.");
+  
   }
-  ZF_LogDebug("perk_buildSurPerkListMenu: Menu handle is %x.", menu);
+
   return menu;
 }
 
 public void perk_menuSurPerkList(Handle menu, MenuAction action, int param1, int param2)
 {
-  ZF_LogDebug("perk_menuSurPerkList: action=%d, client=%d, item=%d", action, param1, param2);
+
   if(action == MenuAction_Select)
   {
     if (param2 == 0) // "None" option
@@ -1099,7 +1131,7 @@ public void perk_menuSurPerkList(Handle menu, MenuAction action, int param1, int
 //
 Handle perk_buildZomPerkListMenu()
 {
-  ZF_LogDebug("perk_buildZomPerkListMenu: Building zombie perk list menu.");
+
   Handle menu = CreateMenu(perk_menuZomPerkList);
   if(menu != INVALID_HANDLE)
   {
@@ -1110,29 +1142,27 @@ Handle perk_buildZomPerkListMenu()
 
     // Perks
     int perkCount = GetTotalZomPerks();
-    ZF_LogDebug("perk_buildZomPerkListMenu: Found %d zombie perks to add.", perkCount);
+  
     for(int i = 0; i < perkCount; i++)
     {
-      char name[128], shortDesc[128];
-      GetZomPerkName(i, name, sizeof(name));
-      GetZomPerkShortDesc(i, shortDesc, sizeof(shortDesc));
-      StrCat(name, sizeof(name), " - ");
-      StrCat(name, sizeof(name), shortDesc);
-      AddMenuItem(menu, name, name);
+      char name[128], shortDescKey[128], shortDescTranslated[128];
+      GetZomPerkShortDesc(i, shortDescKey, sizeof(shortDescKey));
+      Format(shortDescTranslated, sizeof(shortDescTranslated), "%T", shortDescKey, LANG_SERVER);
+      AddMenuItem(menu, name, shortDescTranslated);
     }
 
   }
   else
   {
-    ZF_LogDebug("perk_buildZomPerkListMenu: Failed to create menu handle.");
+  
   }
-  ZF_LogDebug("perk_buildZomPerkListMenu: Menu handle is %x.", menu);
+
   return menu;
 }
 
 public void perk_menuZomPerkList(Handle menu, MenuAction action, int param1, int param2)
 {
-  ZF_LogDebug("perk_menuZomPerkList: action=%d, client=%d, item=%d", action, param1, param2);
+
   if(action == MenuAction_Select)
   {
     if (param2 == 0) // "None" option
@@ -1151,17 +1181,18 @@ public void perk_menuZomPerkList(Handle menu, MenuAction action, int param1, int
 //
 public void panel_PrintSurPerkSelect(int client, int perk)
 {
-  ZF_LogDebug("panel_PrintSurPerkSelect: client=%d, perk=%d", client, perk);
+
   Handle panel = CreatePanel();
   
   char title[128];
-  Format(title, sizeof(title), "%T", "ZF_Menu_PerkSelect_Title", LANG_SERVER);
+  Format(title, sizeof(title), "%T", "ZF_Menu_PerkSelect_Title", client);
   SetPanelTitle(panel, title);
-  char name[64], longDesc[1024];
-  GetSurPerkName(perk, name, sizeof(name));
-  GetSurPerkLongDesc(perk, longDesc, sizeof(longDesc));
-  DrawPanelText(panel, name);
-  DrawPanelText(panel, longDesc);
+  char longDescKey[1024], longDescTranslated[1024], displayName[64];
+  GetSurPerkDisplayName(client, perk, displayName, sizeof(displayName));
+  GetSurPerkLongDesc(perk, longDescKey, sizeof(longDescKey));
+  Format(longDescTranslated, sizeof(longDescTranslated), "%T", longDescKey, client);
+  DrawPanelText(panel, displayName);
+  DrawPanelText(panel, longDescTranslated);
   if(surPerkEnabled(perk))
   {
     char buffer[128];
@@ -1188,7 +1219,7 @@ public void panel_PrintSurPerkSelect(int client, int perk)
 
 public void panel_HandleSurPerkSelect(Handle menu, MenuAction action, int param1, int param2)
 {
-  ZF_LogDebug("panel_HandleSurPerkSelect: action=%d, client=%d, item=%d", action, param1, param2);
+
   if(action == MenuAction_Select)
   {
     switch(param2)
@@ -1211,17 +1242,18 @@ public void panel_HandleSurPerkSelect(Handle menu, MenuAction action, int param1
 //
 public void panel_PrintZomPerkSelect(int client, int perk)
 {
-  ZF_LogDebug("panel_PrintZomPerkSelect: client=%d, perk=%d", client, perk);
+
   Handle panel = CreatePanel();
   
   char title[128];
-  Format(title, sizeof(title), "%T", "ZF_Menu_PerkSelect_Title", LANG_SERVER);
+  Format(title, sizeof(title), "%T", "ZF_Menu_PerkSelect_Title", client);
   SetPanelTitle(panel, title);
-  char name[64], longDesc[1024];
-  GetZomPerkName(perk, name, sizeof(name));
-  GetZomPerkLongDesc(perk, longDesc, sizeof(longDesc));
-  DrawPanelText(panel, name);
-  DrawPanelText(panel, longDesc);
+  char longDescKey[1024], longDescTranslated[1024], displayName[64];
+  GetZomPerkDisplayName(client, perk, displayName, sizeof(displayName));
+  GetZomPerkLongDesc(perk, longDescKey, sizeof(longDescKey));
+  Format(longDescTranslated, sizeof(longDescTranslated), "%T", longDescKey, client);
+  DrawPanelText(panel, displayName);
+  DrawPanelText(panel, longDescTranslated);
   if(zomPerkEnabled(perk))
   {
     char buffer[128];
@@ -1248,7 +1280,7 @@ public void panel_PrintZomPerkSelect(int client, int perk)
 
 public void panel_HandleZomPerkSelect(Handle menu, MenuAction action, int param1, int param2)
 {
-  ZF_LogDebug("panel_HandleZomPerkSelect: action=%d, client=%d, item=%d", action, param1, param2);
+
   if(action == MenuAction_Select)
   {
     switch(param2)
@@ -1299,7 +1331,6 @@ stock void hideAura(int client)
 ////////////////////////////////////////////////////////////
 stock void createIcon(int ownerClient, int targetClient, const char[] strSprite)
 {
-  removeIcon(ownerClient);
   fxCreateSprite(strSprite, targetClient, zf_icon[ownerClient][ICON_SPR], zf_icon[ownerClient][ICON_ANC]);
 }
 
@@ -1314,10 +1345,15 @@ stock bool validIcon(int client)
 { return fxIsSpriteValid(zf_icon[client][ICON_SPR], zf_icon[client][ICON_ANC]); }
 
 stock void showIcon(int client)
-{ fxShowSprite(zf_icon[client][ICON_SPR], zf_icon[client][ICON_ANC]); }
+{ 
+
+  fxShowSprite(zf_icon[client][ICON_SPR], zf_icon[client][ICON_ANC]);
+   }
 
 stock void hideIcon(int client)
-{ fxHideSprite(zf_icon[client][ICON_SPR], zf_icon[client][ICON_ANC]); }
+{ 
+
+  fxHideSprite(zf_icon[client][ICON_SPR], zf_icon[client][ICON_ANC]); }
 
 ////////////////////////////////////////////////////////////
 //
@@ -1486,7 +1522,7 @@ stock void updateClientPermStats(int client)
   if (g_hPerks[client] != null) {
     char buffer[64];
     g_hPerks[client].getName(buffer, sizeof(buffer));
-    ZF_LogDebug("client %d, choose %s perk, execute updateclientpermstats", client, buffer);
+  
     g_hPerks[client].updateClientPermStats();
   }
   //
@@ -1742,20 +1778,20 @@ public void perk_OnGameFrame()
 
 public void perk_OnMapStart()
 {
-  ZF_LogDebug("perk_OnMapStart");
+
   utilFxPrecache(); 
   resetAllClients();
 }
 
 public void perk_OnMapEnd()
 {
-  ZF_LogDebug("perk_OnMapEnd");
+
   resetAllClients();
 }
 
 public void perk_OnClientConnect(int client)
 {
-  ZF_LogDebug("perk_OnClientConnect: client=%d", client);
+
   resetClient(client);
   if(prefGet(client, PerkSelectMode) > 1)
     prefSet(client, PerkSelectMode, 0);
@@ -1763,7 +1799,7 @@ public void perk_OnClientConnect(int client)
 
 public void perk_OnClientDisconnect(int client)
 {
-  ZF_LogDebug("perk_OnClientDisconnect: client=%d", client);
+
   // 删除Perk对象
   if (g_hPerks[client] != null)
   {
@@ -1777,7 +1813,7 @@ public void perk_OnClientDisconnect(int client)
 
 public void perk_OnRoundStart()
 {
-  ZF_LogDebug("perk_OnRoundStart");
+
   resetAllClients();
  
   //
@@ -1798,8 +1834,8 @@ public void perk_OnRoundStart()
   {
     int validSurPerkCount = 0;
     int validZomPerkCount = 0;   
-    int validSurPerks[32];
-    int validZomPerks[24];
+    int validSurPerks[64];
+    int validZomPerks[64];
        
     for(int i = 1; i < GetTotalSurPerks(); i++)
       if(surPerkEnabled(i))
@@ -1815,7 +1851,7 @@ public void perk_OnRoundStart()
 
 public void perk_OnGraceEnd()
 {
-  ZF_LogDebug("perk_OnGraceEnd");
+
   for(int i = 1; i <= MaxClients; i++)
   {
     if (g_hPerks[i] != null) {
@@ -1842,7 +1878,7 @@ public void perk_OnGraceEnd()
 
 public void perk_OnRoundEnd()
 {
-  ZF_LogDebug("perk_OnRoundEnd");
+
   // Destroy all perk objects
   for (int i = 1; i <= MaxClients; i++)
   {
@@ -1882,11 +1918,21 @@ public Action perk_OnSetTransmit(int entity, int client)
   if (g_hPerks[client] != null) {
     g_hPerks[client].onSetTransmit(entity, client);
   }
-  if(isSur(client))
+  // 1. Check for self-respawn first
+  if (g_hPerks[client] != null)
   {
-  }
-  else if(isZom(client))
-  {
+      char perkName[32];
+      g_hPerks[client].getName(perkName, sizeof(perkName));
+      if (StrEqual(perkName, "Friend"))
+      {
+        if(zf_icon[client][ICON_SPR] == entity)
+          return Plugin_Continue;
+      }
+      if (StrEqual(perkName, "Marked"))
+      {
+        if(zf_icon[client][ICON_SPR] == entity)
+          return Plugin_Continue;
+      }
   }
   return Plugin_Handled;
 }
@@ -1918,11 +1964,11 @@ public Action perk_OnCharitableGiftTouched(int entity, int other)
         int randBonus = GetRandomInt(10, 30); // ZF_CHARITABLE_GIFT_BONUS_MIN, ZF_CHARITABLE_GIFT_BONUS_MAX
         addStatTempStack(other, view_as<ZFStat>(randStat), randBonus, 20); // ZF_CHARITABLE_GIFT_DURATION
         
-        // Give the owner some health
-        addHealth(owner, 75, true); // ZF_CHARITABLE_GIFT_BONUS_HEALTH
+        // Give the recipient some health
+        addHealth(other, 75, true); // ZF_CHARITABLE_GIFT_BONUS_HEALTH
         
         // TODO: Add a hint message to the recipient about the stat boost.
-        // This requires a global way to get stat names, which is not yet implemented.
+        // // This requires a global way to get stat names, which is not yet implemented.
         // char statName[32];
         // GetStatName(randStat, statName, sizeof(statName));
         // PrintHintText(other, "You received a %d%% bonus to %s!", randBonus, statName);
@@ -2022,6 +2068,16 @@ public Action perk_OnFenceTakeDamage(int victim, int &attacker, int &inflictor, 
 
 public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
+  // [CRASH FIX] Prevent crashes from invalid attackers (e.g., world damage, attacker index 0).
+  // Passing an invalid client index to functions like isZom() is a guaranteed crash.
+  // This check is essential for stability. Perks that need to handle world damage (like fall damage)
+  // should be aware that fall damage has attacker == victim, so it will pass this check.
+  // This specifically blocks damage where the attacker is not a valid player.
+  if (attacker <= 0 || !IsClientInGame(attacker))
+  {
+      return Plugin_Continue;
+  }
+
   float originalDamage = damage; // 保存原始伤害
 
   // 增加更严格的检查：确保受害者是有效、存活的玩家，并且其Perk对象存在
@@ -2075,6 +2131,29 @@ public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float
   // 应用攻击和防御加成
   fDamage = fDamage * (1.0 + att_bonus / 100.0);
   fDamage = fDamage * (1.0 - def_bonus / 100.0);
+
+  // Marked Perk team damage bonus
+  if (validLivingZom(attacker) && validLivingSur(victim))
+  {
+      for (int i = 1; i <= MaxClients; i++)
+      {
+          if (g_hPerks[i] != null && isZom(i))
+          {
+              char perkName[64];
+              g_hPerks[i].getName(perkName, sizeof(perkName));
+              if (StrEqual(perkName, "Marked"))
+              {
+                  MarkedPerk perk = view_as<MarkedPerk>(g_hPerks[i]);
+                  if (perk.target == victim)
+                  {
+                      // Apply 50% damage bonus from teammates
+                      fDamage *= 1.5;
+                      break; // Found the marker, no need to check others
+                  }
+              }
+          }
+      }
+  }
 
   // 确保伤害不为负
   if (fDamage < 0.0) {
@@ -2131,7 +2210,7 @@ public void perk_OnTouch(int toucher, int touchee)
 
 public void perk_OnPlayerSpawn(int client)
 {
-  ZF_LogDebug("perk_OnPlayerSpawn: client=%d", client);
+
   if(validClient(client))
   {
     //
@@ -2182,8 +2261,8 @@ public void perk_OnPlayerSpawn(int client)
       {
         int validSurPerkCount = 0;
         int validZomPerkCount = 0;
-        int validSurPerks[32];
-        int validZomPerks[24];
+        int validSurPerks[64];
+        int validZomPerks[64];
            
         for(int i = 1; i < GetTotalSurPerks(); i++)
           if(surPerkEnabled(i))
@@ -2203,8 +2282,8 @@ public void perk_OnPlayerSpawn(int client)
         if (!IsFakeClient(client))
         {
             char surPerkName[64], zomPerkName[64];
-            GetSurPerkName(prefGet(client, SurPendPerk), surPerkName, sizeof(surPerkName));
-            GetZomPerkName(prefGet(client, ZomPendPerk), zomPerkName, sizeof(zomPerkName));
+            GetSurPerkDisplayName(client, prefGet(client, SurPendPerk), surPerkName, sizeof(surPerkName));
+            GetZomPerkDisplayName(client, prefGet(client, ZomPendPerk), zomPerkName, sizeof(zomPerkName));
             PrintToChat(client, "%T", "ZF_Perk_Random_Player", client, surPerkName, zomPerkName);
         }
       }
@@ -2218,8 +2297,8 @@ public void perk_OnPlayerSpawn(int client)
         if (!IsFakeClient(client))
         {
             char surPerkName[64], zomPerkName[64];
-            GetSurPerkName(zf_perkRandSurPerk, surPerkName, sizeof(surPerkName));
-            GetZomPerkName(zf_perkRandZomPerk, zomPerkName, sizeof(zomPerkName));
+            GetSurPerkDisplayName(client, zf_perkRandSurPerk, surPerkName, sizeof(surPerkName));
+            GetZomPerkDisplayName(client, zf_perkRandZomPerk, zomPerkName, sizeof(zomPerkName));
             PrintToChat(client, "%T", "ZF_Perk_Random_Team", client, surPerkName, zomPerkName);
         }
       }
@@ -2233,8 +2312,8 @@ public void perk_OnPlayerSpawn(int client)
         if (!IsFakeClient(client))
         {
             char surPerkName[64], zomPerkName[64];
-            GetSurPerkName(zf_perkTeamSurPerk, surPerkName, sizeof(surPerkName));
-            GetZomPerkName(zf_perkTeamZomPerk, zomPerkName, sizeof(zomPerkName));
+            GetSurPerkDisplayName(client, zf_perkTeamSurPerk, surPerkName, sizeof(surPerkName));
+            GetZomPerkDisplayName(client, zf_perkTeamZomPerk, zomPerkName, sizeof(zomPerkName));
             PrintToChat(client, "%T", "ZF_Perk_Cvar_Team", client, surPerkName, zomPerkName);
         }
       }
@@ -2261,7 +2340,7 @@ public void perk_OnPlayerSpawn(int client)
       if((zf_perkMode == 0) && surPerkAtLimit(client, nextPerk))
       {
         char perkName[64];
-        GetSurPerkName(nextPerk, perkName, sizeof(perkName));
+        GetSurPerkDisplayName(client, nextPerk, perkName, sizeof(perkName));
         PrintToChat(client, "%T", "ZF_Perk_Limit_Reached_Sur", client, perkName, zf_surPerksLimit[nextPerk]);
         nextPerk = ZF_PERK_NONE;
       }
@@ -2283,7 +2362,7 @@ public void perk_OnPlayerSpawn(int client)
       if((zf_perkMode == 0) && zomPerkAtLimit(client, nextPerk))
       {
         char perkName[64];
-        GetZomPerkName(nextPerk, perkName, sizeof(perkName));
+        GetZomPerkDisplayName(client, nextPerk, perkName, sizeof(perkName));
         PrintToChat(client, "%T", "ZF_Perk_Limit_Reached_Zom", client, perkName, zf_zomPerksLimit[nextPerk]);
         nextPerk = ZF_PERK_NONE;
       }
@@ -2343,11 +2422,11 @@ public void perk_OnPlayerSpawn(int client)
                 g_hPerks[client] = perk;
                 char buffer[64];
                 perk.getName(buffer, sizeof(buffer));
-                ZF_LogDebug("client %d, chose %s perk", client, buffer);
+              
             }
             else
             {
-                ZF_LogDebug("Failed to create perk instance for client %d with perk index %d. Creator function is null. Falling back to BasePerk.", client, nextPerk);
+              
                 g_hPerks[client] = new BasePerk(client); // Fallback to BasePerk
             }
         }
@@ -2378,7 +2457,7 @@ public void perk_OnPlayerSpawn(int client)
 
 public void perk_OnPlayerDeath(int victim, int killer, int assist, int inflictor, int damagetype)
 {
-  ZF_LogDebug("perk_OnPlayerDeath: victim=%d, killer=%d", victim, killer);
+
 //   // DEBUG
 //   LogMessage("[ZF DEBUG] Vic %d, Klr %d, Ast %d, Inf %d, DTp %x", victim, killer, assist, inflictor, damagetype);
   
@@ -2406,6 +2485,52 @@ public void perk_OnPlayerDeath(int victim, int killer, int assist, int inflictor
     // Set last killer.
     //
     zf_lastKiller[victim] = killer;
+
+    // Swarming Perk Logic: Fast respawn aura
+    if (isZom(victim))
+    {
+        bool respawnTimerCreated = false;
+
+        // 1. Check for self-respawn first
+        if (g_hPerks[victim] != null)
+        {
+            char perkName[32];
+            g_hPerks[victim].getName(perkName, sizeof(perkName));
+            if (StrEqual(perkName, "Swarming"))
+            {
+                CreateTimer(ZF_SWARMING_RESPAWNTIME, perk_tSpawnClient, victim);
+                respawnTimerCreated = true;
+            }
+        }
+
+        // 2. If not a Swarmer or self-respawn didn't apply, check for nearby Swarmer teammates
+        if (!respawnTimerCreated)
+        {
+            float victimPos[3];
+            GetClientAbsOrigin(victim, victimPos);
+
+            for (int i = 1; i <= MaxClients; i++)
+            {
+                if (i == victim || !validLivingZom(i) || g_hPerks[i] == null)
+                    continue;
+
+                char teammatePerkName[32];
+                g_hPerks[i].getName(teammatePerkName, sizeof(teammatePerkName));
+
+                if (StrEqual(teammatePerkName, "Swarming"))
+                {
+                    float swarmerPos[3];
+                    GetClientAbsOrigin(i, swarmerPos);
+
+                    if (GetVectorDistance(victimPos, swarmerPos, true) <= ZF_SWARMING_RADIUSSQ)
+                    {
+                        CreateTimer(ZF_SWARMING_RESPAWNTIME, perk_tSpawnClient, victim);
+                        break; // Found a swarmer, no need to check further
+                    }
+                }
+            }
+        }
+    }
              
     //
     // Clear conditions.
@@ -2434,7 +2559,7 @@ public void perk_OnPlayerDeath(int victim, int killer, int assist, int inflictor
 
 public Action perk_OnCallForMedic(int client)
 {
-  ZF_LogDebug("perk_OnCallForMedic: client=%d", client);
+
   if(validLivingSur(client))
   {
     if (g_hPerks[client] != null) {
@@ -2457,7 +2582,7 @@ public Action perk_OnCallForMedic(int client)
 
 public void perk_OnAmmoPickup(int client, int pickup)
 {
-  ZF_LogDebug("perk_OnAmmoPickup: client=%d, pickup=%d", client, pickup);
+
   if(validLivingSur(client))
   {
     if (g_hPerks[client] != null) {
@@ -2468,7 +2593,7 @@ public void perk_OnAmmoPickup(int client, int pickup)
 
 public void perk_OnMedPickup(int client, int pickup)
 {
-  ZF_LogDebug("perk_OnMedPickup: client=%d, pickup=%d", client, pickup);
+
   if(validLivingSur(client))
   {
     if (g_hPerks[client] != null) {

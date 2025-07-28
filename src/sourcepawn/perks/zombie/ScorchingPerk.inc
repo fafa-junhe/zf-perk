@@ -36,7 +36,7 @@ methodmap ScorchingPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, ScorchingPerkFonTakeDamage);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE_POST, ScorchingPerkFonTakeDamagePost);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, ScorchingPerkFonPeriodic);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_TOUCH, ScorchingPerkFonPlayerTouch);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TOUCH, ScorchingPerkFonTouch);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_RUN_CMD, ScorchingPerkFonPlayerRunCmd);
 
         return sm;
@@ -52,11 +52,11 @@ FUNCTION(ScorchingPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(ScorchingPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "免疫火焰,攻击点燃敌人");
+    strcopy(buffer, maxlen, "ScorchingPerk_shortdesc");
 }
 
 FUNCTION(ScorchingPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "免疫火焰伤害,攻击点燃敌人。");
+    strcopy(buffer, maxlen, "ScorchingPerk_desc");
 }
 
 FUNCTION(ScorchingPerk, updatePermStats)) {
@@ -71,15 +71,14 @@ FUNCTION(ScorchingPerk, onPeriodic)) {
 }
 
 FUNCTION_FLOAT(ScorchingPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype) {
-
-    // Case 1: This perk's owner is the attacker. Apply damage modification.
-    if (attacker == _inst.client) {
-        float new_damage = damage * (100.0 + float(ZF_SCORCHING_ATTACK)) / 100.0;
-        return new_damage;
-    }
-    // Case 2: This perk's owner is the victim and is taking fire damage. Grant immunity.
-    else if (victim == _inst.client && (damagetype & DMG_BURN)) {
+    // If this perk's owner is the victim and is taking fire damage, grant immunity.
+    if (victim == _inst.client && (damagetype & DMG_BURN)) {
         return 0.0;
+    }
+
+    // If this perk's owner is the attacker, apply damage modification.
+    if (attacker == _inst.client) {
+        return damage * (1.0 + float(ZF_SCORCHING_ATTACK) / 100.0);
     }
 
     // Default case: Do not interfere with the damage event.
@@ -92,19 +91,29 @@ FUNCTION(ScorchingPerk, onTakeDamagePost), int victim, int attacker, int inflict
     }
 }
 
-FUNCTION(ScorchingPerk, onPlayerTouch), int other) {
-    int client = _inst.client;
-    if (isSur(other) && !isPyro(other)) {
-        TF2_IgnitePlayer(other, client, ZF_SCORCH_DURATION);
+FUNCTION(ScorchingPerk, onTouch), int toucher, int touchee) {
+    // When the Scorching zombie touches a survivor
+    if (toucher == _inst.client && isSur(touchee)) {
+        // Ignite them if they are not a pyro
+        if (!isPyro(touchee)) {
+            TF2_IgnitePlayer(touchee, toucher, ZF_SCORCH_DURATION);
+        }
+        
+        // Remove bonk effect from the survivor
+        if (isBonked(touchee)) {
+            TF2_RemoveCondition(touchee, TFCond_Bonked);
+        }
     }
 }
 
-FUNCTION(ScorchingPerk, onPlayerRunCmd), int &buttons) {
+FUNCTION(ScorchingPerk, onPlayerRunCmd), int &buttons, int &impulse, float vel[3], float angles[3], int &weapon) {
     int client = _inst.client;
-    int weapon = GetEntPropEnt(client, Prop_Data, "m_hActiveWeapon");
-    if (weapon != -1) {
+    
+    // Prevent using Bonk drink
+    int currentActiveWeapon = GetEntPropEnt(client, Prop_Data, "m_hActiveWeapon");
+    if (currentActiveWeapon != -1) {
         char classname[64];
-        GetEdictClassname(weapon, classname, sizeof(classname));
+        GetEdictClassname(currentActiveWeapon, classname, sizeof(classname));
         if (StrContains(classname, "tf_weapon_bonk") != -1) {
             if (buttons & IN_ATTACK2) {
                 buttons &= ~IN_ATTACK2;

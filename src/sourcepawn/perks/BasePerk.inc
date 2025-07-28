@@ -8,11 +8,12 @@
 #include <datapack>
 #include "../perk_vtable.inc"
 #include "../perk_macros.inc"
+#include "../zf_perk.inc"
 
 methodmap BasePerk < DataPack {
     public BasePerk(int client) {
         DataPack sm_base = new DataPack();
-        for (int i = 0; i < PERK_VTABLE_SIZE; i++) {
+        for (int i = 0; i < 64; i++) {
             sm_base.WriteCell(0);
         }
         sm_base.Reset();
@@ -167,11 +168,29 @@ public void BasePerk_getName(BasePerk _inst, char[] buffer, int maxlen) {
 }
 
 public void BasePerk_getShortdesc(BasePerk _inst, char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Unselected");
+    char name[64];
+    _inst.getName(name, sizeof(name));
+    if (StrEqual(name, "Unselected"))
+    {
+        strcopy(buffer, maxlen, "ZF_WithoutPerks");
+    }
+    else
+    {
+        Format(buffer, maxlen, "%sPerk_shortdesc", name);
+    }
 }
 
 public void BasePerk_getDesc(BasePerk _inst, char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Please select one perk to check info");
+    char name[64];
+    _inst.getName(name, sizeof(name));
+    if (StrEqual(name, "Unselected"))
+    {
+        strcopy(buffer, maxlen, "ZF_NoPerk_desc");
+    }
+    else
+    {
+        Format(buffer, maxlen, "%sPerk_desc", name);
+    }
 }
 
 public void BasePerk_onPlayerRunCmd(BasePerk _inst, int buttons, int impulse, float vel[3], float angles[3], int weapon) {

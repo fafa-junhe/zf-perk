@@ -12,6 +12,7 @@
 #define VTABLE_GET_NAME                     0
 #define VTABLE_GET_SHORT_DESC               1
 #define VTABLE_GET_LONG_DESC                2
+#define VTABLE_GET_DISPLAY_NAME             25
 // Slot 3 is reserved for data
 #define VTABLE_ON_PLAYER_RUN_CMD            4
 #define VTABLE_ON_AMMO_PICKUP               5
@@ -53,7 +54,7 @@
 // Perks that need to store their own data should start from this index
 // to avoid conflicts with the base perk's vtable and data.
 // Each level of "inheritance" should increment this.
-#define PERK_DATA_START_INDEX               25
+#define PERK_DATA_START_INDEX               37
 
 /*
     Example Usage for a new perk 'MyPerk' that inherits from 'BasePerk':

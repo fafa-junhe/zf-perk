@@ -45,11 +45,11 @@ FUNCTION(NonlethalPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(NonlethalPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Low power bullets, knockback zombies");
+    strcopy(buffer, maxlen, "NonlethalPerk_shortdesc");
 }
 
 FUNCTION(NonlethalPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "When using bullet weapons, your attack power is reduced, but you can cause knockback.");
+    strcopy(buffer, maxlen, "NonlethalPerk_desc");
 }
 
 FUNCTION_FLOAT(NonlethalPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype)

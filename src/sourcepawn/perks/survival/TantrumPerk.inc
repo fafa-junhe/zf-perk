@@ -58,11 +58,11 @@ FUNCTION(TantrumPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(TantrumPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Gain crits for a short time");
+    strcopy(buffer, maxlen, "TantrumPerk_shortdesc");
 }
 
 FUNCTION(TantrumPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Call for a medic to activate rage.\nRage gives you 15 seconds of crits, followed by a 30-second exhaustion period.\nDuring exhaustion, your movement speed is greatly reduced.");
+    strcopy(buffer, maxlen, "TantrumPerk_desc");
 }
 
 FUNCTION(TantrumPerk, onCallForMedic)) {

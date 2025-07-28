@@ -70,11 +70,11 @@ FUNCTION(LeapPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(LeapPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "大跳飞向空中");
+    strcopy(buffer, maxlen, "LeapPerk_shortdesc");
 }
 
 FUNCTION(LeapPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "你的攻击力与防御力降低,但不受坠落伤害。发医生语音来施展大跳,冷却时间4秒。“起飞!”");
+    strcopy(buffer, maxlen, "LeapPerk_desc");
 }
 
 FUNCTION(LeapPerk, updateClientPermStats)) {

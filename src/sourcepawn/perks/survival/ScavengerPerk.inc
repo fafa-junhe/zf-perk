@@ -39,11 +39,11 @@ FUNCTION(ScavengerPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(ScavengerPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Chance for bonus on ammo pickup.");
+    strcopy(buffer, maxlen, "ScavengerPerk_shortdesc");
 }
 
 FUNCTION(ScavengerPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "When you pick up an ammo pack, you have a chance to gain crits or metal.");
+    strcopy(buffer, maxlen, "ScavengerPerk_desc");
 }
 
 // --- Vtable Functions

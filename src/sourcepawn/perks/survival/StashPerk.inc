@@ -45,11 +45,11 @@ FUNCTION(StashPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(StashPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Place a stash");
+    strcopy(buffer, maxlen, "StashPerk_shortdesc");
 }
 
 FUNCTION(StashPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "You can place a stash by crouching and calling for a medic. The stash needs to be far away from other survivors or stashes. The stash will provide you with ammo, health, and temporary buffs. The stash lasts for 30 seconds and has a 30 second cooldown.");
+    strcopy(buffer, maxlen, "StashPerk_desc");
 }
 
 FUNCTION(StashPerk, updateCondStats), char[] buffer, int maxlen) {

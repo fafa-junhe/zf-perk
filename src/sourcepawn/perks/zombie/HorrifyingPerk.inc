@@ -53,11 +53,11 @@ FUNCTION(HorrifyingPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(HorrifyingPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "攻击削弱人类");
+    strcopy(buffer, maxlen, "HorrifyingPerk_shortdesc");
 }
 
 FUNCTION(HorrifyingPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "你的攻击力降低,但你的攻击能降低幸存者的攻击力、防御力和攻击速度。减益效果持续15秒。你死亡后,这个效果也随即消失。");
+    strcopy(buffer, maxlen, "HorrifyingPerk_desc");
 }
 
 FUNCTION(HorrifyingPerk, updateClientPermStats)) {
@@ -93,18 +93,14 @@ FUNCTION(HorrifyingPerk, onTakeDamagePost), int victim, int attacker, int inflic
 }
 
 FUNCTION(HorrifyingPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
-    // When the horrifying zombie dies, scale down the debuffs on the survivors who killed/assisted
-    if (victim == killer) {
-        return;
-    }
-    if (validSur(killer)) {
-        scaleStatTempPct(killer, ZFStatAtt, HORRIFYING_PENALTYPCT_KILL);
-        scaleStatTempPct(killer, ZFStatDef, HORRIFYING_PENALTYPCT_KILL);
-        scaleStatTempPct(killer, ZFStatRof, HORRIFYING_PENALTYPCT_KILL);
-    }
-    if (validSur(assist) && assist != killer) {
-        scaleStatTempPct(assist, ZFStatAtt, HORRIFYING_PENALTYPCT_ASSIST);
-        scaleStatTempPct(assist, ZFStatDef, HORRIFYING_PENALTYPCT_ASSIST);
-        scaleStatTempPct(assist, ZFStatRof, HORRIFYING_PENALTYPCT_ASSIST);
+    // When the horrifying zombie dies, remove the debuffs from ALL survivors.
+    for (int i = 1; i <= MaxClients; i++) {
+        if (validSur(i)) {
+            // Reset the temporary stats applied by this perk.
+            // We use scaleStatTempPct with a 0.0 multiplier to effectively clear them.
+            scaleStatTempPct(i, ZFStatAtt, 0.0);
+            scaleStatTempPct(i, ZFStatDef, 0.0);
+            scaleStatTempPct(i, ZFStatRof, 0.0);
+        }
     }
 }

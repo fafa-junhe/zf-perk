@@ -83,11 +83,11 @@ FUNCTION(RagePerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(RagePerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "短时间加强属性");
+    strcopy(buffer, maxlen, "RagePerk_shortdesc");
 }
 
 FUNCTION(RagePerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "发医生语音来激活愤怒。愤怒使你获得150%的生命和速度加成。生命低于80%后,已有的愤怒会消失,也无法激活愤怒。冷却时间20秒。");
+    strcopy(buffer, maxlen, "RagePerk_desc");
 }
 
 FUNCTION(RagePerk, onRemove)) {

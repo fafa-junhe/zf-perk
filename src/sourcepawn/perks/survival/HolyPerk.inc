@@ -42,11 +42,11 @@ FUNCTION(HolyPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(HolyPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Heal nearby survivors when crouching");
+    strcopy(buffer, maxlen, "HolyPerk_shortdesc");
 }
 
 FUNCTION(HolyPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Your attack power is reduced. When you crouch and stand still, you heal yourself and nearby survivors.");
+    strcopy(buffer, maxlen, "HolyPerk_desc");
 }
 
 FUNCTION(HolyPerk, updateClientPermStats)) {

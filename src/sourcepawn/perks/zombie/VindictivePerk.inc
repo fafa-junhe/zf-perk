@@ -45,11 +45,11 @@ FUNCTION(VindictivePerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(VindictivePerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "死亡时对凶手造成伤害");
+    strcopy(buffer, maxlen, "VindictivePerk_shortdesc");
 }
 
 FUNCTION(VindictivePerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "死后对杀死你的敌人造成一次伤害。");
+    strcopy(buffer, maxlen, "VindictivePerk_desc");
 }
 
 FUNCTION(VindictivePerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {

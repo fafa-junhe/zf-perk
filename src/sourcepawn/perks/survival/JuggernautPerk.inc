@@ -56,11 +56,11 @@ FUNCTION(JuggernautPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(JuggernautPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "High attack, low speed");
+    strcopy(buffer, maxlen, "JuggernautPerk_shortdesc");
 }
 
 FUNCTION(JuggernautPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Your attack power is greatly increased, but your defense and movement speed are reduced.\nYou are immune to fall damage.\nIf you land near a zombie, the zombie will take slight damage, and be knocked back and stunned.");
+    strcopy(buffer, maxlen, "JuggernautPerk_desc");
 }
 
 FUNCTION(JuggernautPerk, updateClientPermStats)) {

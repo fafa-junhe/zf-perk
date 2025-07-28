@@ -46,11 +46,11 @@ FUNCTION(VampiricPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(VampiricPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "攻击吸取生命值");
+    strcopy(buffer, maxlen, "VampiricPerk_shortdesc");
 }
 
 FUNCTION(VampiricPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "攻击敌人时会恢复少量生命值。");
+    strcopy(buffer, maxlen, "VampiricPerk_desc");
 }
 
 FUNCTION(VampiricPerk, onDealDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype) {
@@ -59,18 +59,14 @@ FUNCTION(VampiricPerk, onDealDamagePost), int victim, int attacker, int inflicto
     }
 
     int client = _inst.client;
-    int health_to_heal = RoundFloat(damage * ZF_VAMPIRIC_LIFESTEAL_RATIO);
+    int health_to_heal = RoundToCeil(damage * ZF_VAMPIRIC_LIFESTEAL_RATIO);
     
     if (health_to_heal > 0) {
-        SetEntityHealth(client, GetClientHealth(client) + health_to_heal);
+        addHealth(client, health_to_heal, true); // Allow overheal from lifesteal
     }
 }
 
 FUNCTION(VampiricPerk, onPeriodic)) {
-    int client = _inst.client;
-    int current_health = GetClientHealth(client);
-    int max_health = GetEntProp(client, Prop_Data, "m_iMaxHealth");
-    if (current_health < max_health) {
-        SetEntityHealth(client, current_health + ZF_VAMPIRIC_REGEN);
-    }
+    // Passive regen should not overheal. The addHealth function handles the max health check.
+    addHealth(_inst.client, ZF_VAMPIRIC_REGEN, false);
 }

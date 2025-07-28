@@ -53,11 +53,11 @@ FUNCTION(LeaderPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(LeaderPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Place a buff banner");
+    strcopy(buffer, maxlen, "LeaderPerk_shortdesc");
 }
 
 FUNCTION(LeaderPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "You have a crit bonus and provide a passive attack bonus to nearby survivors. Call for a medic to place a banner that gives attack and defense to nearby survivors. Banner lasts 90s, 150s cooldown.");
+    strcopy(buffer, maxlen, "LeaderPerk_desc");
 }
 
 FUNCTION(LeaderPerk, onPeriodic))

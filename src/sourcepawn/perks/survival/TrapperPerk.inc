@@ -47,11 +47,11 @@ FUNCTION(TrapperPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(TrapperPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Place mines");
+    strcopy(buffer, maxlen, "TrapperPerk_shortdesc");
 }
 
 FUNCTION(TrapperPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Call for a medic to place a mine that explodes when a zombie gets near. Max 5 mines. 20s cooldown.");
+    strcopy(buffer, maxlen, "TrapperPerk_desc");
 }
 FUNCTION(TrapperPerk, updateCondStats), char[] buffer, int maxlen) {
     int client = _inst.client;
@@ -197,7 +197,15 @@ FUNCTION(TrapperPerk, onCallForMedic)) {
 }
 
 FUNCTION(TrapperPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
-    removeItems(_inst.client);
+    int client = _inst.client;
+    for (int i = 0; i < ZF_TRAPPER_MAX_ITEMS; i++) {
+        if (validItem(client, i)) {
+            float mine_pos[3];
+            GetEntPropVector(zf_item[client][i], Prop_Send, "m_vecOrigin", mine_pos);
+            fxExplosionBig(zf_item[client][i]);
+            removeItem(client, i);
+        }
+    }
 }
 
 stock bool isMagnetic(int client) {

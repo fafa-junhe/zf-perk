@@ -32,6 +32,7 @@ methodmap MagneticPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, MagneticPerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, MagneticPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, MagneticPerkFonPeriodic);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, MagneticPerkFonRemove);
 
         return sm;
     }
@@ -46,14 +47,63 @@ FUNCTION(MagneticPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(MagneticPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "瘫痪附近建筑");
+    strcopy(buffer, maxlen, "MagneticPerk_shortdesc");
 }
 
 FUNCTION(MagneticPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "你能使附近的步哨和地雷失效。“I will murder your toys as well.”");
+    strcopy(buffer, maxlen, "MagneticPerk_desc");
 }
 
 FUNCTION(MagneticPerk, onPeriodic)) {
-    // This logic is now handled globally in zf_perk.inc's periodic update
-    // based on the user's feedback. This perk now primarily serves as a marker.
+    int client = _inst.client;
+    float zom_pos[3];
+    GetClientAbsOrigin(client, zom_pos);
+
+    for (int i = MaxClients + 1; i <= GetMaxEntities(); i++) {
+        if (!IsValidEntity(i)) {
+            continue;
+        }
+
+        char classname[64];
+        GetEdictClassname(i, classname, sizeof(classname));
+
+        bool isBuilding = StrEqual(classname, "obj_sentrygun") || StrEqual(classname, "obj_dispenser") || StrEqual(classname, "obj_teleporter");
+
+        if (isBuilding) {
+            if (GetEntProp(i, Prop_Data, "m_iTeamNum") == zomTeam()) {
+                continue;
+            }
+
+            float build_pos[3];
+            GetEntPropVector(i, Prop_Send, "m_vecOrigin", build_pos);
+
+            if (GetVectorDistance(zom_pos, build_pos, true) <= ZF_MAGNETIC_RADIUSSQ) {
+                AcceptEntityInput(i, "SetDisabled");
+                if (GetRandomInt(0, 5) == 0) {
+                    fxSpark(i);
+                }
+            } else {
+                AcceptEntityInput(i, "SetEnabled");
+            }
+        }
+    }
+}
+
+FUNCTION(MagneticPerk, onRemove)) {
+    for (int i = MaxClients + 1; i <= GetMaxEntities(); i++) {
+        if (!IsValidEntity(i)) {
+            continue;
+        }
+
+        char classname[64];
+        GetEdictClassname(i, classname, sizeof(classname));
+        
+        bool isBuilding = StrEqual(classname, "obj_sentrygun") || StrEqual(classname, "obj_dispenser") || StrEqual(classname, "obj_teleporter");
+
+        if (isBuilding) {
+            if (GetEntProp(i, Prop_Data, "m_iTeamNum") != zomTeam()) {
+                AcceptEntityInput(i, "SetEnabled");
+            }
+        }
+    }
 }

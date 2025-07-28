@@ -209,7 +209,6 @@ stock char ZFSND_PAINSHARP[10][] = { // Index with TFClassType
 // ZF Sprite Objects
 //
 stock char ZFSPR_EXCLAMATION[] = "materials/sprites/minimap_icons/voiceicon.vmt";
-stock char ZFSPR_HEART[]       = "materials/sprites/hud_medic_heart.vmt";
 stock char ZFSPR_DEATH[]       = "materials/sprites/minimap_icons/death.vmt";
 stock char ZFSPR_DOMINATED[]   = "materials/HUD/leaderboard_dominated.vmt";
 stock char ZFSPR_CROSSHAIR[]   = "materials/HUD/leaderboard_class_sniper.vmt";
@@ -236,7 +235,9 @@ stock void utilFxPrecache()
   PrecacheModel(ZFMDL_FLAG, true);
   PrecacheModel(ZFMDL_FENCE, true);
   PrecacheModel("models/props_junk/garbage_milkcarton002a.mdl", true);
-
+  PrecacheModel("models/props_fortifications/fort_blocker_64.mdl", true);
+  PrecacheModel("models/weapons/w_models/w_jar.mdl", true);
+  PrecacheModel("models/props_mining/rock001.mdl", true);
   for(int i = 0; i < 1; i++)
     PrecacheModel(ZFMDL_TOTEM[i], true);
   for(int i = 0; i < 1; i++)    

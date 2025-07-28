@@ -35,8 +35,6 @@ methodmap SwarmingPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, SwarmingPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, SwarmingPerkFupdatePermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, SwarmingPerkFonPlayerSpawn);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, SwarmingPerkFonDeath);
-
         return sm;
     }
 }
@@ -50,11 +48,11 @@ FUNCTION(SwarmingPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(SwarmingPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "快速复活僵尸");
+    strcopy(buffer, maxlen, "SwarmingPerk_shortdesc");
 }
 
 FUNCTION(SwarmingPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "你有移速加成,但你的攻击和防御力降低。你能使自己与身边的队友快速重生。");
+    strcopy(buffer, maxlen, "SwarmingPerk_desc");
 }
 
 FUNCTION(SwarmingPerk, updatePermStats)) {
@@ -68,28 +66,3 @@ FUNCTION(SwarmingPerk, onPlayerSpawn)) {
     createAura(_inst.client, ZFPART_AURAFLIES, AttachBase);
 }
 
-FUNCTION(SwarmingPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
-    int client = _inst.client;
-    // Self-respawn
-    if (victim == client) {
-        CreateTimer(ZF_SWARMING_RESPAWNTIME, timer_RespawnPlayer, GetClientUserId(victim), TIMER_FLAG_NO_MAPCHANGE);
-    }
-    // Aura respawn for teammates
-    else if (isZom(victim) && victim != client) {
-        float pos_victim[3], pos_client[3];
-        GetClientAbsOrigin(victim, pos_victim);
-        GetClientAbsOrigin(client, pos_client);
-
-        if (GetVectorDistance(pos_victim, pos_client, true) <= ZF_SWARMING_RADIUSSQ) {
-            CreateTimer(ZF_SWARMING_RESPAWNTIME, timer_RespawnPlayer, GetClientUserId(victim), TIMER_FLAG_NO_MAPCHANGE);
-        }
-    }
-}
-
-public Action timer_RespawnPlayer(Handle timer, any userid) {
-    int client = GetClientOfUserId(userid);
-    if (client > 0 && !IsPlayerAlive(client)) {
-        TF2_RespawnPlayer(client);
-    }
-    return Plugin_Stop;
-}

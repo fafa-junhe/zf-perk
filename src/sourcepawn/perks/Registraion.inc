@@ -28,6 +28,14 @@
 #include "survival/TurtlePerk.inc"
 #include "survival/WisePerk.inc"
 #include "survival/ZenlikePerk.inc"
+#include "survival/BerserkerPerk.inc"
+#include "survival/MountaineerPerk.inc"
+#include "survival/AlchemistPerk.inc"
+#include "survival/GuardianPerk.inc"
+#include "survival/GamblerPerk.inc"
+#include "survival/SpecterPerk.inc"
+#include "survival/EchoPerk.inc"
+#include "survival/RicochetSpecialistPerk.inc"
 #include "zombie/ZombieBasePerk.inc"
 #include "zombie/AlphaPerk.inc"
 #include "zombie/CombustiblePerk.inc"
@@ -42,10 +50,19 @@
 #include "zombie/SickPerk.inc"
 #include "zombie/SwarmingPerk.inc"
 #include "zombie/TarredPerk.inc"
-#include "zombie/ThievingPerk.inc"
 #include "zombie/ToxicPerk.inc"
 #include "zombie/VampiricPerk.inc"
 #include "zombie/VindictivePerk.inc"
+#include "zombie/StaticFieldPerk.inc"
+#include "zombie/GravityWarperPerk.inc"
+#include "zombie/PhantasmPerk.inc"
+#include "zombie/VolatilePerk.inc"
+#include "zombie/GeomancerPerk.inc"
+#include "zombie/ParasitePerk.inc"
+#include "zombie/CorruptorPerk.inc"
+#include "zombie/ChargerPerk.inc"
+#include "zombie/OverlordPerk.inc"
+#include "zombie/MimicPerk.inc"
 #include <datapack>
 
 
@@ -72,6 +89,14 @@ public void registerSurvivorPerks() {
     RegisterSurvivorPerk(TurtlePerk);
     RegisterSurvivorPerk(WisePerk);
     RegisterSurvivorPerk(ZenlikePerk);
+    RegisterSurvivorPerk(BerserkerPerk);
+    RegisterSurvivorPerk(MountaineerPerk);
+    RegisterSurvivorPerk(AlchemistPerk);
+    RegisterSurvivorPerk(GuardianPerk);
+    RegisterSurvivorPerk(GamblerPerk);
+    RegisterSurvivorPerk(SpecterPerk);
+    RegisterSurvivorPerk(EchoPerk);
+    RegisterSurvivorPerk(RicochetSpecialistPerk);
 }
 
 public void registerZombiePerks() {
@@ -89,9 +114,18 @@ public void registerZombiePerks() {
     RegisterZombiePerk(SickPerk);
     RegisterZombiePerk(SwarmingPerk);
     RegisterZombiePerk(TarredPerk);
-    RegisterZombiePerk(ThievingPerk);
     RegisterZombiePerk(ToxicPerk);
     RegisterZombiePerk(VampiricPerk);
     RegisterZombiePerk(VindictivePerk);
+    RegisterZombiePerk(StaticFieldPerk);
+    RegisterZombiePerk(GravityWarperPerk);
+    RegisterZombiePerk(PhantasmPerk);
+    RegisterZombiePerk(VolatilePerk);
+    RegisterZombiePerk(GeomancerPerk);
+    RegisterZombiePerk(ParasitePerk);
+    RegisterZombiePerk(CorruptorPerk);
+    RegisterZombiePerk(ChargerPerk);
+    RegisterZombiePerk(OverlordPerk);
+    RegisterZombiePerk(MimicPerk);
 }
 

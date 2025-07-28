@@ -61,11 +61,11 @@ FUNCTION(CowardlyPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(CowardlyPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Ready to run at any moment");
+    strcopy(buffer, maxlen, "CowardlyPerk_shortdesc");
 }
 
 FUNCTION(CowardlyPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "When you are attacked, your passive ability \"Panic\" is automatically activated.\nPanic gives you a defense and speed bonus.\nThe panic ability lasts for 5 seconds and has a cooldown of 30 seconds.");
+    strcopy(buffer, maxlen, "CowardlyPerk_desc");
 }
 
 FUNCTION_FLOAT(CowardlyPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype) {

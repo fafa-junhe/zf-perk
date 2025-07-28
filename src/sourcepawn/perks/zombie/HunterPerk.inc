@@ -83,11 +83,11 @@ FUNCTION(HunterPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(HunterPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "手动放置重生点");
+    strcopy(buffer, maxlen, "HunterPerk_shortdesc");
 }
 
 FUNCTION(HunterPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "发医生语音来放置你的重生点。从自己的重生点重生时,你的重生时间较短,并获得临时的攻击加成。每次重生后,你只能放置一次重生点。注意!幸存者可以摧毁你的重生点。");
+    strcopy(buffer, maxlen, "HunterPerk_desc");
 }
 
 FUNCTION(HunterPerk, onPlayerSpawn)) {

@@ -58,9 +58,15 @@
 #include <tf2>
 
 #include "zf_util_base.inc"
-
+ 
 #include "zf_util_pref.inc"
 
+int g_iRoundKills[MAXPLAYERS+1];
+int g_iSurvivorKills[MAXPLAYERS+1];
+int g_iZombieKills[MAXPLAYERS+1];
+TFClassType g_eLastSurvivorClass[MAXPLAYERS+1];
+int g_iLastSurvivorPerk[MAXPLAYERS+1];
+ 
 #include "zf_perk.inc"
 
 //
@@ -121,7 +127,7 @@ Handle zf_cvSwapOnAttdef;
 ////////////////////////////////////////////////////////////
 public void OnPluginStart()
 {
-    ZF_LogDebug("OnPluginStart");
+  
     LoadTranslations("common.phrases.txt");
     LoadTranslations("zombie_fortress.phrases.txt");
     // TODO Doesn't register as true at this point. Where else can it be called?
@@ -196,7 +202,7 @@ public void OnPluginStart()
 
 public void OnConfigsExecuted()
 {
-    ZF_LogDebug("OnConfigsExecuted");
+  
     // Determine whether to enable ZF.
     // + Enable ZF for "zf_" maps or if sm_zf_force_on is set.
     // + Disable ZF otherwise.
@@ -236,7 +242,7 @@ public void OnConfigsExecuted()
 
 public void OnMapEnd()
 {
-    ZF_LogDebug("OnMapEnd");
+  
     // Close timer handles
     if (zf_tMain != INVALID_HANDLE)
     {
@@ -265,7 +271,7 @@ public void OnMapEnd()
 
 public void OnClientPostAdminCheck(int client)
 {
-    ZF_LogDebug("OnClientPostAdminCheck: client=%d", client);
+  
     if (!zf_bEnabled) return;
 
     CreateTimer(10.0, timer_initialHelp, client, TIMER_FLAG_NO_MAPCHANGE);
@@ -283,7 +289,7 @@ public void OnClientPostAdminCheck(int client)
 
 public void OnClientDisconnect(int client)
 {
-    ZF_LogDebug("OnClientDisconnect: client=%d", client);
+  
     if (!zf_bEnabled) return;
 
     pref_OnClientDisconnect(client);
@@ -321,7 +327,7 @@ public void OnEntityCreated(int entity,
 ////////////////////////////////////////////////////////////
 public Action OnGetGameDescription(char gameDesc[64])
 {
-    ZF_LogDebug("OnGetGameDescription");
+  
     if (!zf_bEnabled) return Plugin_Continue;
     Format(gameDesc, sizeof(gameDesc), "%t", "ZF_GameDescription", PLUGIN_VERSION);
     return Plugin_Changed;
@@ -373,7 +379,7 @@ public void OnTakeDamagePost(int victim, int attacker, int inflictor, float dama
 ////////////////////////////////////////////////////////////
 public Action command_zfEnable(int client, int args)
 {
-    ZF_LogDebug("command_zfEnable: client=%d", client);
+  
     if (zf_bEnabled) return Plugin_Continue;
 
     zfEnable();
@@ -385,7 +391,7 @@ public Action command_zfEnable(int client, int args)
 
 public Action command_zfDisable(int client, int args)
 {
-    ZF_LogDebug("command_zfDisable: client=%d", client);
+  
     if (!zf_bEnabled) return Plugin_Continue;
 
     zfDisable();
@@ -397,7 +403,7 @@ public Action command_zfDisable(int client, int args)
 
 public Action command_zfSwapTeams(int client, int args)
 {
-    ZF_LogDebug("command_zfSwapTeams: client=%d", client);
+  
     if (!zf_bEnabled) return Plugin_Continue;
 
     zfSwapTeams();
@@ -418,7 +424,7 @@ public Action command_zfSwapTeams(int client, int args)
 public Action hook_JoinTeam(int client,
                      const char[] command, int argc)
 {
-    ZF_LogDebug("hook_JoinTeam: client=%d, command=%s, argc=%d", client, command, argc);
+  
     char cmd1[32];
     char sSurTeam[16];
     char sZomTeam[16];
@@ -470,7 +476,7 @@ public Action hook_JoinTeam(int client,
 public Action hook_JoinClass(int client,
                       const char[] command, int argc)
 {
-    ZF_LogDebug("hook_JoinClass: client=%d, command=%s, argc=%d", client, command, argc);
+  
     char cmd1[32];
 
     if (!zf_bEnabled) return Plugin_Continue;
@@ -478,7 +484,7 @@ public Action hook_JoinClass(int client,
 
     GetCmdArg(1, cmd1, sizeof(cmd1));
 
-    ZF_LogDebug("hook_JoinClass client %d selected class %s", client, cmd1);
+  
 
     if (IsFakeClient(client) && (StrEqual(cmd1, "spy", false) || StrEqual(cmd1, "engineer", false)))
     {
@@ -516,7 +522,7 @@ public Action hook_JoinClass(int client,
 public Action hook_VoiceMenu(int client,
                       const char[] command, int argc)
 {
-    ZF_LogDebug("hook_VoiceMenu: client=%d, command=%s, argc=%d", client, command, argc);
+  
     char cmd1[32], cmd2[32];
 
     if (!zf_bEnabled) return Plugin_Continue;
@@ -537,7 +543,7 @@ public Action hook_VoiceMenu(int client,
 public Action hook_zfTeamPref(int client,
                        const char[] command, int argc)
 {
-    ZF_LogDebug("hook_zfTeamPref: client=%d, command=%s, argc=%d", client, command, argc);
+  
     char cmd[32];
 
     if (!zf_bEnabled) return Plugin_Continue;
@@ -574,7 +580,7 @@ public Action hook_zfTeamPref(int client,
 
 public Action cmd_zfMenu(int client, int args)
 {
-    ZF_LogDebug("cmd_zfMenu: client=%d, args=%d", client, args);
+  
     if (!zf_bEnabled) return Plugin_Continue;
     panel_PrintMain(client);
 
@@ -672,7 +678,7 @@ void SpawnEntity(char[] entity, float origin[3], float rotation[3] = { 0.0, 0.0,
 //
 public Action event_WaitingBegins(Handle event, const char[] name, bool dontBroadcast)
 {
-    ZF_LogDebug("event_WaitingBegins");
+  
     if (!zf_bEnabled) return Plugin_Continue;
 
     removeEntitiesByClassname("prop_door_rotating");
@@ -686,9 +692,17 @@ public Action event_WaitingBegins(Handle event, const char[] name, bool dontBroa
 // Round Start Event
 //
 public Action event_RoundStart(Handle event,
-                        const char[] name, bool dontBroadcast)
+                         const char[] name, bool dontBroadcast)
 {
-    ZF_LogDebug("event_RoundStart");
+    for (int i = 0; i <= MaxClients; i++)
+    {
+        g_iRoundKills[i] = 0;
+        g_iSurvivorKills[i] = 0;
+        g_iZombieKills[i] = 0;
+        g_eLastSurvivorClass[i] = TFClass_Unknown;
+        g_iLastSurvivorPerk[i] = 0;
+    }
+  
     int players[MAXPLAYERS];
     int playerCount;
     int surCount;
@@ -776,7 +790,7 @@ public Action event_RoundStart(Handle event,
 public Action event_SetupEnd(Handle event,
                       const char[] name, bool dontBroadcast)
 {
-    ZF_LogDebug("event_SetupEnd");
+  
     if (!zf_bEnabled) return Plugin_Continue;
 
     if (roundState() != RoundActive)
@@ -796,7 +810,7 @@ public Action event_SetupEnd(Handle event,
 public Action event_RoundEnd(Handle event,
                       const char[] name, bool dontBroadcast)
 {
-    ZF_LogDebug("event_RoundEnd");
+  
     if (!zf_bEnabled) return Plugin_Continue;
 
     //
@@ -807,8 +821,10 @@ public Action event_RoundEnd(Handle event,
     zf_bNewRound = GetEventBool(event, "full_round") || (GetEventInt(event, "team") == zomTeam());
     setRoundState(RoundPost);
 
+    PrintMVPRankings();
+ 
     perk_OnRoundEnd();
-
+ 
     return Plugin_Continue;
 }
 
@@ -821,10 +837,10 @@ public Action event_PlayerSpawn(Handle event,
     if (!zf_bEnabled) return Plugin_Continue;
 
     int         client      = GetClientOfUserId(GetEventInt(event, "userid"));
-    ZF_LogDebug("event_PlayerSpawn: client=%d, team=%d", client, GetClientTeam(client));
+  
     TFClassType clientClass = TF2_GetPlayerClass(client);
 
-    ZF_LogDebug("event_PlayerSpawn client %d, class %d", client, view_as<int>(clientClass));
+  
 
     // 1. Prevent players spawning on survivors if round has started.
     //    Prevent players spawning on survivors as an invalid class.
@@ -891,7 +907,18 @@ public Action event_PlayerDeath(Handle event,
 
     int victim     = GetClientOfUserId(GetEventInt(event, "userid"));
     int killer     = GetClientOfUserId(GetEventInt(event, "attacker"));
-    ZF_LogDebug("event_PlayerDeath: victim=%d, killer=%d", victim, killer);
+
+    if (killer > 0 && killer != victim)
+    {
+        g_iRoundKills[killer]++;
+        if (isSur(killer) && isZom(victim)) {
+            g_iSurvivorKills[killer]++;
+        }
+        else if (isZom(killer) && isSur(victim)) {
+            g_iZombieKills[killer]++;
+        }
+    }
+  
     int assist     = GetClientOfUserId(GetEventInt(event, "assister"));
     int inflictor  = GetEventInt(event, "inflictor_entindex");
     int damagetype = GetEventInt(event, "damagebits");
@@ -917,6 +944,9 @@ public Action event_PlayerDeath(Handle event,
     {
         if (validZom(killer)) zf_spawnSurvivorsKilledCounter--;
 
+        g_eLastSurvivorClass[victim] = TF2_GetPlayerClass(victim);
+        g_iLastSurvivorPerk[victim] = prefGet(victim, SurPerk);
+
         // Transfer player to zombie team.
         CreateTimer(6.0, timer_zombify, victim, TIMER_FLAG_NO_MAPCHANGE);
     }
@@ -939,8 +969,7 @@ public Action event_PlayerBuiltObject(Handle event,
 
     int index   = GetEventInt(event, "index");
     int object_ = GetEventInt(event, "object");
-    int builder = GetClientOfUserId(GetEventInt(event, "userid"));
-    ZF_LogDebug("event_PlayerBuiltObject: builder=%d, object_type=%d, entity_index=%d", builder, object_, index);
+  
 
     // 1. Handle dispenser rules.
     //    Disable dispensers when they begin construction.
@@ -956,14 +985,14 @@ public Action event_PlayerBuiltObject(Handle event,
 
 public void event_AmmopackPickup(const char[] output, int caller, int activator, float delay)
 {
-    ZF_LogDebug("event_AmmopackPickup: activator=%d, caller(entity)=%d", activator, caller);
+  
     if (!zf_bEnabled) return;
     perk_OnAmmoPickup(activator, caller);
 }
 
 public void event_MedpackPickup(const char[] output, int caller, int activator, float delay)
 {
-    ZF_LogDebug("event_MedpackPickup: activator=%d, caller(entity)=%d", activator, caller);
+  
     if (!zf_bEnabled) return;
     perk_OnMedPickup(activator, caller);
 }
@@ -993,7 +1022,7 @@ public Action timer_main(Handle timer)    // 1Hz
 
 public Action timer_mainSlow(Handle timer)    // 4 min
 {
-    ZF_LogDebug("timer_mainSlow");
+  
     if (!zf_bEnabled) return Plugin_Continue;
     help_printZFInfoChat(0);
 
@@ -1007,7 +1036,7 @@ public Action timer_mainSlow(Handle timer)    // 4 min
 ////////////////////////////////////////////////////////////
 public Action timer_graceStartPost(Handle timer)
 {
-    ZF_LogDebug("timer_graceStartPost");
+  
     // Disable all resupply cabinets.
     int index = -1;
     while ((index = FindEntityByClassname(index, "func_regenerate")) != -1)
@@ -1041,7 +1070,7 @@ public Action timer_graceStartPost(Handle timer)
 
 public Action timer_graceEnd(Handle timer)
 {
-    ZF_LogDebug("timer_graceEnd");
+  
     if (roundState() != RoundActive)
     {
         setRoundState(RoundActive);
@@ -1055,7 +1084,7 @@ public Action timer_graceEnd(Handle timer)
 
 public Action timer_initialHelp(Handle timer, any client)
 {
-    ZF_LogDebug("timer_initialHelp: client=%d", client);
+  
     // Wait until client is in game before printing initial help text.
     if (IsClientInGame(client))
     {
@@ -1070,8 +1099,7 @@ public Action timer_initialHelp(Handle timer, any client)
 
 public Action timer_postSpawn(Handle timer, any client)
 {
-    ZF_LogDebug("timer_postSpawn: client=%d", client);
-    if (IsClientInGame(client)) ZF_LogDebug("timer_postSpawn: client=%d class=%d", client, view_as<int>(TF2_GetPlayerClass(client)));
+  
 
     if (IsClientInGame(client) && IsPlayerAlive(client))
     {
@@ -1084,7 +1112,7 @@ public Action timer_postSpawn(Handle timer, any client)
 
 public Action timer_zombify(Handle timer, any client)
 {
-    ZF_LogDebug("timer_zombify: client=%d", client);
+  
     if (validClient(client))
     {
         PrintToChat(client, "%t", "ZF_Infected");
@@ -1371,7 +1399,7 @@ void handle_zombieAbilities()
 ////////////////////////////////////////////////////////////
 void zfEnable()
 {
-    ZF_LogDebug("zfEnable");
+  
     zf_bEnabled  = true;
     zf_bNewRound = true;
     setRoundState(RoundInit2);
@@ -1418,7 +1446,7 @@ void zfEnable()
 
 void zfDisable()
 {
-    ZF_LogDebug("zfDisable");
+  
     zf_bEnabled  = false;
     zf_bNewRound = true;
     setRoundState(RoundInit2);
@@ -1471,7 +1499,7 @@ void zfDisable()
 
 void zfSetTeams()
 {
-    ZF_LogDebug("zfSetTeams");
+  
     //
     // Determine team roles.
     // + By default, survivors are RED and zombies are BLU.
@@ -1525,7 +1553,7 @@ void zfSetTeams()
 
 void zfSwapTeams()
 {
-    ZF_LogDebug("zfSwapTeams");
+  
     int survivorTeam = surTeam();
     int zombieTeam   = zomTeam();
 
@@ -1576,7 +1604,7 @@ public void help_printZFInfoChat(int client)
 //
 public void panel_PrintMain(int client)
 {
-    ZF_LogDebug("panel_PrintMain: client=%d", client);
+  
     Handle panel = CreatePanel();
     char   buffer[128];
 
@@ -1602,25 +1630,25 @@ public void panel_PrintMain(int client)
     DrawPanelItem(panel, buffer, 0);
     SendPanelToClient(panel, client, panel_HandleMain, 30);
     CloseHandle(panel);
-    ZF_LogDebug("panel_PrintMain: Main menu panel sent to client %d", client);
+  
 }
 
 public void panel_HandleMain(Handle menu, MenuAction action, int param1, int param2)
 {
-    ZF_LogDebug("panel_HandleMain: action=%d, client=%d, item=%d", action, param1, param2);
+  
     if (action == MenuAction_Select)
     {
         switch (param2)
         {
             case 1:
             {
-                ZF_LogDebug("panel_HandleMain: Client %d selected item 1 (Survivor Perks). Menu handle: %x", param1, zf_menuSurPerkList);
+              
                 DisplayMenu(zf_menuSurPerkList, param1, MENU_TIME_FOREVER);
                 return;
             }
             case 2:
             {
-                ZF_LogDebug("panel_HandleMain: Client %d selected item 2 (Zombie Perks). Menu handle: %x", param1, zf_menuZomPerkList);
+              
                 DisplayMenu(zf_menuZomPerkList, param1, MENU_TIME_FOREVER);
                 return;
             }
@@ -1652,7 +1680,7 @@ public void panel_HandleMain(Handle menu, MenuAction action, int param1, int par
 //
 public void panel_PrintPrefTeam(int client)
 {
-    ZF_LogDebug("panel_PrintPrefTeam: client=%d", client);
+  
     Handle panel = CreatePanel();
     char   buffer[128];
 
@@ -1685,7 +1713,7 @@ public void panel_PrintPrefTeam(int client)
 
 public void panel_HandlePrefTeam(Handle menu, MenuAction action, int param1, int param2)
 {
-    ZF_LogDebug("panel_HandlePrefTeam: action=%d, client=%d, item=%d", action, param1, param2);
+  
     if (action == MenuAction_Select)
     {
         switch (param2)
@@ -1721,7 +1749,7 @@ public void panel_HandlePrefTeam(Handle menu, MenuAction action, int param1, int
 //
 public void panel_PrintHelp(int client)
 {
-    ZF_LogDebug("panel_PrintHelp: client=%d", client);
+  
     Handle panel = CreatePanel();
     char   buffer[128];
 
@@ -1751,7 +1779,7 @@ public void panel_PrintHelp(int client)
 
 public void panel_HandleHelp(Handle menu, MenuAction action, int param1, int param2)
 {
-    ZF_LogDebug("panel_HandleHelp: action=%d, client=%d, item=%d", action, param1, param2);
+  
     if (action == MenuAction_Select)
     {
         switch (param2)
@@ -1794,7 +1822,7 @@ public void panel_HandleHelp(Handle menu, MenuAction action, int param1, int par
 //
 public void panel_PrintHelpOverview(int client)
 {
-    ZF_LogDebug("panel_PrintHelpOverview: client=%d", client);
+  
     Handle panel = CreatePanel();
     char   buffer[256];
 
@@ -1825,7 +1853,7 @@ public void panel_PrintHelpOverview(int client)
 
 public void panel_HandleHelpOverview(Handle menu, MenuAction action, int param1, int param2)
 {
-    ZF_LogDebug("panel_HandleHelpOverview: action=%d, client=%d, item=%d", action, param1, param2);
+  
     if (action == MenuAction_Select)
     {
         switch (param2)
@@ -1848,7 +1876,7 @@ public void panel_HandleHelpOverview(Handle menu, MenuAction action, int param1,
 //
 public void panel_PrintHelpTeam(int client, int team)
 {
-    ZF_LogDebug("panel_PrintHelpTeam: client=%d, team=%d", client, team);
+  
     Handle panel = CreatePanel();
     char   buffer[256];
 
@@ -1895,7 +1923,7 @@ public void panel_PrintHelpTeam(int client, int team)
 
 public void panel_HandleHelpTeam(Handle menu, MenuAction action, int param1, int param2)
 {
-    ZF_LogDebug("panel_HandleHelpTeam: action=%d, client=%d, item=%d", action, param1, param2);
+  
     if (action == MenuAction_Select)
     {
         switch (param2)
@@ -1918,7 +1946,7 @@ public void panel_HandleHelpTeam(Handle menu, MenuAction action, int param1, int
 //
 public void panel_PrintHelpSurClass(int client)
 {
-    ZF_LogDebug("panel_PrintHelpSurClass: client=%d", client);
+  
     Handle panel = CreatePanel();
     char   buffer[128];
 
@@ -1951,7 +1979,7 @@ public void panel_PrintHelpSurClass(int client)
 
 public void panel_HandleHelpSurClass(Handle menu, MenuAction action, int param1, int param2)
 {
-    ZF_LogDebug("panel_HandleHelpSurClass: action=%d, client=%d, item=%d", action, param1, param2);
+  
     if (action == MenuAction_Select)
     {
         switch (param2)
@@ -1996,7 +2024,7 @@ public void panel_HandleHelpSurClass(Handle menu, MenuAction action, int param1,
 
 public void panel_PrintHelpZomClass(int client)
 {
-    ZF_LogDebug("panel_PrintHelpZomClass: client=%d", client);
+  
     Handle panel = CreatePanel();
     char   buffer[128];
 
@@ -2020,7 +2048,7 @@ public void panel_PrintHelpZomClass(int client)
 
 public void panel_HandleHelpZomClass(Handle menu, MenuAction action, int param1, int param2)
 {
-    ZF_LogDebug("panel_HandleHelpZomClass: action=%d, client=%d, item=%d", action, param1, param2);
+  
     if (action == MenuAction_Select)
     {
         switch (param2)
@@ -2050,7 +2078,7 @@ public void panel_HandleHelpZomClass(Handle menu, MenuAction action, int param1,
 
 public void panel_PrintClass(int client, TFClassType class)
 {
-    ZF_LogDebug("panel_PrintClass: client=%d, class=%d", client, class);
+  
     Handle panel = CreatePanel();
     char   buffer[256];
     switch (class)
@@ -2217,7 +2245,7 @@ public void panel_PrintClass(int client, TFClassType class)
 
 public void panel_HandleClass(Handle menu, MenuAction action, int param1, int param2)
 {
-    ZF_LogDebug("panel_HandleClass: action=%d, client=%d, item=%d", action, param1, param2);
+  
     if (action == MenuAction_Select)
     {
         switch (param2)
@@ -2240,7 +2268,7 @@ public void panel_HandleClass(Handle menu, MenuAction action, int param1, int pa
 //
 void panel_PrintPerkHelp(int client)
 {
-    ZF_LogDebug("panel_PrintPerkHelp: client=%d", client);
+  
     Handle panel = CreatePanel();
     char   buffer[256];
 
@@ -2268,7 +2296,7 @@ void panel_PrintPerkHelp(int client)
 
 public void panel_HandlePerkHelp(Handle menu, MenuAction action, int param1, int param2)
 {
-    ZF_LogDebug("panel_HandlePerkHelp: action=%d, client=%d, item=%d", action, param1, param2);
+  
     if (action == MenuAction_Select)
     {
         switch (param2)
@@ -2284,4 +2312,127 @@ public void panel_HandlePerkHelp(Handle menu, MenuAction action, int param1, int
             }
         }
     }
+}
+
+stock void GetClassNameFromEnum(TFClassType classType, char[] buffer, int maxlen)
+{
+    switch (classType)
+    {
+        case TFClass_Unknown: { strcopy(buffer, maxlen, "Unknown"); }
+        case TFClass_Scout: { strcopy(buffer, maxlen, "Scout"); }
+        case TFClass_Sniper: { strcopy(buffer, maxlen, "Sniper"); }
+        case TFClass_Soldier: { strcopy(buffer, maxlen, "Soldier"); }
+        case TFClass_DemoMan: { strcopy(buffer, maxlen, "Demoman"); }
+        case TFClass_Medic: { strcopy(buffer, maxlen, "Medic"); }
+        case TFClass_Heavy: { strcopy(buffer, maxlen, "Heavy"); }
+        case TFClass_Pyro: { strcopy(buffer, maxlen, "Pyro"); }
+        case TFClass_Spy: { strcopy(buffer, maxlen, "Spy"); }
+        case TFClass_Engineer: { strcopy(buffer, maxlen, "Engineer"); }
+        default: { strcopy(buffer, maxlen, "Spectator"); }
+    }
+}
+
+public int Sort_Kills(int index1, int index2, Handle array, Handle hndl)
+{
+    DataPack pack1 = view_as<DataPack>(GetArrayCell(array, index1));
+    DataPack pack2 = view_as<DataPack>(GetArrayCell(array, index2));
+
+    pack1.Reset();
+    pack1.ReadCell(); // skip client
+    int kills1 = pack1.ReadCell();
+
+    pack2.Reset();
+    pack2.ReadCell(); // skip client
+    int kills2 = pack2.ReadCell();
+
+    return kills2 - kills1;
+}
+
+stock void PrintMVPRankings()
+{
+    ArrayList surPlayers = new ArrayList();
+    ArrayList zomPlayers = new ArrayList();
+
+    for (int i = 1; i <= MaxClients; i++) {
+        if (IsClientInGame(i)) {
+            if (g_iSurvivorKills[i] > 0) {
+                DataPack pack = new DataPack();
+                pack.WriteCell(i);
+                pack.WriteCell(g_iSurvivorKills[i]);
+                surPlayers.Push(pack);
+            }
+            if (g_iZombieKills[i] > 0) {
+                DataPack pack = new DataPack();
+                pack.WriteCell(i);
+                pack.WriteCell(g_iZombieKills[i]);
+                zomPlayers.Push(pack);
+            }
+        }
+    }
+
+    surPlayers.SortCustom(Sort_Kills);
+    zomPlayers.SortCustom(Sort_Kills);
+
+    PrintToServer(" ");
+    PrintToServer("--- Zombie MVP ---");
+    PrintToServer("Player               Perk                 Class      Kills");
+    PrintToServer("----------------------------------------------------------");
+    for (int i = 0; i < zomPlayers.Length; i++)
+    {
+        DataPack pack = zomPlayers.Get(i);
+        pack.Reset();
+        int client = pack.ReadCell();
+        int kills = pack.ReadCell();
+        
+        char name[32];
+        GetClientName(client, name, sizeof(name));
+        
+        char perkName[32];
+        GetSurPerkName(g_iLastSurvivorPerk[client], perkName, sizeof(perkName));
+
+        char className[32];
+        GetClassNameFromEnum(g_eLastSurvivorClass[client], className, sizeof(className));
+
+        PrintToServer("%-20.20s %-20.20s %-10.10s %d", name, perkName, className, kills);
+    }
+    PrintToServer("----------------------------------------------------------");
+
+    PrintToServer(" ");
+    PrintToServer("--- Survivor MVP ---");
+    PrintToServer("Player               Perk                 Class      Kills");
+    PrintToServer("----------------------------------------------------------");
+    for (int i = 0; i < surPlayers.Length; i++)
+    {
+        DataPack pack = surPlayers.Get(i);
+        pack.Reset();
+        int client = pack.ReadCell();
+        int kills = pack.ReadCell();
+        
+        char name[32];
+        GetClientName(client, name, sizeof(name));
+        
+        char perkName[32];
+        GetSurPerkName(g_iLastSurvivorPerk[client], perkName, sizeof(perkName));
+
+        char className[32];
+        GetClassNameFromEnum(g_eLastSurvivorClass[client], className, sizeof(className));
+
+        PrintToServer("%-20.20s %-20.20s %-10.10s %d", name, perkName, className, kills);
+    }
+    PrintToServer("----------------------------------------------------------");
+    PrintToServer(" ");
+
+    for (int i = 0; i < surPlayers.Length; i++)
+    {
+        DataPack pack = surPlayers.Get(i);
+        delete pack;
+    }
+    delete surPlayers;
+
+    for (int i = 0; i < zomPlayers.Length; i++)
+    {
+        DataPack pack = zomPlayers.Get(i);
+        delete pack;
+    }
+    delete zomPlayers;
 }

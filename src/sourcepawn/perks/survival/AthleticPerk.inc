@@ -1,4 +1,3 @@
-
 #if defined __AthleticPerk_included
 #endinput
 #endif
@@ -40,11 +39,11 @@ FUNCTION(AthleticPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(AthleticPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Faster movement and ROF");
+    strcopy(buffer, maxlen, "AthleticPerk_shortdesc");
 }
 
 FUNCTION(AthleticPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Faster movement and ROF!!");
+    strcopy(buffer, maxlen, "AthleticPerk_desc");
 }
 
 FUNCTION(AthleticPerk, updateClientPermStats)) {

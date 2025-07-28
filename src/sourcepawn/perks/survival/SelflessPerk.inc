@@ -37,11 +37,11 @@ FUNCTION(SelflessPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(SelflessPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Explode on death");
+    strcopy(buffer, maxlen, "SelflessPerk_shortdesc");
 }
 
 FUNCTION(SelflessPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "You explode on death, dealing massive damage to nearby zombies.");
+    strcopy(buffer, maxlen, "SelflessPerk_desc");
 }
 
 // 使用 onTakeDamage 来触发爆炸

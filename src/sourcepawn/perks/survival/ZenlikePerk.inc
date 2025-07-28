@@ -43,11 +43,11 @@ FUNCTION(ZenlikePerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(ZenlikePerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Gain crit chance while crouching");
+    strcopy(buffer, maxlen, "ZenlikePerk_shortdesc");
 }
 
 FUNCTION(ZenlikePerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "While crouching and still, you regenerate health and build up critical hit chance. Each attack lowers your crit chance by 25%.");
+    strcopy(buffer, maxlen, "ZenlikePerk_desc");
 }
 
 FUNCTION(ZenlikePerk, updateCondStats), char[] buffer, int maxlen) {

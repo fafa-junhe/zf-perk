@@ -49,11 +49,11 @@ FUNCTION(ResourcefulPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(ResourcefulPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Friends with pickups");
+    strcopy(buffer, maxlen, "ResourcefulPerk_shortdesc");
 }
 
 FUNCTION(ResourcefulPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Your kills give you ammo, health, and metal. Ammo packs give you a temporary attack bonus, and medkits give you a temporary defense bonus.");
+    strcopy(buffer, maxlen, "ResourcefulPerk_desc");
 }
 
 FUNCTION(ResourcefulPerk, onKill), int victim, int killer, int assist, int inflictor, int damagetype) {

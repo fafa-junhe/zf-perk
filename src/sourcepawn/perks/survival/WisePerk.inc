@@ -44,11 +44,11 @@ FUNCTION(WisePerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(WisePerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Gain stats from combat");
+    strcopy(buffer, maxlen, "WisePerk_shortdesc");
 }
 
 FUNCTION(WisePerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Your kills and assists permanently increase your attack power. Your defense permanently increases when you are hit by a melee attack.");
+    strcopy(buffer, maxlen, "WisePerk_desc");
 }
 
 FUNCTION_FLOAT(WisePerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype) {

@@ -72,11 +72,11 @@ FUNCTION(RoarPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(RoarPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "咆哮击退幸存者");
+    strcopy(buffer, maxlen, "RoarPerk_shortdesc");
 }
 
 FUNCTION(RoarPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "发医生语音来激活咆哮。咆哮造成击退效果并暂时降低幸存者防御力,冷却时间15秒。“哈!”");
+    strcopy(buffer, maxlen, "RoarPerk_desc");
 }
 
 FUNCTION(RoarPerk, onCallForMedic)) {

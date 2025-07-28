@@ -46,11 +46,11 @@ FUNCTION(TurtlePerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(TurtlePerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "High defense, low speed");
+    strcopy(buffer, maxlen, "TurtlePerk_shortdesc");
 }
 
 FUNCTION(TurtlePerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Your defense is greatly increased, but your attack power and movement speed are reduced, and you cannot deal random critical hits. Spies cannot backstab you.");
+    strcopy(buffer, maxlen, "TurtlePerk_desc");
 }
 
 FUNCTION(TurtlePerk, updateClientPermStats)) {

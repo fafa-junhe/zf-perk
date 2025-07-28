@@ -46,18 +46,18 @@ FUNCTION(ToxicPerk, getName), char[] buffer, int maxlen) {
 }
 
 FUNCTION(ToxicPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "攻击使敌人中毒");
+    strcopy(buffer, maxlen, "ToxicPerk_shortdesc");
 }
 
 FUNCTION(ToxicPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "攻击使敌人中毒,中毒的敌人攻击速度和移动速度都会降低。");
+    strcopy(buffer, maxlen, "ToxicPerk_desc");
 }
 
 FUNCTION(ToxicPerk, onDealDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype) {
     if (validLivingSur(victim) && (damagetype & DMG_CLUB)) {
         // Apply poison effect
-        addStat(victim, ZFStatSpeed, ZFStatTypePerm, ZF_TOXIC_SPEED);
-        addStat(victim, ZFStatRof, ZFStatTypePerm, ZF_TOXIC_ROF);
+        addStatTempStack(victim, ZFStatSpeed, ZF_TOXIC_SPEED, RoundToCeil(ZF_TOXIC_DURATION));
+        addStatTempStack(victim, ZFStatRof, ZF_TOXIC_ROF, RoundToCeil(ZF_TOXIC_DURATION));
     }
 }
 

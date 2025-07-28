@@ -39,15 +39,15 @@ stock SurvivorBasePerk StirCrazyPerkFnew(any client) {
 
 
 FUNCTION(StirCrazyPerk, getName), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Stir-Crazy");
+    strcopy(buffer, maxlen, "StirCrazy");
 }
 
 FUNCTION(StirCrazyPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Speed determines attack power");
+    strcopy(buffer, maxlen, "StirCrazyPerk_shortdesc");
 }
 
 FUNCTION(StirCrazyPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Your movement speed gives you an attack power bonus. The faster you move, the higher your attack power.");
+    strcopy(buffer, maxlen, "StirCrazyPerk_desc");
 }
 
 FUNCTION(StirCrazyPerk, onPlayerSpawn)) {
