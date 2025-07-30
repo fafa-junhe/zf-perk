@@ -126,7 +126,7 @@ VTable 是这套框架实现多态（即不同 Perk 对同一事件有不同响�
 | **战斗事件**              |                                                |                                                                                                        |                                            |
 | `VTABLE_ON_TAKE_DAMAGE`   | Perk 拥有者**受到**伤害**前**                  | 修改或免疫受到的伤害（Leap 免疫摔伤）、在受到致命一击**前**触发效果（Selfless, Combustible）             | `Leap`, `Juggernaut`, `Selfless`, `Wise`     |
 | `VTABLE_ON_TAKE_DAMAGE_POST` | Perk 拥有者**受到**伤害**后**                  | 受到伤害后触发反击或效果，但不能再修改本次伤害                                                           | `Juggernaut` (近战击退)                      |
-| `VTABLE_ON_DEAL_DAMAGE_POST` | Perk 拥有者**造成**伤害**后**                  | 吸血、偷取、施加 Debuff 等在伤害计算完毕后应用的效果                                                     | `Vampiric`, `Thieving`, `Tarred` (近战)    |
+| `VTABLE_ON_TAKE_DAMAGE_POST` | Perk 拥有者**造成**伤害**后**                  | 吸血、偷取、施加 Debuff 等在伤害计算完毕后应用的效果                                                     | `Vampiric`, `Thieving`, `Tarred` (近战)    |
 | `VTABLE_ON_KILL`          | Perk 拥有者**完成击杀**时                      | 击杀奖励（Resourceful）、转化随从（Alpha）、累积属性（Wise）                                                 | `Resourceful`, `Alpha`, `Wise`, `Heroic`     |
 | `VTABLE_ON_ASSIST_KILL`   | Perk 拥有者**完成助攻**时                      | 助攻奖励、转化随从等                                                                                   | `Alpha`, `Heroic`                          |
 | **周期与状态事件**        |                                                |                                                                                                        |                                            |

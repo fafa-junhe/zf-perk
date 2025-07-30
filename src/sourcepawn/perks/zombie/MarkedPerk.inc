@@ -141,16 +141,16 @@ FUNCTION(MarkedPerk, updateCondStats), char[] buffer, int maxlen) {
     if (target > 0 && validLivingSur(target)) {
         char targetName[MAX_NAME_LENGTH];
         GetClientName(target, targetName, sizeof(targetName));
-        Format(buffer, maxlen, "Target: %s", targetName);
+        Format(buffer, maxlen, "%t", "MarkedPerk_Status_Target", targetName);
     } else if (_inst.perk_timer > 0) {
-        Format(buffer, maxlen, "New Target in %ds", _inst.perk_timer);
+        Format(buffer, maxlen, "%t", "MarkedPerk_Status_NewTargetIn", _inst.perk_timer);
     } else {
         // This case handles when a target is dead and timer is not running,
         // or when there are no targets left.
         if (local_getSurCount() <= ZF_MARKED_MIN_SURVIVORS && _inst.target != -1) {
-             Format(buffer, maxlen, "No targets left");
+             Format(buffer, maxlen, "%t", "MarkedPerk_Status_NoTargets");
         } else {
-             Format(buffer, maxlen, "Selecting target...");
+             Format(buffer, maxlen, "%t", "MarkedPerk_Status_Selecting");
         }
     }
 }
@@ -187,8 +187,8 @@ void doMarkedSelect(MarkedPerk inst) {
         createIcon(inst.client, target, ZFSPR_EXCLAMATION);
         showIcon(target);
 
-        PrintHintText(inst.client, "你标记了一个新的目标, ta是 %N !", target);
-        PrintHintText(target, "你被某个僵尸标记了! 小心行事!");
+        PrintHintText(inst.client, "%t", "MarkedPerk_Hint_NewTarget", target);
+        PrintHintText(target, "%t", "MarkedPerk_Hint_Marked");
     } else {
         inst.target = -1; // No targets available
     }

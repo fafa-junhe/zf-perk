@@ -69,7 +69,7 @@ FUNCTION_FLOAT(CombustiblePerk, onTakeDamage), int victim, int attacker,  int in
     if (victim != client) return damage;
 
     // 检查是否是来自幸存者的非近战致命一击
-    if (isSur(attacker) && !(damagetype & DMG_CLUB)) {
+    if (validSur(attacker) && !(damagetype & DMG_CLUB)) {
         if (damage >= GetClientHealth(client)) {
             // 是致命一击，触发爆炸
             int explosionDamage = (TF2_GetPlayerClass(victim) == TFClass_Heavy) ? ZF_COMBUSTIBLE_DAMAGE_HEAVY : ZF_COMBUSTIBLE_DAMAGE;
@@ -121,5 +121,5 @@ FUNCTION(CombustiblePerk, onPlayerSpawn))
 FUNCTION(CombustiblePerk, updateCondStats), char[] buffer, int maxlen) {
     // Visual hint for the player
     fxExplosionTiny(_inst.client);
-    strcopy(buffer, maxlen, "Ready to explode on death");
+Format(buffer, maxlen, "%t", "CombustiblePerk_Status_Ready");
 }

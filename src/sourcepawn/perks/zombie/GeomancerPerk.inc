@@ -70,7 +70,7 @@ stock BasePerk GeomancerPerkFnew(int client) {
 }
 
 FUNCTION(GeomancerPerk, getName), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Geomancer");
+    strcopy(buffer, maxlen, "GeomancerPerk_Name");
 }
 
 FUNCTION(GeomancerPerk, getShortdesc), char[] buffer, int maxlen) {
@@ -88,7 +88,7 @@ FUNCTION(GeomancerPerk, updateClientPermStats)) {
 FUNCTION(GeomancerPerk, onCallForMedic)) {
     int client = _inst.client;
     if (_inst.cooldown > 0.0) {
-        PrintHintText(client, "石墙正在冷却中: %.0fs", _inst.cooldown);
+        PrintHintText(client, "%t", "GeomancerPerk_Hint_Cooldown", RoundFloat(_inst.cooldown));
         return;
     }
 
@@ -100,9 +100,12 @@ FUNCTION(GeomancerPerk, onCallForMedic)) {
     GetAngleVectors(ang, fwd, NULL_VECTOR, NULL_VECTOR);
 
     for (int i = 0; i < GEOMANCER_WALL_COUNT; i++) {
-        float wall_pos[3];
-        ScaleVector(fwd, GEOMANCER_WALL_DISTANCE * (i + 1));
-        AddVectors(pos, fwd, wall_pos);
+        float wall_pos[3], scaled_fwd[3];
+        
+        // Use a copy for scaling to avoid modifying the original fwd vector
+        scaled_fwd = fwd;
+        ScaleVector(scaled_fwd, GEOMANCER_WALL_DISTANCE * (i + 1));
+        AddVectors(pos, scaled_fwd, wall_pos);
 
         // Trace down to find the ground
         float down[3] = {0.0, 0.0, -1.0};
@@ -165,8 +168,8 @@ FUNCTION(GeomancerPerk, onPeriodic)) {
 
 FUNCTION(GeomancerPerk, updateCondStats), char[] buffer, int maxlen) {
     if (_inst.cooldown > 0.0) {
-        Format(buffer, maxlen, "石墙冷却: %.0fs", _inst.cooldown);
+        Format(buffer, maxlen, "%t", "GeomancerPerk_Status_Cooldown", RoundFloat(_inst.cooldown));
     } else {
-        Format(buffer, maxlen, "石墙已准备就绪");
+        Format(buffer, maxlen, "%t", "GeomancerPerk_Status_Ready");
     }
 }

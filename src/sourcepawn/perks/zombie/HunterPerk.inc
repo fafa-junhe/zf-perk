@@ -79,7 +79,7 @@ stock BasePerk HunterPerkFnew(int client) {
 }
 
 FUNCTION(HunterPerk, getName), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Hunter");
+    strcopy(buffer, maxlen, "HunterPerk_Name");
 }
 
 FUNCTION(HunterPerk, getShortdesc), char[] buffer, int maxlen) {
@@ -125,24 +125,20 @@ public Action Timer_RespawnPlayerHunter(Handle timer, any userid) {
 
 FUNCTION(HunterPerk, onCallForMedic)) {
     if (_inst.placed_spawn) {
+        PrintHintText(_inst.client, "%t", "HunterPerk_Hint_AlreadyPlaced");
         return;
     }
     int client = _inst.client;
-    if(_inst.placed_spawn)
+    if(!isGrounded(client))
     {
-        PrintHintText(client, "你已经放过了你的重生点.");
+        PrintHintText(client, "%t", "HunterPerk_Hint_NotGrounded");
         ClientCommand(client, "voicemenu 2 5");
-    }
-    else if(!isGrounded(client))
-    {
-        PrintHintText(client, "你必须站在地上才能布置重生点.");
-        ClientCommand(client, "voicemenu 2 5");        
     }
     else if(isCrouching(client))
     {
-        PrintHintText(client, "你不需要蹲着来布置重生点.");
+        PrintHintText(client, "%t", "HunterPerk_Hint_NoCrouch");
         ClientCommand(client, "voicemenu 2 5");
-    }  
+    }
     float pos[3];
     GetClientAbsOrigin(client, pos);
     
@@ -152,19 +148,19 @@ FUNCTION(HunterPerk, onCallForMedic)) {
     _inst.setSpawnPos(pos);
     _inst.placed_spawn = true;
     ClientCommand(client, "voicemenu 0 6");
-    PrintHintText(client, "重生点已放置。");
+    PrintHintText(client, "%t", "HunterPerk_Hint_Placed");
 }
 
 FUNCTION(HunterPerk, updateCondStats), char[] buffer, int maxlen) {
     int client = _inst.client;
 
     if (!_inst.placed_spawn) {
-        strcopy(buffer, maxlen, "可以放置重生点");
+        Format(buffer, maxlen, "%t", "HunterPerk_Status_CanPlace");
         return;
     }
 
     if (!validAura(client)) {
-        strcopy(buffer, maxlen, "重生点已被摧毁");
+        Format(buffer, maxlen, "%t", "HunterPerk_Status_Destroyed");
         return;
     }
     
@@ -177,7 +173,7 @@ FUNCTION(HunterPerk, updateCondStats), char[] buffer, int maxlen) {
             GetClientAbsOrigin(i, sur_pos);
             if (GetVectorDistance(spawn_pos, sur_pos, true) < ZF_HUNTER_RADIUSSQ) {
                 removeAura(client);
-                PrintHintText(client, "你的重生点已被幸存者摧毁！");
+                PrintHintText(client, "%t", "HunterPerk_Hint_Destroyed");
                 destroyed = true;
                 break;
             }
@@ -185,8 +181,8 @@ FUNCTION(HunterPerk, updateCondStats), char[] buffer, int maxlen) {
     }
     
     if(destroyed) {
-        strcopy(buffer, maxlen, "重生点已被摧毁");
+        Format(buffer, maxlen, "%t", "HunterPerk_Status_Destroyed");
     } else {
-        strcopy(buffer, maxlen, "重生点激活中");
+        Format(buffer, maxlen, "%t", "HunterPerk_Status_Active");
     }
 }

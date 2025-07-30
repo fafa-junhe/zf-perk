@@ -137,8 +137,6 @@ FUNCTION(RoarPerk, onPeriodic)) {
 
 FUNCTION(RoarPerk, updateCondStats), char[] buffer, int maxlen) {
     if (_inst.perk_timer > 0) {
-        Format(buffer, maxlen, "Roar Cooldown: %ds", _inst.perk_timer);
-    } else {
-        Format(buffer, maxlen, "Roar Ready");
-    }
+Format(buffer, maxlen, "%t", "RoarPerk_Status_Cooldown", _inst.perk_timer);    } else {
+Format(buffer, maxlen, "%t", "RoarPerk_Status_Ready");    }
 }

@@ -62,7 +62,8 @@ FUNCTION(TurtlePerk, updateClientPermStats)) {
 }
 
 FUNCTION_FLOAT(TurtlePerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype) {
-    if (victim == _inst.client && attackWasBackstab(attacker, inflictor, damagetype)) {
+    if (victim == _inst.client && attackWasBackstab(attacker, inflictor, damage)) {
+PrintHintText(victim, "%t", "TurtlePerk_Hint_BackstabBlocked");
         TF2_StunPlayer(attacker, ZF_TURTLE_STUN_DURATION, _, 0, attacker);
         fxSpark(victim);
         return 0.0;

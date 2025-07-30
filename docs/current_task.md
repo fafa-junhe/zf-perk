@@ -1,24 +1,43 @@
-# 技能僵尸要塞 - 任务状态 - 2025-07-20 12:50
+# 技能僵尸要塞 - 任务状态 - 2025-07-30 14:06
 
 ## 用户原始需求
-> 使用SourceMod的多语言系统，来重构插件内的所有文本，包括getName getDesc getShortdesc等函数
+> 将其他未移入到翻译文件内的字符串移入到翻译文件内。
 
 ## 当前任务 (Current Task)
-> 修复 `zombie_fortress_perk.sp` 中所有 `panel_Handle...` 函数内 `switch` 语句缺少 `break` 导致的逻辑错误和编译问题。
+> 将 `src/sourcepawn/perks/zombie/HunterPerk.inc` 文件中的硬编码字符串移入翻译文件。
 
 ## 下一个任务 (Next Task)
-> 在修复 `switch` 语句的 bug 后，继续重构 `zombie_fortress_perk.sp` 文件，将所有面向用户的硬编码字符串（聊天、菜单、HUD、命令回复等）替换为 `translations/zombie_fortress.phrases.txt` 文件中定义的翻译键。
+> 继续处理搜索结果中的下一个文件 (`src/sourcepawn/perks/zombie/GeomancerPerk.inc`)，直到所有硬编码字符串都被迁移。
 
 ## 任务清单 (To-Do List)
-- [x] 创建 `translations/zombie_fortress.phrases.txt` 翻译文件。
-- [x] 在 `zombie_fortress_perk.sp` 中加载翻译文件。
-- [-] 重构 `zombie_fortress_perk.sp` 中的硬编码字符串。
-- [ ] 重构 `zf_perk.inc` 中的硬编码字符串。
-- [ ] 重构 `zf_util_base.inc`, `zf_util_fx.inc`, `zf_util_pref.inc` 中的硬编码字符串。
-- [ ] 编译插件并测试所有文本是否已正确本地化。
+- [x] 处理 `src/sourcepawn/perks/zombie/RagePerk.inc`
+- [x] 处理 `src/sourcepawn/perks/zombie/PhantasmPerk.inc`
+- [x] 处理 `src/sourcepawn/perks/zombie/ParasitePerk.inc` (文件不存在，跳过)
+- [x] 处理 `src/sourcepawn/perks/zombie/OverlordPerk.inc`
+- [x] 处理 `src/sourcepawn/perks/zombie/MimicPerk.inc` (文件不存在，跳过)
+- [x] 处理 `src/sourcepawn/perks/zombie/MarkedPerk.inc`
+- [x] 处理 `src/sourcepawn/perks/zombie/HunterPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/zombie/GeomancerPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/zombie/CorruptorPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/zombie/ChargerPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/zombie/AlphaPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/survival/TrapperPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/survival/TantrumPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/survival/StashPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/survival/SpecterPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/survival/ScavengerPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/survival/RicochetSpecialistPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/survival/NinjaPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/survival/MountaineerPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/survival/GamblerPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/survival/FriendPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/survival/EchoPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/survival/CowardlyPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/survival/CarpenterPerk.inc`
+- [ ] 处理 `src/sourcepawn/perks/survival/AlchemistPerk.inc`
 
 ## 本次会话总结 (Session Summary)
-> 本次会话继续了插件的国际化重构。我们合并了翻译文件中的多个帮助文本键，以简化代码。在尝试修复菜单处理函数中缺失 `break` 的严重逻辑错误时，多次 `apply_diff` 操作失败并最终被中断，导致文件处于包含编译错误的状态。
+> 本次会话中，我开始执行将硬编码字符串迁移到翻译文件的任务。我首先搜索了所有相关的源文件，然后成功地将 `src/sourcepawn/zf_perk.inc` 和 `src/sourcepawn/perks/zombie/VolatilePerk.inc` 中的字符串提取到了 `translations/zombie_fortress.phrases.txt` 文件，并更新了源代码以使用翻译键。
 
 ## 注意事项
-> `zombie_fortress_perk.sp` 文件目前存在编译错误。恢复任务时，必须首先修复所有 `panel_Handle...` 函数中的 `switch` 语句。需要一次性地、正确地修复所有 `switch` 语句，确保每个 `case` 都有 `break`，并且为“关闭”或“返回”选项保留 `default` 或明确的 `case` 处理逻辑。在修复此 bug 之前，不应继续进行其他文本替换工作。
+> 任务被中断，需要从 `src/sourcepawn/perks/zombie/RagePerk.inc` 文件继续。

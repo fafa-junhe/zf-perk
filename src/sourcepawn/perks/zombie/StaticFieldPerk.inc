@@ -110,5 +110,5 @@ FUNCTION(StaticFieldPerk, onPeriodic)) {
 }
 
 FUNCTION(StaticFieldPerk, updateCondStats), char[] buffer, int maxlen) {
-    Format(buffer, maxlen, "Static Field Aura Active");
+Format(buffer, maxlen, "%t", "StaticFieldPerk_Status_Active");
 }

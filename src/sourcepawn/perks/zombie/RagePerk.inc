@@ -79,7 +79,7 @@ stock BasePerk RagePerkFnew(int client) {
 }
 
 FUNCTION(RagePerk, getName), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Rage");
+    strcopy(buffer, maxlen, "RagePerk_Name");
 }
 
 FUNCTION(RagePerk, getShortdesc), char[] buffer, int maxlen) {
@@ -106,7 +106,7 @@ FUNCTION(RagePerk, onCallForMedic)) {
 
     float health_pct = float(GetClientHealth(client)) / float(clientMaxHealth(client));
     if (health_pct < ZF_RAGE_HEALTHPCT_TOUSE) {
-        PrintHintText(client, "生命值过低，无法激活狂怒！");
+        PrintHintText(client, "%t", "RagePerk_Health_Too_Low");
         return;
     }
 
@@ -118,7 +118,7 @@ FUNCTION(RagePerk, onCallForMedic)) {
     SetEntityHealth(client, currentHealth + health_bonus);
     addStat(client, ZFStatSpeed, ZFStatTypeCond, ZF_RAGE_SPEED);
     createAura(client, ZFPART_AURAINRED, AttachBase);
-    PrintHintText(client, "狂怒已激活！");
+    PrintHintText(client, "%t", "RagePerk_Activated");
 }
 
 FUNCTION(RagePerk, onPeriodic)) {
@@ -135,17 +135,17 @@ FUNCTION(RagePerk, updateCondStats), char[] buffer, int maxlen) {
             _inst.perk_state = 0;
             if (validAura(client)) removeAura(client);
             resetClientStatType(client, ZFStatTypeCond);
-            PrintHintText(client, "狂怒效果已消失。");
+            PrintHintText(client, "%t", "RagePerk_Expired");
         } else {
-            Format(buffer, maxlen, "Rage Active!");
+            Format(buffer, maxlen, "%t", "RagePerk_Status_Active");
         }
     }
     
     if (_inst.perk_state == 0) {
         if (_inst.perk_timer > 0) {
-            Format(buffer, maxlen, "Rage Cooldown: %ds", _inst.perk_timer);
+            Format(buffer, maxlen, "%t", "RagePerk_Status_Cooldown", _inst.perk_timer);
         } else {
-            Format(buffer, maxlen, "Rage Ready");
+            Format(buffer, maxlen, "%t", "RagePerk_Status_Ready");
         }
     }
 }

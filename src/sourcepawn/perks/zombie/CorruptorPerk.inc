@@ -30,7 +30,7 @@ methodmap CorruptorPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, CorruptorPerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, CorruptorPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, CorruptorPerkFupdateClientPermStats);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEAL_DAMAGE_POST, CorruptorPerkFonDealDamagePost);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_BUILDING_TAKE_DAMAGE_POST, CorruptorPerkFonBuildTakeDamagePost);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, CorruptorPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, CorruptorPerkFonPlayerSpawn);
 
@@ -107,6 +107,7 @@ stock bool IsBuilding(int entity) {
     }
     char classname[64];
     GetEdictClassname(entity, classname, sizeof(classname));
+    PrintToServer(classname);
     return (StrContains(classname, "obj_", false) != -1);
 }
 
@@ -115,11 +116,26 @@ stock void doCorruptBuilding(int owner, int building) {
     SetEntProp(building, Prop_Send, "m_iTeamNum", zomTeam());
     SetEntPropEnt(building, Prop_Send, "m_hOwnerEntity", owner);
     
-    // For sentries, make them active
+    // For sentries, make them active and fully functional
     char classname[64];
     GetEdictClassname(building, classname, sizeof(classname));
     if (StrEqual(classname, "obj_sentrygun")) {
+        // Cancel any building/upgrading process and reset state
+        SetEntProp(building, Prop_Send, "m_bBuilding", 0);
+        SetEntProp(building, Prop_Send, "m_bUpgrading", 0);
         SetEntProp(building, Prop_Send, "m_bDisabled", 0);
+        SetEntProp(building, Prop_Send, "m_iState", 1); // 1 = SENTRY_STATE_IDLE
+
+        // Restore health and ammo to max for its level
+        int level = GetEntProp(building, Prop_Send, "m_iUpgradeLevel");
+        SetEntProp(building, Prop_Data, "m_iHealth", GetEntProp(building, Prop_Data, "m_iMaxHealth"));
+        
+        int max_ammo = (level == 1) ? 150 : 200;
+        SetEntProp(building, Prop_Send, "m_iAmmo", max_ammo);
+        
+        if (level == 3) {
+            SetEntProp(building, Prop_Send, "m_iRockets", 20);
+        }
     }
 
     // Create a timer to destroy the building
@@ -127,7 +143,7 @@ stock void doCorruptBuilding(int owner, int building) {
     pack.WriteCell(building);
     CreateTimer(CORRUPTOR_CORRUPTED_LIFETIME, timer_DestroyBuilding, pack);
     
-    PrintHintText(owner, "建筑已被腐化！");
+    PrintHintText(owner, "%t", "CorruptorPerk_Hint_Corrupted");
 }
 
 public Action timer_DestroyBuilding(Handle timer, DataPack pack) {
@@ -140,30 +156,32 @@ public Action timer_DestroyBuilding(Handle timer, DataPack pack) {
     return Plugin_Stop;
 }
 
-FUNCTION(CorruptorPerk, onDealDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype) {
+FUNCTION_FLOAT(CorruptorPerk, onBuildTakeDamagePost), int iBuilding, int &iAttacker, int &iInflictor, float &flDamage, int &iDamagetype, int &iWeapon, float flDamageForce[3], float vecDamagePosition[3], int iDamagecustom) {
     int client = _inst.client;
-    if (client != attacker) return;
-
-    if (!IsBuilding(victim)) {
+    PrintToServer("c%d v%d a%d i%d d%f d%d", client, iBuilding, iAttacker, iInflictor, flDamage, iDamagetype)
+    if (client != iAttacker) return flDamage;
+    PrintHintText(client, "victim %d %b", iBuilding, IsBuilding(iBuilding));
+    if (!IsBuilding(iBuilding)) {
         _inst.target_building = -1;
-        return;
+        return flDamage;
     }
 
     // Apply bonus damage
-    SDKHooks_TakeDamage(victim, client, client, damage * (CORRUPTOR_BUILDING_DAMAGE_BONUS / 100.0), DMG_CLUB);
-
+    SDKHooks_TakeDamage(iBuilding, client, client, flDamage * (CORRUPTOR_BUILDING_DAMAGE_BONUS / 100.0), DMG_CLUB);
+    PrintHintText(client, "%t", "CorruptorPerk_Hint_BonusDamage");
     // Corruption logic
-    if (victim != _inst.target_building) {
-        _inst.target_building = victim;
+    if (iBuilding != _inst.target_building) {
+        _inst.target_building = iBuilding;
         _inst.first_hit_time = GetGameTime();
     }
     
     _inst.last_hit_time = GetGameTime();
 
     if ((GetGameTime() - _inst.first_hit_time) >= CORRUPTOR_CORRUPT_DURATION) {
-        doCorruptBuilding(client, victim);
+        doCorruptBuilding(client, iBuilding);
         _inst.target_building = -1;
     }
+    return flDamage;
 }
 
 FUNCTION(CorruptorPerk, updateCondStats), char[] buffer, int maxlen) {
@@ -173,7 +191,7 @@ FUNCTION(CorruptorPerk, updateCondStats), char[] buffer, int maxlen) {
         } else {
             int progress = RoundFloat(((GetGameTime() - _inst.first_hit_time) / CORRUPTOR_CORRUPT_DURATION) * 100.0);
             if (progress > 100) progress = 100;
-            Format(buffer, maxlen, "正在腐化: %d%%", progress);
+            Format(buffer, maxlen, "%t", "CorruptorPerk_Status_Corrupting", progress);
         }
     }
 }

@@ -1,5 +1,5 @@
 #if defined _zf_perk_heroic_inc
-  #endinput
+    #endinput
 #endif
 #define _zf_perk_heroic_inc
 
@@ -12,20 +12,21 @@
 #pragma newdecls required
 
 // --- Constants
-#define HEROIC_COMBAT 15
-#define HEROIC_CRITTIME_INIT 30
-#define HEROIC_CRITTIME_KILL 3
-#define HEROIC_CRITTIME_KILL_ACTIVE 0
-#define HEROIC_CRITTIME_ASSIST 1
+#define HEROIC_COMBAT                 15
+#define HEROIC_CRITTIME_INIT          30
+#define HEROIC_CRITTIME_KILL          3
+#define HEROIC_CRITTIME_KILL_ACTIVE   0
+#define HEROIC_CRITTIME_ASSIST        1
 #define HEROIC_CRITTIME_ASSIST_ACTIVE 0
 
 // --- Methodmap
 methodmap HeroicPerk < SurvivorBasePerk
 {
-    public HeroicPerk(int client)
+
+public     HeroicPerk(int client)
     {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
-        HeroicPerk sm = view_as<HeroicPerk>(sm_base);
+        HeroicPerk       sm      = view_as<HeroicPerk>(sm_base);
 
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, HeroicPerkFgetName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, HeroicPerkFgetShortdesc);
@@ -44,15 +45,18 @@ stock SurvivorBasePerk HeroicPerkFnew(int client)
     return new HeroicPerk(client);
 }
 
-FUNCTION(HeroicPerk, getName), char[] buffer, int maxlen) {
+FUNCTION(HeroicPerk, getName), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "Heroic");
 }
 
-FUNCTION(HeroicPerk, getShortdesc), char[] buffer, int maxlen) {
+FUNCTION(HeroicPerk, getShortdesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "HeroicPerk_shortdesc");
 }
 
-FUNCTION(HeroicPerk, getDesc), char[] buffer, int maxlen) {
+FUNCTION(HeroicPerk, getDesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "HeroicPerk_desc");
 }
 
@@ -69,14 +73,14 @@ FUNCTION(HeroicPerk, onPlayerSpawn), int client)
 FUNCTION(HeroicPerk, onKill), int victim, int killer, int assist, int inflictor, int damagetype)
 {
     int client = _inst.client;
-    int time = zf_perkState[client] == 1 ? HEROIC_CRITTIME_KILL_ACTIVE : HEROIC_CRITTIME_KILL;
+    int time   = zf_perkState[client] == 1 ? HEROIC_CRITTIME_KILL_ACTIVE : HEROIC_CRITTIME_KILL;
     zf_perkTimer[client] += time;
 }
 
 FUNCTION(HeroicPerk, onAssistKill), int victim, int killer, int assist, int inflictor, int damagetype)
 {
     int client = _inst.client;
-    int time = zf_perkState[client] == 1 ? HEROIC_CRITTIME_ASSIST_ACTIVE : HEROIC_CRITTIME_ASSIST;
+    int time   = zf_perkState[client] == 1 ? HEROIC_CRITTIME_ASSIST_ACTIVE : HEROIC_CRITTIME_ASSIST;
     zf_perkTimer[client] += time;
 }
 
@@ -116,9 +120,9 @@ FUNCTION(HeroicPerk, updateCondStats), char[] buffer, int maxlen)
             removeAura(client);
             TF2_RemoveCondition(client, TFCond_Kritzkrieged);
             fxKritzStop(client);
-            zf_perkState[client] = 2; // 0: normal, 1: active, 2: used
+            zf_perkState[client] = 2;    // 0: normal, 1: active, 2: used
         }
     }
-    
-    Format(buffer, maxlen, "Crit Time: %is", timer);
+
+    Format(buffer, maxlen, "%t", "HeroicPerk_Status_CritTime", timer);
 }

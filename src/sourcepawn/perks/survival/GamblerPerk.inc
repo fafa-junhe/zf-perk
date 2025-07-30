@@ -78,25 +78,21 @@ FUNCTION(GamblerPerk, onCalcIsAttackCritical)) {
         case 1: { // 3x Crit Damage
             addStatTempStack(client, ZFStatAtt, 200, 1); // 200% bonus damage for the next hit
             addStatTempStack(client, ZFStatCrit, 200, 1); // 200% crit chance for the next hit
-            PrintHintText(client, "幸运一击! 造成3倍伤害!");
-        }
+PrintHintText(client, "%t", "GamblerPerk_Hint_Crit");        }
         case 2: { // Instant Reload
             int slot = activeWeaponSlot(client);
             if (slot != -1) {
                 TF2_RemoveCondition(client, TFCond_CritOnFirstBlood); // Visual cue
                 TF2_AddCondition(client, TFCond_CritOnFirstBlood, 0.1);
                 setClipAmmo(client, slot, maxClipAmmo(client, slot));
-                PrintHintText(client, "好运! 弹药已装满!");
-            }
+PrintHintText(client, "%t", "GamblerPerk_Hint_Reload");            }
         }
         case 3: { // Speed Boost
             addStatTempStack(client, ZFStatSpeed, GAMBLER_SPEED_BOOST_AMOUNT, GAMBLER_SPEED_BOOST_DURATION);
-            PrintHintText(client, "手气不错! 获得速度加成!");
-        }
+PrintHintText(client, "%t", "GamblerPerk_Hint_Speed");        }
         case 4: { // Misfire
             SDKHooks_TakeDamage(client, client, client, GAMBLER_SELF_DAMAGE, DMG_GENERIC);
-            PrintHintText(client, "厄运... 攻击哑火!");
-        }
+PrintHintText(client, "%t", "GamblerPerk_Hint_Misfire");        }
     }
     // This event is tricky, we return nothing but modify player state.
     // The core plugin needs to check for our custom crit condition.
@@ -123,5 +119,4 @@ FUNCTION(GamblerPerk, onDealDamagePost), int victim, int attacker, int inflictor
 }
 
 FUNCTION(GamblerPerk, updateCondStats), char[] buffer, int maxlen) {
-    Format(buffer, maxlen, "幸运值: %d/%d", zf_perkState[_inst.client], GAMBLER_MAX_LUCK);
-}
+Format(buffer, maxlen, "%t", "GamblerPerk_Status_Luck", zf_perkState[_inst.client], GAMBLER_MAX_LUCK);}

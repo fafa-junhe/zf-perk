@@ -1,24 +1,25 @@
 #if defined _zf_perk_scavenger_inc
-  #endinput
+    #endinput
 #endif
 #define _zf_perk_scavenger_inc
 
 #include "SurvivorBasePerk.inc"
 
 // --- Constants
-#define ZF_PERK_SCAVENGER_ID 9
-#define SCAVENGER_CRIT_CHANCE 25
-#define SCAVENGER_METAL_CHANCE 50
+#define ZF_PERK_SCAVENGER_ID    9
+#define SCAVENGER_CRIT_CHANCE   25
+#define SCAVENGER_METAL_CHANCE  50
 #define SCAVENGER_CRIT_DURATION 5
-#define SCAVENGER_METAL_AMOUNT 50
+#define SCAVENGER_METAL_AMOUNT  50
 
 // --- Methodmap
 methodmap ScavengerPerk < SurvivorBasePerk
 {
-    public ScavengerPerk(int client)
+
+public     ScavengerPerk(int client)
     {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
-        ScavengerPerk sm = view_as<ScavengerPerk>(sm_base);
+        ScavengerPerk    sm      = view_as<ScavengerPerk>(sm_base);
 
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, ScavengerPerkFgetName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, ScavengerPerkFgetShortdesc);
@@ -34,15 +35,18 @@ stock SurvivorBasePerk ScavengerPerkFnew(int client)
     return new ScavengerPerk(client);
 }
 
-FUNCTION(ScavengerPerk, getName), char[] buffer, int maxlen) {
+FUNCTION(ScavengerPerk, getName), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "Scavenger");
 }
 
-FUNCTION(ScavengerPerk, getShortdesc), char[] buffer, int maxlen) {
+FUNCTION(ScavengerPerk, getShortdesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "ScavengerPerk_shortdesc");
 }
 
-FUNCTION(ScavengerPerk, getDesc), char[] buffer, int maxlen) {
+FUNCTION(ScavengerPerk, getDesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "ScavengerPerk_desc");
 }
 
@@ -57,12 +61,12 @@ FUNCTION(ScavengerPerk, onAmmoPickup), int pickup)
     {
         addCondKritz(client, float(SCAVENGER_CRIT_DURATION));
         fxKritzStart(client);
-        PrintHintText(client, "You found crits!");
+        PrintHintText(client, "%t", "ScavengerPerk_Hint_Crits");
     }
     else if (GetRandomInt(1, 100) <= SCAVENGER_METAL_CHANCE)
     {
         int currentMetal = getMetal(client);
         setMetal(client, currentMetal + SCAVENGER_METAL_AMOUNT);
-        PrintHintText(client, "You found metal!");
+        PrintHintText(client, "%t", "ScavengerPerk_Hint_Metal");
     }
 }

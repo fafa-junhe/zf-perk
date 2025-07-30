@@ -1,5 +1,5 @@
 #if defined __FriendPerk_included
-#endinput
+    #endinput
 #endif
 #define __FriendPerk_included
 
@@ -10,43 +10,53 @@
 #include "../../perk_vtable.inc"
 #include "../../perk_macros.inc"
 
-#define ZF_FRIEND_ATTACK 25
-#define ZF_FRIEND_REGEN 10
-#define ZF_FRIEND_CRITTIME_INIT 5
-#define ZF_FRIEND_CRITTIME_KILL 4
-#define ZF_FRIEND_CRITTIME_ASSIST 2
-#define ZF_FRIEND_RADIUSSQ (300 * 300)
+#define ZF_FRIEND_ATTACK           25
+#define ZF_FRIEND_REGEN            10
+#define ZF_FRIEND_CRITTIME_INIT    5
+#define ZF_FRIEND_CRITTIME_KILL    4
+#define ZF_FRIEND_CRITTIME_ASSIST  2
+#define ZF_FRIEND_RADIUSSQ         (300 * 300)
 
-#define FRIEND_PERK_DATA_FRIEND DP(27)
+#define FRIEND_PERK_DATA_FRIEND    DP(27)
 #define FRIEND_PERK_DATA_CRIT_TIME DP(28)
 
-methodmap FriendPerk < SurvivorBasePerk {
-    property int friendId {
-        public get() {
+methodmap FriendPerk < SurvivorBasePerk
+{
+    property int friendId
+    {
+
+public         get()
+        {
             this.Position = view_as<DataPackPos>(FRIEND_PERK_DATA_FRIEND);
             return this.ReadCell();
         }
-        public set(int value) {
+
+public         set(int value)
+        {
             this.Position = view_as<DataPackPos>(FRIEND_PERK_DATA_FRIEND);
             this.WriteCell(value);
         }
     }
-    property int critTime {
-        public get() {
+    property int critTime
+    {
 
+public         get()
+        {
             this.Position = view_as<DataPackPos>(FRIEND_PERK_DATA_CRIT_TIME);
             return this.ReadCell();
         }
-        public set(int value) {
 
+public         set(int value)
+        {
             this.Position = view_as<DataPackPos>(FRIEND_PERK_DATA_CRIT_TIME);
             this.WriteCell(value);
         }
     }
 
-    public FriendPerk(int client) {
+public     FriendPerk(int client)
+    {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
-        FriendPerk sm = view_as<FriendPerk>(sm_base);
+        FriendPerk       sm      = view_as<FriendPerk>(sm_base);
 
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, FriendPerkFgetName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, FriendPerkFgetShortdesc);
@@ -58,122 +68,149 @@ methodmap FriendPerk < SurvivorBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, FriendPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, FriendPerkFonPeriodic);
         sm_base.Position = FRIEND_PERK_DATA_FRIEND;
-        sm_base.WriteCell(0); // friendId
+        sm_base.WriteCell(0);    // friendId
         sm_base.Position = FRIEND_PERK_DATA_CRIT_TIME;
-        sm_base.WriteCell(0); // critTime
+        sm_base.WriteCell(0);    // critTime
         return sm;
     }
 }
 
-stock SurvivorBasePerk FriendPerkFnew(int client) {
+stock SurvivorBasePerk FriendPerkFnew(int client)
+{
     return new FriendPerk(client);
 }
 
-FUNCTION(FriendPerk, getName), char[] buffer, int maxlen) {
+FUNCTION(FriendPerk, getName), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "Friend");
 }
 
-FUNCTION(FriendPerk, getShortdesc), char[] buffer, int maxlen) {
+FUNCTION(FriendPerk, getShortdesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "FriendPerk_shortdesc");
 }
 
-FUNCTION(FriendPerk, getDesc), char[] buffer, int maxlen) {
+FUNCTION(FriendPerk, getDesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "FriendPerk_desc");
 }
 
-void FriendPerk_doFriendSelect(FriendPerk perk, int friend = -1) {
+void FriendPerk_doFriendSelect(FriendPerk perk, int friend = -1)
+{
     int client = perk.client;
-    if (friend == -1) {
+    if (friend == -1)
+    {
         int targets[MAXPLAYERS];
         int count = 0;
-        for (int i = 1; i <= MaxClients; i++) {
-            if (validLivingSur(i) && i != client) {
+        for (int i = 1; i <= MaxClients; i++)
+        {
+            if (validLivingSur(i) && i != client)
+            {
                 targets[count++] = i;
             }
         }
-        if (count > 0) {
+        if (count > 0)
+        {
             friend = targets[GetRandomInt(0, count - 1)];
         }
     }
 
-    if (friend != -1) {
+    if (friend != -1)
+    {
         perk.friendId = friend;
         perk.critTime = ZF_FRIEND_CRITTIME_INIT;
         createIcon(client, friend, ZFSPR_DOMINATED);
         createIcon(friend, client, ZFSPR_DOMINATED);
         showIcon(client);
         showIcon(friend);
-        PrintToChat(client, "[ZF] You are now friends with %N.", friend);
-        PrintToChat(friend, "[ZF] You are now friends with %N.", client);
+        PrintToChat(client, "%t", "FriendPerk_Chat_NewFriend", friend);
+        PrintToChat(friend, "%t", "FriendPerk_Chat_NewFriend", client);
     }
 }
 
-FUNCTION(FriendPerk, onGraceEnd)) {
-    if (_inst.friendId == 0) {
+FUNCTION(FriendPerk, onGraceEnd))
+{
+    if (_inst.friendId == 0)
+    {
         FriendPerk_doFriendSelect(_inst);
     }
 }
 
-FUNCTION(FriendPerk, onCallForMedic)) {
+FUNCTION(FriendPerk, onCallForMedic))
+{
     int client = _inst.client;
     if (roundState() > RoundGrace) return;
 
     int target = GetClientAimTarget(client, false);
-    if (validLivingSur(target) && target != client) {
+    if (validLivingSur(target) && target != client)
+    {
         FriendPerk_doFriendSelect(_inst, target);
     }
 }
 
-FUNCTION(FriendPerk, onKill), int victim, int killer, int assist, int inflictor, int damagetype) {
+FUNCTION(FriendPerk, onKill), int victim, int killer, int assist, int inflictor, int damagetype)
+{
     int friend = _inst.friendId;
     if (friend <= 0 || !isZom(victim)) return;
 
     bool friendInvolved = (killer == friend || assist == friend);
-    if (friendInvolved) {
+    if (friendInvolved)
+    {
         _inst.critTime += ZF_FRIEND_CRITTIME_KILL;
-    } else {
+    }
+    else {
         _inst.critTime += ZF_FRIEND_CRITTIME_ASSIST;
     }
 }
 
-FUNCTION(FriendPerk, onAssistKill), int victim, int killer, int assist, int inflictor, int damagetype) {
+FUNCTION(FriendPerk, onAssistKill), int victim, int killer, int assist, int inflictor, int damagetype)
+{
     int friend = _inst.friendId;
     if (friend <= 0 || !isZom(victim)) return;
 
     bool friendInvolved = (killer == friend || assist == friend);
-    if (friendInvolved) {
+    if (friendInvolved)
+    {
         _inst.critTime += ZF_FRIEND_CRITTIME_KILL;
     }
     // No points for just assisting a non-friend kill
 }
 
-FUNCTION(FriendPerk, onPeriodic)) {
+FUNCTION(FriendPerk, onPeriodic))
+{
     // If friend is marked as dead (-1) and we have crit time, decay it.
-    if (_inst.friendId == -1 && _inst.critTime > 0) {
+    if (_inst.friendId == -1 && _inst.critTime > 0)
+    {
         _inst.critTime--;
     }
 }
 
-FUNCTION(FriendPerk, updateCondStats), char[] buffer, int maxlen) {
+FUNCTION(FriendPerk, updateCondStats), char[] buffer, int maxlen)
+{
     int client = _inst.client;
     int friend = _inst.friendId;
 
-    if (friend > 0) { // Friend is selected and supposed to be alive
-        if (validLivingSur(friend)) {
+    if (friend > 0)
+    {    // Friend is selected and supposed to be alive
+        if (validLivingSur(friend))
+        {
             float clientPos[3];
             GetClientAbsOrigin(client, clientPos);
             float friendPos[3];
             GetClientAbsOrigin(friend, friendPos);
 
-            if (GetVectorDistance(clientPos, friendPos, true) <= ZF_FRIEND_RADIUSSQ) {
+            if (GetVectorDistance(clientPos, friendPos, true) <= ZF_FRIEND_RADIUSSQ)
+            {
                 addHealth(client, ZF_FRIEND_REGEN);
                 addHealth(friend, ZF_FRIEND_REGEN);
                 addStat(client, ZFStatAtt, ZFStatTypeCond, ZF_FRIEND_ATTACK);
                 addStat(friend, ZFStatAtt, ZFStatTypeCond, ZF_FRIEND_ATTACK);
             }
-        } else { // Friend has died
-            _inst.friendId = -1; // Mark friend as dead
-            if (_inst.critTime > 0) {
+        }
+        else {                      // Friend has died
+            _inst.friendId = -1;    // Mark friend as dead
+            if (_inst.critTime > 0)
+            {
                 addCondKritz(client, float(_inst.critTime));
                 fxKritzStart(client);
                 fxCreateParticle(ZFPART_AURAINRED, client, AttachBase, float(_inst.critTime));
@@ -182,5 +219,5 @@ FUNCTION(FriendPerk, updateCondStats), char[] buffer, int maxlen) {
         }
     }
 
-    Format(buffer, maxlen, "Crit Time: %ds", _inst.critTime);
+    Format(buffer, maxlen, "%t", "FriendPerk_Status_CritTime", _inst.critTime);
 }

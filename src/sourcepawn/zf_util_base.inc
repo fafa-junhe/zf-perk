@@ -1082,14 +1082,14 @@ stock void setWeaponRof(int weapon, int rateScale)
 // Weapon Attack/Damage Utils
 //
 ////////////////////////////////////////////////////////////
-stock bool attackWasBackstab(int attacker, int inflictor, int damagetype)
+stock bool attackWasBackstab(int attacker, int inflictor, float damage)
 {
   // Backstab attack defined as:
   // + attacker equals inflictor (i.e. not a projectile), AND
   // + attacker is a spy, AND
   // + attacker is wielding a melee weapon, AND
   // + damagetype (masked) equals 0x100000 (which indicates crit, thus backstab, through testing)
-  return (attacker == inflictor) && isSpy(attacker) && isWieldingMelee(attacker) && ((damagetype & TF2_DMGTYPE_CRIT) != 0);
+  return (attacker == inflictor) && isSpy(attacker) && isWieldingMelee(attacker) && (damage >= 240.0);
 }
 
 stock bool attackWasMelee(int attacker, int inflictor, int damagetype)

@@ -93,7 +93,7 @@ FUNCTION(BerserkerPerk, updateCondStats), char[] buffer, int maxlen) {
     _inst.lifesteal_rate = lifesteal_bonus;
 
     if (lifesteal_bonus > 0) {
-        Format(buffer, maxlen, "ROF: +%d%%, Lifesteal: +%d%%", RoundFloat(rof_bonus), RoundFloat(lifesteal_bonus * 100.0));
+Format(buffer, maxlen, "%t", "BerserkerPerk_Status_Active", RoundFloat(rof_bonus), RoundFloat(lifesteal_bonus * 100.0));
     } else {
         strcopy(buffer, maxlen, "");
     }

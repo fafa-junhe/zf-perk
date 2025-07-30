@@ -427,8 +427,8 @@ FUNCTION(SickPerk, onGameFrame)) {
 
 FUNCTION(SickPerk, updateCondStats), char[] buffer, int maxlen) {
     if (_inst.cooldown > 0.0) {
-        Format(buffer, maxlen, "Spit Cooldown: %.0fs", _inst.cooldown);
+Format(buffer, maxlen, "%t", "SickPerk_Status_Cooldown", _inst.cooldown);
     } else {
-        Format(buffer, maxlen, "Spit Ready");
+Format(buffer, maxlen, "%t", "SickPerk_Status_Ready");
     }
 }

@@ -71,7 +71,7 @@ FUNCTION(HolyPerk, updateCondStats), char[] buffer, int maxlen) {
                 }
             }
         }
-        strcopy(buffer, maxlen, "(Healing)");
+Format(buffer, maxlen, "%t", "HolyPerk_Status_Healing");
     } else {
         strcopy(buffer, maxlen, "");
     }

@@ -120,10 +120,8 @@ FUNCTION(LeaderPerk, updateCondStats), char[] buffer, int maxlen) {
     }
     
     if (zf_perkTimer[client] > 0) {
-        Format(buffer, maxlen, "(Cooldown: %ds)", zf_perkTimer[client]);
-    } else {
-        Format(buffer, maxlen, "(Ready to Rally)");
-    }
+Format(buffer, maxlen, "%t", "LeaderPerk_Status_Cooldown", zf_perkTimer[client]);    } else {
+Format(buffer, maxlen, "%t", "LeaderPerk_Status_Ready");    }
 }
 
 FUNCTION(LeaderPerk, onCallForMedic)) {

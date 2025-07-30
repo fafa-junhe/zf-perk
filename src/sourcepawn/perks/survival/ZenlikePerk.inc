@@ -64,7 +64,7 @@ FUNCTION(ZenlikePerk, updateCondStats), char[] buffer, int maxlen) {
     addStat(client, ZFStatCrit, ZFStatTypeCond, zf_perkState[client]);
 
     if (zf_perkState[client] > 0) {
-        Format(buffer, maxlen, "(Crit: %d%%)", zf_perkState[client]);
+Format(buffer, maxlen, "%t", "ZenlikePerk_Status_Crit", zf_perkState[client]);
     } else {
         strcopy(buffer, maxlen, "");
     }

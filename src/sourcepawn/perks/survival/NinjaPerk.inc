@@ -192,15 +192,12 @@ FUNCTION(NinjaPerk, onPlayerRunCmd), int buttons, int impulse, float vel[3], flo
 
 FUNCTION(NinjaPerk, updateCondStats), char[] perk_str, int maxlen_perk_str) {
     if ((_inst.perk_state == 1)) {
-        Format(perk_str, maxlen_perk_str, "Decoy Active: %ds", _inst.decoy_active_timer);
-    }
+Format(perk_str, maxlen_perk_str, "%t", "NinjaPerk_Status_DecoyActive", _inst.decoy_active_timer);    }
     else {
         if ((_inst.perk_timer > 0)) {
-            Format(perk_str, maxlen_perk_str, "Cooldown: %ds", _inst.perk_timer);
-        }
+Format(perk_str, maxlen_perk_str, "%t", "NinjaPerk_Status_Cooldown", _inst.perk_timer);        }
         else {
-            Format(perk_str, maxlen_perk_str, "Decoy Ready");
-        }
+Format(perk_str, maxlen_perk_str, "%t", "NinjaPerk_Status_Ready");        }
     }
 }
 
@@ -231,16 +228,14 @@ FUNCTION(NinjaPerk, onCallForMedic)) {
         GetClientEyeAngles(_inst.client, __temp_decoy_ang);
         _inst.setDecoyAng(__temp_decoy_ang);
         createAura(_inst.client, "particles/medic_heal_blu.pcf", AttachBase);
-        PrintHintText(_inst.client, "Retreat point placed! It will last for %d seconds.", ZF_NINJA_DURATION_DECOY_ACTIVE);
-    }
+PrintHintText(_inst.client, "%t", "NinjaPerk_Hint_DecoyPlaced", ZF_NINJA_DURATION_DECOY_ACTIVE);    }
 }
 
 FUNCTION(NinjaPerk, onPeriodic)) {
     if ((_inst.perk_timer > 0)) {
         _inst.perk_timer -= 1;
         if ((_inst.perk_timer == 0)) {
-            PrintHintText(_inst.client, "Ninja ability is ready.");
-        }
+PrintHintText(_inst.client, "%t", "NinjaPerk_Hint_Ready");        }
     }
     if ((_inst.decoy_active_timer > 0)) {
         _inst.decoy_active_timer -= 1;
@@ -249,8 +244,7 @@ FUNCTION(NinjaPerk, onPeriodic)) {
             if (validAura(_inst.client)) {
                 removeAura(_inst.client);
             }
-            PrintHintText(_inst.client, "Your retreat point has expired.");
-        }
+PrintHintText(_inst.client, "%t", "NinjaPerk_Hint_DecoyExpired");        }
     }
     if ((_inst.decoy_poof_timer > 0)) {
         _inst.decoy_poof_timer -= 1;
@@ -274,8 +268,7 @@ FUNCTION(NinjaPerk, doNinjaDecoyPlace)) {
     
     // 如果传送点无效 (0, 0, z)，则取消传送并重置技能
     if (__vec_decoy_pos[0] == 0.0 && __vec_decoy_pos[1] == 0.0) {
-        PrintHintText(client, "Retreat point was invalid. Teleport cancelled.");
-        
+PrintHintText(client, "%t", "NinjaPerk_Hint_InvalidPoint");        
         // 清理刚刚创建的诱饵
         if (IsValidEntity(decoy_entity)) {
            fxPuffSmall(decoy_entity);
@@ -305,8 +298,7 @@ FUNCTION(NinjaPerk, doNinjaDecoyPlace)) {
     }
     _inst.perk_state = 0;
     _inst.decoy_active_timer = 0;
-    PrintHintText(client, "You escaped using your decoy!");
-}
+PrintHintText(client, "%t", "NinjaPerk_Hint_Escaped");}
 
 // 修改 doNinjaDecoyPoof 来直接移除实体
 FUNCTION(NinjaPerk, doNinjaDecoyPoof)) {

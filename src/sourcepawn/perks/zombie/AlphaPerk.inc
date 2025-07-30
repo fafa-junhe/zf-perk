@@ -88,7 +88,7 @@ FUNCTION(AlphaPerk, onKill), int victim, int killer, int assist, int inflictor, 
     {
         // 将 AlphaPerk 的拥有者设置为这个受害者的主人
         zf_perkAlphaMaster[victim] = _inst.client;
-        PrintHintText(_inst.client, "%N 将成为你的随从。", victim); // 给 AlphaPerk 玩家一个提示
+        PrintHintText(_inst.client, "%t", "AlphaPerk_Hint_NewMinion", victim);
     }
 }
 
@@ -99,7 +99,7 @@ FUNCTION(AlphaPerk, onAssistKill), int victim, int killer, int assist, int infli
     if (validClient(victim))
     {
         zf_perkAlphaMaster[victim] = _inst.client;
-        PrintHintText(_inst.client, "%N 将成为你的随从。", victim);
+        PrintHintText(_inst.client, "%t", "AlphaPerk_Hint_NewMinion", victim);
     }
 }
 // 辅助函数，用于计算随从数量
@@ -128,7 +128,7 @@ FUNCTION(AlphaPerk, onCallForMedic)) {
 
     if (minionCount == 0) {
       
-        PrintHintText(client, "你没有任何随从可以召唤！");
+        PrintHintText(client, "%t", "AlphaPerk_Hint_NoMinions");
         return;
     }
 
@@ -171,13 +171,13 @@ stock void doAlphaSummon(int client)
         summonVel[2] = GetRandomFloat(300.0, 400.0);
         TeleportEntity(validMinions[i], clientPos, clientAng, summonVel);
         ClientCommand(validMinions[i], "voicemenu 1 0");
-        PrintHintText(validMinions[i], "你的主人召唤了你!");
+        PrintHintText(validMinions[i], "%t", "AlphaPerk_Hint_Summoned");
         fxTeleportTrail(validMinions[i], 5.0);
         ++summonCount;
     }
 
     if(summonCount > 0)
-        PrintHintText(client, "你召唤了 %d 个随从!", summonCount);
+        PrintHintText(client, "%t", "AlphaPerk_Hint_SummonCount", summonCount);
 }
 
 FUNCTION(AlphaPerk, updateCondStats), char[] buffer, int maxlen) {
@@ -215,9 +215,9 @@ FUNCTION(AlphaPerk, updateCondStats), char[] buffer, int maxlen) {
     }
 
     if (_inst.perk_timer > 0) {
-        Format(buffer, maxlen, "Summon Cooldown: %ds", _inst.perk_timer);
+            Format(buffer, maxlen, "%t", "AlphaPerk_Status_Cooldown", _inst.perk_timer);
     } else {
-        Format(buffer, maxlen, "Summon Ready");
+            Format(buffer, maxlen, "%t", "AlphaPerk_Status_Ready");
     }
 }
 

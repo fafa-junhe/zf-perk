@@ -15,16 +15,17 @@
 #define OVERLORD_DEFEND 75      // 极高生命值 (通过防御模拟)
 #define OVERLORD_SPEED -40      // 移动速度非常慢
 #define OVERLORD_COOLDOWN 30.0  // 冷却时间
-#define OVERLORD_MAX_CREEPS 3   // 最多3个菌毯
+#define OVERLORD_MAX_CREEPS 8   // 最多8个菌毯
 #define OVERLORD_CREEP_HEALTH 400 // 菌毯生命值
-#define OVERLORD_CREEP_RADIUS 300.0 // 菌毯光环半径
+#define OVERLORD_CREEP_RADIUS 250.0 // 菌毯光环半径
 #define OVERLORD_CREEP_LIFETIME 60.0 // 菌毯持续时间
+#define OVERLORD_CREEP_REPRODUCE_TIME 15.0 // 菌毯繁殖时间
 #define OVERLORD_BUFF_SPEED 20  // 菌毯速度加成
 #define OVERLORD_BUFF_REGEN 5   // 菌毯回血加成
 
 // --- Data Slots ---
 #define OVERLORD_DATA_COOLDOWN      (PERK_DATA_START_INDEX + 0)
-#define OVERLORD_DATA_CREEPS_HANDLE (PERK_DATA_START_INDEX + 1) // DataPack handle for creep entities
+#define OVERLORD_DATA_CREEPS_HANDLE (PERK_DATA_START_INDEX + 1) // DataPack handle for creep entities. Format: [entity, creation_time, last_reproduce_time]
 
 methodmap OverlordPerk < ZombieBasePerk {
     public OverlordPerk(int client) {
@@ -79,14 +80,15 @@ stock int getCreepCount(DataPack creeps) {
     int count = 0;
     while(creeps.IsReadable()) {
         creeps.ReadCell(); // entity
-        creeps.ReadFloat(); // time
+        creeps.ReadFloat(); // creation_time
+        creeps.ReadFloat(); // last_reproduce_time
         count++;
     }
     return count;
 }
 
 FUNCTION(OverlordPerk, getName), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Overlord");
+    strcopy(buffer, maxlen, "OverlordPerk_Name");
 }
 
 FUNCTION(OverlordPerk, getShortdesc), char[] buffer, int maxlen) {
@@ -104,32 +106,50 @@ FUNCTION(OverlordPerk, updateClientPermStats)) {
 
 FUNCTION(OverlordPerk, onCallForMedic)) {
     if (_inst.cooldown > GetGameTime()) {
-        PrintHintText(_inst.client, "技能尚未冷却。");
+        PrintHintText(_inst.client, "%t", "OverlordPerk_Error_Cooldown");
         return;
     }
 
     DataPack creeps = _inst.creeps;
     if (getCreepCount(creeps) >= OVERLORD_MAX_CREEPS) {
-        PrintHintText(_inst.client, "你已放置了最大数量的菌毯。");
+        PrintHintText(_inst.client, "%t", "OverlordPerk_Error_Max_Creeps");
         return;
     }
 
     int client = _inst.client;
     _inst.cooldown = GetGameTime() + OVERLORD_COOLDOWN;
 
-    float pos[3], ang[3];
+    float pos[3];
     GetClientAbsOrigin(client, pos);
-    GetClientAbsAngles(client, ang);
-    ang[0] = 0.0; // Make it flat on the ground
+    
+    createCreepAt(_inst, pos);
+    PrintHintText(client, "%t", "OverlordPerk_Creep_Placed");
+}
 
-    // Using a placeholder model, e.g., haybale from SickPerk
-    int creep_entity = fxCreateModelStatic(ZFMDL_HAYBALE, client, true, false, pos, ang, {128, 0, 128});
+stock bool traceEntityFilter(int entity, int contentsMask) {
+    return false;
+}
+
+stock void createCreepAt(OverlordPerk inst, float pos[3]) {
+    DataPack creeps = inst.creeps;
+    if (getCreepCount(creeps) >= OVERLORD_MAX_CREEPS) {
+        return;
+    }
+
+    float ang[3] = {0.0, 0.0, 0.0};
+    ang[1] = GetRandomFloat(0.0, 360.0); // Randomize yaw
+
+    int creep_entity = fxCreateModelStatic(ZFMDL_HAYBALE, inst.client, true, false, pos, ang, {128, 0, 128});
     if (IsValidEdict(creep_entity)) {
+        SetEntProp(creep_entity, Prop_Data, "m_takedamage", 2); // DAMAGE_YES
+        
+        float now = GetGameTime();
         creeps.WriteCell(creep_entity);
-        creeps.WriteFloat(GetGameTime()); // Creation time
+        creeps.WriteFloat(now); // Creation time
+        creeps.WriteFloat(now); // Last reproduce time
+
         setItemMetadata(creep_entity, OVERLORD_CREEP_HEALTH);
         SDKHook(creep_entity, SDKHook_OnTakeDamage, onCreepTakeDamage);
-        PrintHintText(client, "菌毯已放置！");
     }
 }
 
@@ -154,13 +174,14 @@ stock void cleanupCreeps(OverlordPerk inst) {
     while(creeps.IsReadable()) {
         int creep_entity = creeps.ReadCell();
         creeps.ReadFloat(); // skip creation time
+        creeps.ReadFloat(); // skip reproduce time
         if (IsValidEdict(creep_entity)) {
             SDKUnhook(creep_entity, SDKHook_OnTakeDamage, onCreepTakeDamage);
             fxDeleteModel(creep_entity);
         }
     }
     delete creeps;
-    inst.creeps = new DataPack();
+    inst.creeps = new DataPack(); // Prevent dangling pointer
 }
 
 FUNCTION(OverlordPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
@@ -179,6 +200,7 @@ FUNCTION(OverlordPerk, updateCondStats), char[] buffer, int maxlen) {
     while(creeps.IsReadable()) {
         int creep_entity = creeps.ReadCell();
         float creation_time = creeps.ReadFloat();
+        float last_reproduce_time = creeps.ReadFloat();
 
         if (!IsValidEdict(creep_entity) || (GetGameTime() - creation_time) > OVERLORD_CREEP_LIFETIME) {
             if (IsValidEdict(creep_entity)) {
@@ -188,11 +210,38 @@ FUNCTION(OverlordPerk, updateCondStats), char[] buffer, int maxlen) {
             continue;
         }
 
-        new_creeps.WriteCell(creep_entity);
-        new_creeps.WriteFloat(creation_time);
-
         float creep_pos[3];
         GetEntPropVector(creep_entity, Prop_Data, "m_vecOrigin", creep_pos);
+
+        // Reproduction logic
+        float new_reproduce_time = last_reproduce_time;
+        if (getCreepCount(_inst.creeps) < OVERLORD_MAX_CREEPS && GetGameTime() - last_reproduce_time > OVERLORD_CREEP_REPRODUCE_TIME) {
+            float new_pos[3];
+            for (int i = 0; i < 5; i++) { // Try 5 times to find a spot
+                float random_ang = GetRandomFloat(0.0, 360.0);
+                float random_dist = GetRandomFloat(100.0, 200.0);
+                new_pos[0] = creep_pos[0] + Cosine(DegToRad(random_ang)) * random_dist;
+                new_pos[1] = creep_pos[1] + Sine(DegToRad(random_ang)) * random_dist;
+                new_pos[2] = creep_pos[2];
+
+                // Simple ground check
+                float start_pos[3];
+                start_pos = new_pos;
+                start_pos[2] += 50.0;
+                TR_TraceRayFilter(start_pos, {0.0, 0.0, -1.0}, MASK_SOLID_BRUSHONLY, RayType_Infinite, traceEntityFilter);
+                if (TR_DidHit()) {
+                    TR_GetEndPosition(new_pos);
+                    new_pos[2] += 5.0;
+                    createCreepAt(_inst, new_pos);
+                    new_reproduce_time = GetGameTime();
+                    break;
+                }
+            }
+        }
+        
+        new_creeps.WriteCell(creep_entity);
+        new_creeps.WriteFloat(creation_time);
+        new_creeps.WriteFloat(new_reproduce_time);
 
         // Apply aura effect
         for (int i = 1; i <= MaxClients; i++) {
@@ -213,8 +262,8 @@ FUNCTION(OverlordPerk, updateCondStats), char[] buffer, int maxlen) {
     // HUD String
     float cooldown_left = _inst.cooldown - GetGameTime();
     if (cooldown_left > 0) {
-        Format(buffer, maxlen, "菌毯冷却: %ds", RoundFloat(cooldown_left));
+        Format(buffer, maxlen, "%t", "OverlordPerk_Status_Cooldown", RoundFloat(cooldown_left));
     } else {
-        Format(buffer, maxlen, "菌毯已就绪 (%d/%d)", getCreepCount(_inst.creeps), OVERLORD_MAX_CREEPS);
+        Format(buffer, maxlen, "%t", "OverlordPerk_Status_Ready", getCreepCount(_inst.creeps), OVERLORD_MAX_CREEPS);
     }
 }

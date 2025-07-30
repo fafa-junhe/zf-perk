@@ -97,7 +97,7 @@ FUNCTION(VolatilePerk, onCallForMedic)) {
         // We just need to kill the player.
         ForcePlayerSuicide(client);
     } else {
-        PrintHintText(client, "你没有储存任何能量！");
+        PrintHintText(client, "%t", "ZF_Volatile_No_Energy");
     }
 }
 
@@ -108,5 +108,5 @@ FUNCTION(VolatilePerk, onPeriodic)) {
 }
 
 FUNCTION(VolatilePerk, updateCondStats), char[] buffer, int maxlen) {
-    Format(buffer, maxlen, "储存的能量: %.0f", _inst.energy);
+    Format(buffer, maxlen, "%t", "ZF_Volatile_Stored_Energy", _inst.energy);
 }

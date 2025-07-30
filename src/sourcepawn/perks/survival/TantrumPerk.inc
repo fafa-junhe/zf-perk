@@ -1,6 +1,6 @@
 
 #if defined __TantrumPerk_included
-#endinput
+    #endinput
 #endif
 #define __TantrumPerk_included
 
@@ -12,16 +12,19 @@
 #include "../../perk_vtable.inc"
 #include "../../perk_macros.inc"
 
-#define ZF_TANTRUM_ACTIVE 15
+#define ZF_TANTRUM_ACTIVE   15
 #define ZF_TANTRUM_COOLDOWN 30
-#define ZF_TANTRUM_SPEED -(100)
+#define ZF_TANTRUM_SPEED    -(100)
 
-#define TANTRUM_DATA_TIMER (PERK_DATA_START_INDEX + 0)
+#define TANTRUM_DATA_TIMER  (PERK_DATA_START_INDEX + 0)
 
-methodmap TantrumPerk < SurvivorBasePerk {
-    public TantrumPerk(int client) {
+methodmap TantrumPerk < SurvivorBasePerk
+{
+
+public     TantrumPerk(int client)
+    {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
-        TantrumPerk sm = view_as<TantrumPerk>(sm_base);
+        TantrumPerk      sm      = view_as<TantrumPerk>(sm_base);
 
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, TantrumPerkFgetName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, TantrumPerkFgetShortdesc);
@@ -36,66 +39,82 @@ methodmap TantrumPerk < SurvivorBasePerk {
         return sm;
     }
 
-    property int perk_timer {
-        public get() {
+    property int perk_timer
+    {
+
+public         get()
+        {
             this.Position = view_as<DataPackPos>(TANTRUM_DATA_TIMER);
             return this.ReadCell();
         }
-        public set(int value) {
+
+public         set(int value)
+        {
             this.Position = view_as<DataPackPos>(TANTRUM_DATA_TIMER);
             this.WriteCell(value);
         }
     }
 }
 
-stock SurvivorBasePerk TantrumPerkFnew(int client) {
+stock SurvivorBasePerk TantrumPerkFnew(int client)
+{
     return new TantrumPerk(client);
 }
 
-
-FUNCTION(TantrumPerk, getName), char[] buffer, int maxlen) {
+FUNCTION(TantrumPerk, getName), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "Tantrum");
 }
 
-FUNCTION(TantrumPerk, getShortdesc), char[] buffer, int maxlen) {
+FUNCTION(TantrumPerk, getShortdesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "TantrumPerk_shortdesc");
 }
 
-FUNCTION(TantrumPerk, getDesc), char[] buffer, int maxlen) {
+FUNCTION(TantrumPerk, getDesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "TantrumPerk_desc");
 }
 
-FUNCTION(TantrumPerk, onCallForMedic)) {
-    if ((_inst.perk_timer == 0)) {
+FUNCTION(TantrumPerk, onCallForMedic))
+{
+    if ((_inst.perk_timer == 0))
+    {
         _inst.perk_timer = (ZF_TANTRUM_ACTIVE + ZF_TANTRUM_COOLDOWN);
         fxKritzStart(_inst.client);
-        PrintHintText(_inst.client, "You are enraged! CRITICAL HITS!");
+        PrintHintText(_inst.client, "%t", "TantrumPerk_Hint_Enraged");
     }
 }
 
-FUNCTION(TantrumPerk, onPeriodic)) {
-    if ((_inst.perk_timer > 0)) {
+FUNCTION(TantrumPerk, onPeriodic))
+{
+    if ((_inst.perk_timer > 0))
+    {
         _inst.perk_timer -= 1;
-        if ((_inst.perk_timer == ZF_TANTRUM_COOLDOWN)) {
+        if ((_inst.perk_timer == ZF_TANTRUM_COOLDOWN))
+        {
             fxKritzStop(_inst.client);
-            PrintHintText(_inst.client, "You are exhausted.");
+            PrintHintText(_inst.client, "%t", "TantrumPerk_Hint_Exhausted");
         }
         else {
-            if ((_inst.perk_timer == 0)) {
-                PrintHintText(_inst.client, "Tantrum ability is ready.");
+            if ((_inst.perk_timer == 0))
+            {
+                PrintHintText(_inst.client, "%t", "TantrumPerk_Hint_Ready");
             }
         }
     }
 }
 
-FUNCTION(TantrumPerk, updateCondStats)) {
-    if ((_inst.perk_timer > ZF_TANTRUM_COOLDOWN)) {
+FUNCTION(TantrumPerk, updateCondStats))
+{
+    if ((_inst.perk_timer > ZF_TANTRUM_COOLDOWN))
+    {
         addStat(_inst.client, ZFStatCrit, ZFStatTypeCond, 100);
     }
     else {
-        if ((_inst.perk_timer > 0)) {
+        if ((_inst.perk_timer > 0))
+        {
             addStat(_inst.client, ZFStatSpeed, ZFStatTypeCond, ZF_TANTRUM_SPEED);
         }
     }
 }
-

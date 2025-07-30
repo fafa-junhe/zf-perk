@@ -53,7 +53,7 @@ FUNCTION(CharitablePerk, getDesc), char[] buffer, int maxlen) {
 
 FUNCTION(CharitablePerk, updateCondStats), char[] buffer, int maxlen) {
     int gifts = zf_perkState[_inst.client] / ZF_CHARITABLE_POINTS_GIFT;
-    Format(buffer, maxlen, "(Gifts: %d)", gifts);
+Format(buffer, maxlen, "%t", "CharitablePerk_Status_Gifts", gifts);
 }
 
 public void CharitablePerk_onKill(CharitablePerk _inst, int victim, int killer, int assist, int inflictor, int damagetype) {

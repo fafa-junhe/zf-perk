@@ -152,6 +152,7 @@ public void OnPluginStart()
     utilPrefInit();
     utilFxInit();
     perkInit();
+    InitZombieVisuals();
 
 
     // Register cvars
@@ -171,6 +172,7 @@ public void OnPluginStart()
     HookEvent("player_death", event_PlayerDeath);
     HookEvent("player_builtobject", event_PlayerBuiltObject);
     HookEvent("teamplay_waiting_begins", event_WaitingBegins);
+    HookEvent("post_inventory_application", event_post_inventory_application);
 
     // DEBUG
     //   HookEvent("player_death",            event_PlayerDeathPre, EventHookMode_Pre);
@@ -365,11 +367,20 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 public void OnTakeDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype)
 {
-    // ZF_LogDebug("OnTakeDamagePost: victim=%d, attacker=%d, inflictor=%d, damage=%.2f, damagetype=%d", victim, attacker, inflictor, damage, damagetype);
     if (!zf_bEnabled) return;
 
     perk_OnTakeDamagePost(victim, attacker, inflictor, damage, damagetype);
     perk_OnDealDamagePost(victim, attacker, inflictor, damage, damagetype);
+}
+
+public Action Hook_BuildingOnTakeDamagePost ( int iBuilding, int & iAttacker, int & iInflictor, float  & flDamage, int & iDamagetype, int & iWeapon, float flDamageForce [ 3 ] , float vecDamagePosition [ 3 ] , int iDamagecustom )
+{
+    
+    if (validClient(iAttacker) && g_hPerks[iAttacker] != null)
+    {
+        g_hPerks[iAttacker].onBuildingTakeDamagePost(iBuilding, iAttacker, iInflictor, flDamage, iDamagetype, iWeapon, flDamageForce, vecDamagePosition, iDamagecustom);
+    }
+    return Plugin_Continue;
 }
 
 ////////////////////////////////////////////////////////////
@@ -872,6 +883,15 @@ public Action event_PlayerSpawn(Handle event,
     // 2. Handle valid, post spawn logic
     CreateTimer(0.1, timer_postSpawn, client, TIMER_FLAG_NO_MAPCHANGE);
 
+   if (isZom(client))
+   {
+       ApplyZombieVisuals(client);
+   }
+   else
+   {
+       RemoveZombieVisuals(client);
+   }
+
     return Plugin_Continue;
 }
 
@@ -956,6 +976,8 @@ public Action event_PlayerDeath(Handle event,
         if (validSur(killer)) zf_spawnZombiesKilledCounter--;
     }
 
+   RemoveZombieVisuals(victim);
+
     return Plugin_Continue;
 }
 
@@ -979,8 +1001,46 @@ public Action event_PlayerBuiltObject(Handle event,
         SetEntProp(index, Prop_Send, "m_bDisabled", 1);
         SetEntProp(index, Prop_Send, "m_iMaxHealth", 250);
     }
+    SDKHook(index, SDKHook_OnTakeDamageAlivePost, Hook_BuildingOnTakeDamagePost);
 
     return Plugin_Continue;
+}
+
+public void event_post_inventory_application(Handle event, const char[] name, bool dontBroadcast)
+{
+   int userid = GetEventInt(event, "userid");
+   int client = GetClientOfUserId(userid);
+   ZombieVisuals_OnPlayerInventory(client);
+}
+
+public void TF2_OnConditionAdded(int client, TFCond cond)
+{
+    if (cond == TFCond_Bonked)
+    {
+        TF2_RemoveCondition(client, TFCond_Bonked);
+
+        for (int i = 0; i <= 5; i++) // Iterate through weapon slots
+        {
+            int weapon = GetPlayerWeaponSlot(client, i);
+            if (IsValidEntity(weapon))
+            {
+                // Bonk! Atomic Punch
+                if (GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex") == 46)
+                {
+                    RemovePlayerItem(client, weapon);
+                    AcceptEntityInput(weapon, "Kill");
+                    PrintToChat(client, "%t", "ZF_BonkDisabled");
+                    break;
+                }
+            }
+        }
+    }
+   ZombieVisuals_OnConditionAdded(client, cond);
+}
+
+public void TF2_OnConditionRemoved(int client, TFCond cond)
+{
+   ZombieVisuals_OnConditionRemoved(client, cond);
 }
 
 public void event_AmmopackPickup(const char[] output, int caller, int activator, float delay)

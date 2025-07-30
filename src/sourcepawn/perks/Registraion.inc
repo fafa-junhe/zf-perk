@@ -58,11 +58,9 @@
 #include "zombie/PhantasmPerk.inc"
 #include "zombie/VolatilePerk.inc"
 #include "zombie/GeomancerPerk.inc"
-#include "zombie/ParasitePerk.inc"
 #include "zombie/CorruptorPerk.inc"
-#include "zombie/ChargerPerk.inc"
 #include "zombie/OverlordPerk.inc"
-#include "zombie/MimicPerk.inc"
+#include "zombie/ChargerPerk.inc"
 #include <datapack>
 
 
@@ -122,10 +120,8 @@ public void registerZombiePerks() {
     RegisterZombiePerk(PhantasmPerk);
     RegisterZombiePerk(VolatilePerk);
     RegisterZombiePerk(GeomancerPerk);
-    RegisterZombiePerk(ParasitePerk);
     RegisterZombiePerk(CorruptorPerk);
-    RegisterZombiePerk(ChargerPerk);
     RegisterZombiePerk(OverlordPerk);
-    RegisterZombiePerk(MimicPerk);
+    RegisterZombiePerk(ChargerPerk);
 }
 

@@ -68,8 +68,7 @@ FUNCTION_FLOAT(EchoPerk, onTakeDamage), int victim, int attacker, int inflictor,
     // Store energy from zombie melee attacks
     if (validClient(attacker) && isZom(attacker) && (damagetype & DMG_CLUB)) {
         zf_perkState[client]++;
-        PrintHintText(client, "回响能量已储存! (%d)", zf_perkState[client]);
-    }
+PrintHintText(client, "%t", "EchoPerk_Hint_EnergyStored", zf_perkState[client]);    }
 
     return damage;
 }
@@ -79,8 +78,7 @@ FUNCTION(EchoPerk, onCallForMedic)) {
     int energy = zf_perkState[client];
 
     if (energy <= 0) {
-        PrintHintText(client, "没有回响能量可以释放!");
-        return;
+PrintHintText(client, "%t", "EchoPerk_Hint_NoEnergy");        return;
     }
 
     float client_pos[3];
@@ -110,15 +108,12 @@ FUNCTION(EchoPerk, onCallForMedic)) {
         }
     }
 
-    PrintHintText(client, "释放了 %d 点回响能量!", energy);
-    zf_perkState[client] = 0; // Reset energy
+PrintHintText(client, "%t", "EchoPerk_Hint_EnergyReleased", energy);    zf_perkState[client] = 0; // Reset energy
 }
 
 FUNCTION(EchoPerk, updateCondStats), char[] buffer, int maxlen) {
     int energy = zf_perkState[_inst.client];
     if (energy > 0) {
-        Format(buffer, maxlen, "回响能量: %d", energy);
-    } else {
-        strcopy(buffer, maxlen, "准备储存能量");
-    }
+Format(buffer, maxlen, "%t", "EchoPerk_Status_Energy", energy);    } else {
+Format(buffer, maxlen, "%t", "EchoPerk_Status_Ready");    }
 }

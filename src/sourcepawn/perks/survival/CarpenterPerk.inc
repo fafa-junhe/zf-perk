@@ -65,13 +65,10 @@ FUNCTION(CarpenterPerk, updateCondStats), char[] buffer, int maxlen) {
     int time_left = RoundFloat(g_fCarpenterCooldown[client] - GetGameTime());
 
     if (time_left > 0) {
-        Format(buffer, maxlen, "(Cooldown: %ds)", time_left);
-    } else {
+Format(buffer, maxlen, "%t", "CarpenterPerk_Status_Cooldown", time_left);    } else {
         if (getFreeItemIndex(client, CARPENTER_MAX_ITEMS) == -1) {
-            Format(buffer, maxlen, "(Barricades Full)");
-        } else {
-            Format(buffer, maxlen, "(Ready to Build)");
-        }
+Format(buffer, maxlen, "%t", "CarpenterPerk_Status_Full");        } else {
+Format(buffer, maxlen, "%t", "CarpenterPerk_Status_Ready");        }
     }
 }
 stock bool isCarpenter(int client) {
@@ -91,13 +88,11 @@ FUNCTION(CarpenterPerk, onCallForMedic)) {
         return;
 
     if (!isGrounded(client)) {
-        PrintHintText(client, "你必须站在地上才能放置障碍物.");
-        return;
+PrintHintText(client, "%t", "CarpenterPerk_Hint_NotGrounded");        return;
     }
 
     if (!isCrouching(client)) {
-        PrintHintText(client, "你必须一直蹲在地上才能放置障碍物.");
-        return;
+PrintHintText(client, "%t", "CarpenterPerk_Hint_NotCrouching");        return;
     }
 
     bool clientsNearby = false;
@@ -132,13 +127,11 @@ FUNCTION(CarpenterPerk, onCallForMedic)) {
     }
 
     if (clientsNearby) {
-        PrintHintText(client, "无法设置障碍物 - 附近有其他玩家.");
-        return;
+PrintHintText(client, "%t", "CarpenterPerk_Hint_PlayersNearby");        return;
     }
 
     if (barricadesNearby) {
-        PrintHintText(client, "无法设置障碍物 - 附近有其他玩家的障碍物.");
-        return;
+PrintHintText(client, "%t", "CarpenterPerk_Hint_BarricadesNearby");        return;
     }
 
     int itemIndex = getFreeItemIndex(client, CARPENTER_MAX_ITEMS);

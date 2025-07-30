@@ -45,6 +45,7 @@ methodmap BasePerk < DataPack {
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, BasePerk_updateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_DO_ITEM_THROW, BasePerk_doItemThrow);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEAL_DAMAGE_POST, BasePerk_onDealDamagePost);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_BUILDING_TAKE_DAMAGE_POST, BasePerk_onBuildingTakeDamagePost);
 
         return sm;
     }
@@ -156,6 +157,9 @@ methodmap BasePerk < DataPack {
         PERK_IMPL_onTakeDamagePost(victim, attacker, inflictor, damage, damagetype);
     }
 
+    public void onBuildingTakeDamagePost(int iBuilding, int &iAttacker, int &iInflictor, float &flDamage, int &iDamagetype, int &iWeapon, float flDamageForce[3], float vecDamagePosition[3], int iDamagecustom) {
+        PERK_IMPL_onBuildingTakeDamagePost(iBuilding, iAttacker, iInflictor, flDamage, iDamagetype, iWeapon, flDamageForce, vecDamagePosition, iDamagecustom);
+    }
 }
 
 stock BasePerk BasePerk_new(int client) {
@@ -319,4 +323,11 @@ public void BasePerk_onDealDamagePost(BasePerk _inst, int victim, int attacker, 
     /**
      * 在伤害事件发生后（伤害计算后）触发。
      */
+}
+
+public Action BasePerk_onBuildingTakeDamagePost(BasePerk _inst, int iBuilding, int &iAttacker, int &iInflictor, float &flDamage, int &iDamagetype, int &iWeapon, float flDamageForce[3], float vecDamagePosition[3], int iDamagecustom) {
+    /**
+     * 当玩家的建筑受到伤害时触发。
+     */
+    return Plugin_Continue;
 }

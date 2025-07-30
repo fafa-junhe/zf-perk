@@ -117,5 +117,5 @@ FUNCTION(GravityWarperPerk, onDeath), int victim, int killer, int assist, int in
 }
 
 FUNCTION(GravityWarperPerk, updateCondStats), char[] buffer, int maxlen) {
-    Format(buffer, maxlen, "Gravity Aura Active");
+Format(buffer, maxlen, "%t", "GravityWarperPerk_Status_Active");
 }

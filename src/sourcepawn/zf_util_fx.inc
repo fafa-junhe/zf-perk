@@ -96,6 +96,9 @@ stock char ZFPART_AURABURNINGGREEN[]  = "superrare_burning2";
 stock char ZFPART_AURAFLIES[]         = "superrare_flies";
 stock char ZFPART_AURAENERGYGREEN[]   = "superrare_greenenergy";
 stock char ZFPART_AURAENERGYPURPLE[]  = "superrare_purpleenergy";
+stock char ZFPART_AURAPOTIONPUDDLE[]  = "halloween_boss_summon";
+stock char ZFPART_AURAGUARDIAN[]      = "medic_resist_fire";
+
 
 // Non-persistent particle systems
 stock char ZFPART_REDPOWERUP[]    = "teleportedin_red";
@@ -136,6 +139,7 @@ stock char ZFSND_PUSHBACK[]          = "player/pl_impact_airblast2.wav";
 stock char ZFSND_PACKPICKUP[]        = "ui/item_pack_pickup.wav";
 stock char ZFSND_PACKDROP[]          = "ui/item_pack_drop.wav";
 stock char ZFSND_SPLASH[]            = "player/footsteps/mud1.wav";
+stock char ZFSND_GLASSBROKEN[]       = "physics/glass/glass_sheet_break1.wav";
 stock char ZFSND_CRITXMIT[]          = "player/crit_hit2.wav";
 stock char ZFSND_CRITRECV[]          = "player/crit_received1.wav";
 stock char ZFSND_CRITMINI[]          = "player/crit_hit_mini.wav";
@@ -236,7 +240,7 @@ stock void utilFxPrecache()
   PrecacheModel(ZFMDL_FENCE, true);
   PrecacheModel("models/props_junk/garbage_milkcarton002a.mdl", true);
   PrecacheModel("models/props_fortifications/fort_blocker_64.mdl", true);
-  PrecacheModel("models/weapons/w_models/w_jar.mdl", true);
+  PrecacheModel("models/props_halloween/hwn_flask_vial.mdl", true);
   PrecacheModel("models/props_mining/rock001.mdl", true);
   for(int i = 0; i < 1; i++)
     PrecacheModel(ZFMDL_TOTEM[i], true);
@@ -250,6 +254,7 @@ stock void utilFxPrecache()
   // Precache sounds.
   PrecacheSound(ZFSND_PICKUPAMMO, true);
   PrecacheSound(ZFSND_PICKUPMED, true);
+
   PrecacheSound(ZFSND_PICKUPSPAWN, true);
   PrecacheSound(ZFSND_EXPLOSION, true);
   PrecacheSound(ZFSND_BIRTHDAY, true);

@@ -76,8 +76,7 @@ FUNCTION_FLOAT(CowardlyPerk, onTakeDamage), int victim, int attacker, int inflic
         if ((damagetype & (1 << 3))) {
             _inst.perk_timer = (ZF_COWARDLY_DURATION_SCARED + ZF_COWARDLY_DURATION_COOLDOWN);
             fxCreateSoundToClient("player/vo/yikes.wav", _inst.client);
-            PrintHintText(_inst.client, "You panicked!");
-            return 0.0;
+PrintHintText(_inst.client, "%t", "CowardlyPerk_Hint_Panicked");            return 0.0;
         }
     }
     return damage;
@@ -87,12 +86,10 @@ FUNCTION(CowardlyPerk, onPeriodic)) {
     if ((_inst.perk_timer > 0)) {
         _inst.perk_timer -= 1;
         if ((_inst.perk_timer == ZF_COWARDLY_DURATION_COOLDOWN)) {
-            PrintHintText(_inst.client, "Panic has worn off.");
-        }
+PrintHintText(_inst.client, "%t", "CowardlyPerk_Hint_WornOff");        }
         else {
             if ((_inst.perk_timer == 0)) {
-                PrintHintText(_inst.client, "You are no longer panicked and can use your ability again.");
-            }
+PrintHintText(_inst.client, "%t", "CowardlyPerk_Hint_Ready");            }
         }
     }
 }
@@ -102,7 +99,6 @@ FUNCTION(CowardlyPerk, updateCondStats), char[] buffer, int maxlen) {
         addStat(_inst.client, ZFStatDef, ZFStatTypeCond, ZF_COWARDLY_DEFEND);
         addStat(_inst.client, ZFStatSpeed, ZFStatTypeCond, ZF_COWARDLY_SPEED);
     } else if (_inst.perk_timer == 0) {
-        Format(buffer, maxlen, "(随时准备跑路)");
-    }
+Format(buffer, maxlen, "%t", "CowardlyPerk_Status_Ready");    }
 }
 

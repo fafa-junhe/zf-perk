@@ -1,272 +1,399 @@
 #if defined __ChargerPerk_included
-#endinput
+    #endinput
 #endif
 #define __ChargerPerk_included
 
 #include "ZombieBasePerk.inc"
 #include "../../perk_vtable.inc"
 #include "../../perk_macros.inc"
-#include "../../zf_perk.inc"
+#include "../../../../include/tf2.inc"
+#include "../../../../include/vector.inc"
 #include "../../zf_util_base.inc"
 #include "../../zf_util_fx.inc"
-#include <sdktools_trace>
-#include <sdkhooks>
+#include "../../../../include/sdkhooks.inc"
+#include "../../../../include/sdktools_functions.inc"
 
-// --- Defines ---
-#define CHARGER_DEFEND 50       // 防御力偏高
-#define CHARGER_ATTACK -10      // 伤害略低
-#define CHARGER_SPEED -20       // 速度慢
-#define CHARGER_COOLDOWN 12.0   // 冷却时间
-#define CHARGER_CHARGE_DURATION 4.0 // 冲锋持续时间
-#define CHARGER_CHARGE_SPEED 1000.0 // 冲锋速度
-#define CHARGER_IMPACT_DAMAGE 150.0 // 撞墙伤害
-#define CHARGER_STUN_DURATION 2.0   // 眩晕时间
+// --- Constants ---
+#define CHARGER_DEF_BONUS         25        // 防御力加成
+#define CHARGER_ATT_PENALTY       -15       // 攻击力惩罚
+#define CHARGER_SPEED_PENALTY     -20       // 移速惩罚
+#define CHARGER_CHARGE_FORCE      1000.0    // 冲锋力量
+#define CHARGER_CHARGE_COOLDOWN   12        // 冲锋冷却时间 (秒)
+#define CHARGER_WALL_DAMAGE       50.0      // 撞墙伤害
+#define CHARGER_STUN_DURATION     3.0       // 撞墙眩晕时间
+#define CHARGER_MAX_DURATION      8.0       // 最大冲锋持续时间
 
 // --- Data Slots ---
-#define CHARGER_DATA_STATE          (PERK_DATA_START_INDEX + 0) // 0: ready, 1: charging, 2: grabbing, 3: cooldown
-#define CHARGER_DATA_TIMER          (PERK_DATA_START_INDEX + 1) // Cooldown / duration timer
-#define CHARGER_DATA_GRABBED_VICTIM (PERK_DATA_START_INDEX + 2)
-#define CHARGER_DATA_CHARGE_VEC     (PERK_DATA_START_INDEX + 3) // Size: 3
+#define CHARGER_DATA_TIMER        (PERK_DATA_START_INDEX + 0)    // Cooldown
+#define CHARGER_DATA_STATE        (PERK_DATA_START_INDEX + 1)    // 0: idle, 1: charging, 2: carrying
+#define CHARGER_DATA_VICTIM       (PERK_DATA_START_INDEX + 2)    // The grabbed survivor
+#define CHARGER_DATA_CHARGE_TIMER (PERK_DATA_START_INDEX + 3)    // Max duration timer
+#define VTABLE_DO_CHARGE_END      (PERK_DATA_START_INDEX + 4)    // Custom vtable for ending the charge
 
-methodmap ChargerPerk < ZombieBasePerk {
-    public ChargerPerk(int client) {
+methodmap ChargerPerk < ZombieBasePerk
+{
+
+public     ChargerPerk(int client)
+    {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
-        ChargerPerk sm = view_as<ChargerPerk>(sm_base);
+        ChargerPerk    sm      = view_as<ChargerPerk>(sm_base);
 
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, ChargerPerkFgetName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, ChargerPerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, ChargerPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, ChargerPerkFupdateClientPermStats);
-        PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, ChargerPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, ChargerPerkFonCallForMedic);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_GAME_FRAME, ChargerPerkFonGameFrame);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, ChargerPerkFonPeriodic);
+        PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, ChargerPerkFupdateCondStats);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TOUCH, ChargerPerkFonTouch);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_RUN_CMD, ChargerPerkFonPlayerRunCmd);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, ChargerPerkFonDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, ChargerPerkFonRemove);
+        PERK_REGISTER_VTABLE(sm, VTABLE_DO_CHARGE_END, ChargerPerkFdoChargeEnd);
 
-        sm.state = 0;
-        sm.timer = 0.0;
-        sm.grabbed_victim = 0;
-        float zero_vec[3] = {0.0, 0.0, 0.0};
-        sm.setChargeVec(zero_vec);
+        // Initialize data
+        sm.perk_timer   = 0;
+        sm.perk_state   = 0;
+        sm.victim       = -1;
+        sm.charge_timer = 0.0;
 
         return sm;
     }
 
-    property int state {
-        public get() { 
+    property int perk_timer
+    {
+
+public         get()
+        {
+            this.Position = view_as<DataPackPos>(CHARGER_DATA_TIMER);
+            return this.ReadCell();
+        }
+
+public         set(int value)
+        {
+            this.Position = view_as<DataPackPos>(CHARGER_DATA_TIMER);
+            this.WriteCell(value);
+        }
+    }
+    property int perk_state
+    {
+
+public         get()
+        {
             this.Position = view_as<DataPackPos>(CHARGER_DATA_STATE);
             return this.ReadCell();
         }
-        public set(int value) {
+
+public         set(int value)
+        {
             this.Position = view_as<DataPackPos>(CHARGER_DATA_STATE);
             this.WriteCell(value);
         }
     }
+    property int victim
+    {
 
-    property float timer {
-        public get() {
-            this.Position = view_as<DataPackPos>(CHARGER_DATA_TIMER);
+public         get()
+        {
+            this.Position = view_as<DataPackPos>(CHARGER_DATA_VICTIM);
+            return this.ReadCell();
+        }
+
+public         set(int value)
+        {
+            this.Position = view_as<DataPackPos>(CHARGER_DATA_VICTIM);
+            this.WriteCell(value);
+        }
+    }
+    property float charge_timer
+    {
+
+public         get()
+        {
+            this.Position = view_as<DataPackPos>(CHARGER_DATA_CHARGE_TIMER);
             return this.ReadFloat();
         }
-        public set(float value) {
-            this.Position = view_as<DataPackPos>(CHARGER_DATA_TIMER);
+
+public         set(float value)
+        {
+            this.Position = view_as<DataPackPos>(CHARGER_DATA_CHARGE_TIMER);
             this.WriteFloat(value);
         }
     }
 
-    property int grabbed_victim {
-        public get() {
-            this.Position = view_as<DataPackPos>(CHARGER_DATA_GRABBED_VICTIM);
-            return this.ReadCell();
-        }
-        public set(int value) {
-            this.Position = view_as<DataPackPos>(CHARGER_DATA_GRABBED_VICTIM);
-            this.WriteCell(value);
-        }
-    }
-
-    public void getChargeVec(float buffer[3]) {
-        this.Position = view_as<DataPackPos>(CHARGER_DATA_CHARGE_VEC);
-        this.ReadCellArray(buffer, 3);
-    }
-    public void setChargeVec(const float value[3]) {
-        this.Position = view_as<DataPackPos>(CHARGER_DATA_CHARGE_VEC);
-        this.WriteCellArray(value, 3);
+public     void doChargeEnd(bool hitWall)
+    {
+        START_VTABLE_CALL(VTABLE_DO_CHARGE_END);
+        Call_PushCell(hitWall);
+        Call_Finish();
     }
 }
 
-stock BasePerk ChargerPerkFnew(int client) {
+public bool TraceFilterCharger(int entity, int contentsMask, any data)
+{
+    int client = data;
+    if (entity == client)
+        return false;
+
+    BasePerk perk_base = g_hPerks[client];
+    if (perk_base != null)
+    {
+        ChargerPerk perk = view_as<ChargerPerk>(perk_base);
+        if (perk != null && entity == perk.victim)
+        {
+            return false;
+        }
+    }
+
+    if (entity > 0 && entity <= MaxClients)
+        return false;
+
+    return true;
+}
+
+stock BasePerk ChargerPerkFnew(int client)
+{
     return new ChargerPerk(client);
 }
 
-FUNCTION(ChargerPerk, getName), char[] buffer, int maxlen) {
+FUNCTION(ChargerPerk, getName), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "Charger");
 }
-
-FUNCTION(ChargerPerk, getShortdesc), char[] buffer, int maxlen) {
+FUNCTION(ChargerPerk, getShortdesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "ChargerPerk_shortdesc");
 }
-
-FUNCTION(ChargerPerk, getDesc), char[] buffer, int maxlen) {
+FUNCTION(ChargerPerk, getDesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "ChargerPerk_desc");
 }
 
-FUNCTION(ChargerPerk, updateClientPermStats)) {
-    addStat(_inst.client, ZFStatDef, ZFStatTypePerm, CHARGER_DEFEND);
-    addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, CHARGER_ATTACK);
-    addStat(_inst.client, ZFStatSpeed, ZFStatTypePerm, CHARGER_SPEED);
+FUNCTION(ChargerPerk, updateClientPermStats))
+{
+    addStat(_inst.client, ZFStatDef, ZFStatTypePerm, CHARGER_DEF_BONUS);
+    addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, CHARGER_ATT_PENALTY);
+    addStat(_inst.client, ZFStatSpeed, ZFStatTypePerm, CHARGER_SPEED_PENALTY);
 }
 
-FUNCTION(ChargerPerk, onCallForMedic)) {
-    if (_inst.state != 0) return; // Not ready
+FUNCTION(ChargerPerk, onCallForMedic))
+{
+    int client = _inst.client;
+    if (_inst.perk_timer > 0 || _inst.perk_state != 0 || !(GetEntityFlags(client) & FL_ONGROUND))
+    {
+        return;
+    }
+
+    _inst.perk_state   = 1;
+    _inst.perk_timer   = CHARGER_CHARGE_COOLDOWN;
+    _inst.charge_timer = GetGameTime() + CHARGER_MAX_DURATION;
+
+    float ang[3];
+    GetClientEyeAngles(client, ang);
+    ang[0] = 0.0;    // Prevent charging into the ground
+    float vel[3];
+    GetAngleVectors(ang, vel, NULL_VECTOR, NULL_VECTOR);
+    ScaleVector(vel, CHARGER_CHARGE_FORCE);
+    vel[2] = 500.0;
+
+    TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, vel);
+    TF2_AddCondition(client, TFCond_Charging, CHARGER_MAX_DURATION);
+    TF2_AddCondition(client, TFCond_ImmuneToPushback, CHARGER_MAX_DURATION);
+    TF2_AddCondition(client, TFCond_RestrictToMelee, CHARGER_MAX_DURATION);    // 禁止攻击
+    SetVariantInt(1);
+    AcceptEntityInput(client, "SetForcedTauntCam");
+
+    PrintHintText(client, "%t", "ChargerPerk_Hint_Charging");
+}
+
+FUNCTION(ChargerPerk, onTouch), int toucher, int touchee)
+{
+    int client = _inst.client;
+    if (toucher != client || _inst.perk_state != 1 || !validClient(touchee) || validZom(touchee))
+    {
+        return;
+    }
+
+    _inst.victim     = touchee;
+    _inst.perk_state = 2;
+
+    // Parent the victim to the charger to make them move together
+
+    // Make victim non-solid and carry them
+    TF2_StunPlayer(touchee, CHARGER_MAX_DURATION, 0.0, TF_STUNFLAGS_BIGBONK, client);
+
+    float org[3];
+    GetClientAbsOrigin(toucher, org);
+
+    float ang[3];
+    GetClientAbsAngles(toucher, ang);
+
+    float fwdd[3];
+    GetAngleVectors(ang, fwdd, NULL_VECTOR, NULL_VECTOR);    // 计算面对方向的单位向量
+
+    ScaleVector(fwdd, -40.0);      // 放大为 150 单位距离
+    AddVectors(org, fwdd, org);    // 加到原坐标上
+
+    TeleportEntity(touchee, org, NULL_VECTOR, NULL_VECTOR);    // 移动 touchee
+
+    PrintHintText(client, "%t", "ChargerPerk_Hint_Grabbed");
+    PrintHintText(touchee, "%t", "ChargerPerk_Hint_GrabbedVictim");
+}
+
+FUNCTION(ChargerPerk, onPlayerRunCmd), int buttons, int impulse, float vel[3], float angles[3], int weapon)
+{
+    if (_inst.perk_state == 0)
+    {
+        return;
+    }
 
     int client = _inst.client;
-    _inst.state = 1; // charging
-    _inst.timer = GetGameTime() + CHARGER_CHARGE_DURATION;
 
-    float angles[3];
-    GetClientEyeAngles(client, angles);
-    float charge_vec[3];
-    GetAngleVectors(angles, charge_vec, NULL_VECTOR, NULL_VECTOR);
-    _inst.setChargeVec(charge_vec);
+    if (_inst.perk_state == 2)
+    {
+        TF2_StunPlayer(_inst.victim, CHARGER_MAX_DURATION, 0.0, TF_STUNFLAGS_BIGBONK, client);
+        float org[3];
+        GetClientAbsOrigin(client, org);
 
-    // Apply initial velocity
-    float velocity[3];
-    velocity = charge_vec;
-    ScaleVector(velocity, CHARGER_CHARGE_SPEED);
-    TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
+        float ang[3];
+        GetClientAbsAngles(client, ang);
 
-    PrintHintText(client, "冲锋！");
-    fxCreateSoundToAll("ambient/explosions/explode_8.wav", client); // Placeholder sound
+        float fwdd[3];
+        GetAngleVectors(ang, fwdd, NULL_VECTOR, NULL_VECTOR);    // 计算面对方向的单位向量
+
+        ScaleVector(fwdd, -30.0);      // 放大为 -50 单位距离
+        AddVectors(org, fwdd, org);    // 加到原坐标上
+
+        TeleportEntity(_inst.victim, org, NULL_VECTOR, NULL_VECTOR);    // 移动 touchee
+    }
+    // --- Sustained charge movement & direction ---
+    float charge_ang[3];
+    GetClientEyeAngles(client, charge_ang);
+    charge_ang[0] = 0.0;    // Keep charge horizontal
+
+    float charge_vel[3];
+    GetAngleVectors(charge_ang, charge_vel, NULL_VECTOR, NULL_VECTOR);
+    ScaleVector(charge_vel, CHARGER_CHARGE_FORCE);
+    charge_vel[2] = 0.0;
+    TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, charge_vel);
+    // --- Wall detection logic ---
+    float start_pos[3], end_pos[3], fwd[3];
+    GetEntPropVector(client, Prop_Send, "m_vecOrigin", start_pos);
+
+    fwd = charge_vel;
+    NormalizeVector(fwd, fwd);
+
+    end_pos = start_pos;
+    ScaleVector(fwd, 45.0);    // Check 45 units ahead
+    AddVectors(end_pos, fwd, end_pos);
+    end_pos[2]   = start_pos[2];
+
+    Handle trace = TR_TraceRayFilterEx(start_pos, end_pos, MASK_SOLID, RayType_EndPoint, TraceFilterCharger, client);
+    if (TR_DidHit(trace))
+    {
+        CloseHandle(trace);
+        _inst.doChargeEnd(true);
+        return;
+    }
+    CloseHandle(trace);
 }
 
-FUNCTION(ChargerPerk, onGameFrame)) {
-    if (_inst.state == 0) return;
+FUNCTION(ChargerPerk, onPeriodic))
+{
+    if (_inst.perk_timer > 0)
+    {
+        _inst.perk_timer--;
+    }
 
+    if (_inst.perk_state != 0 && GetGameTime() > _inst.charge_timer)
+    {
+        PrintHintText(_inst.client, "%t", "ChargerPerk_Hint_Finished");
+        _inst.doChargeEnd(false);
+    }
+}
+
+FUNCTION(ChargerPerk, updateCondStats), char[] buffer, int maxlen)
+{
+    switch (_inst.perk_state)
+    {
+        case 1: Format(buffer, maxlen, "%t", "ChargerPerk_Status_Charging");
+
+        case 2: Format(buffer, maxlen, "%t", "ChargerPerk_Status_Carrying");
+
+        default:
+        {
+            if (_inst.perk_timer > 0)
+            {
+                Format(buffer, maxlen, "%t", "ChargerPerk_Status_Cooldown", _inst.perk_timer);
+            }
+            else {
+                Format(buffer, maxlen, "%t", "ChargerPerk_Status_Ready");
+            }
+        }
+    }
+}
+
+FUNCTION(ChargerPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype)
+{
+    if (_inst.perk_state != 0)
+    {
+        _inst.doChargeEnd(false);
+    }
+}
+
+FUNCTION(ChargerPerk, onRemove))
+{
+    if (_inst.perk_state != 0)
+    {
+        _inst.doChargeEnd(false);
+    }
+}
+
+FUNCTION(ChargerPerk, doChargeEnd), bool hitWall)
+{
     int client = _inst.client;
+    int victim = _inst.victim;
 
-    // Cooldown state
-    if (_inst.state == 3) {
-        if (GetGameTime() >= _inst.timer) {
-            _inst.state = 0;
-            PrintHintText(client, "冲锋已准备就绪！");
+    SetEntityMoveType(client, MOVETYPE_WALK);
+
+    TF2_RemoveCondition(client, TFCond_Charging);
+    TF2_RemoveCondition(client, TFCond_ImmuneToPushback);
+    TF2_RemoveCondition(client, TFCond_RestrictToMelee);
+    SetVariantInt(0);
+    AcceptEntityInput(client, "SetForcedTauntCam");
+
+    float zero_vel[3] = { 0.0, 0.0, 0.0 };
+    TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, zero_vel);
+
+    int valid_victim = validClient(victim) && IsPlayerAlive(victim);
+    if (valid_victim)
+    {
+        // Restore collision and state
+        AcceptEntityInput(victim, "ClearParent");
+        SetEntityMoveType(victim, MOVETYPE_WALK);
+        TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, zero_vel);
+        TF2_RemoveCondition(victim, TFCond_Dazed);
+
+        if (hitWall)
+        {
+            PrintHintText(victim, "%t", "ChargerPerk_Hint_WallHitVictim");
+            SDKHooks_TakeDamage(victim, client, client, CHARGER_WALL_DAMAGE, DMG_CRUSH);
+            TF2_StunPlayer(victim, CHARGER_STUN_DURATION, 0.0, TF_STUNFLAGS_BIGBONK, client);
         }
-        return;
-    }
-
-    // Charge has expired
-    if (GetGameTime() >= _inst.timer) {
-        PrintHintText(client, "冲锋结束。");
-        _inst.state = 3; // Cooldown
-        _inst.timer = GetGameTime() + CHARGER_COOLDOWN;
-        if (_inst.grabbed_victim > 0) {
-            // If charge ends mid-air, just release the victim
-            _inst.grabbed_victim = 0;
-        }
-        return;
-    }
-
-    // --- Charging Logic ---
-    float charge_vec[3];
-    _inst.getChargeVec(charge_vec);
-    float velocity[3];
-    velocity = charge_vec;
-    ScaleVector(velocity, CHARGER_CHARGE_SPEED);
-    TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
-
-    float start_pos[3], end_pos[3];
-    GetClientAbsOrigin(client, start_pos);
-    
-    float check_vec[3];
-    check_vec = charge_vec;
-    ScaleVector(check_vec, 20.0); // Check 20 units ahead
-    AddVectors(start_pos, check_vec, end_pos);
-
-    // Check for wall collision
-    TR_TraceHull(start_pos, end_pos, {-16.0, -16.0, 0.0}, {16.0, 16.0, 72.0}, MASK_SOLID);
-    if (TR_DidHit()) {
-        int victim = _inst.grabbed_victim;
-        if (victim > 0 && IsClientInGame(victim) && IsPlayerAlive(victim)) {
-            PrintHintText(client, "你把 %N 撞到了墙上！", victim);
-            PrintHintText(victim, "你被冲撞者撞到了墙上！");
-            SDKHooks_TakeDamage(client, client, client, CHARGER_IMPACT_DAMAGE, DMG_CRUSH);
-            SDKHooks_TakeDamage(victim, client, client, CHARGER_IMPACT_DAMAGE, DMG_CRUSH);
-            
-            // Stun both
-            addStatTempStack(client, ZFStatSpeed, -200, RoundToNearest(CHARGER_STUN_DURATION));
-            addStatTempStack(victim, ZFStatSpeed, -200, RoundToNearest(CHARGER_STUN_DURATION));
-            
-            _inst.grabbed_victim = 0;
-        } else {
-            PrintHintText(client, "你撞到了墙上！");
-            SDKHooks_TakeDamage(client, client, client, CHARGER_IMPACT_DAMAGE / 2.0, DMG_CRUSH);
-            addStatTempStack(client, ZFStatSpeed, -200, RoundToNearest(CHARGER_STUN_DURATION));
-        }
-        
-        _inst.state = 3; // Cooldown
-        _inst.timer = GetGameTime() + CHARGER_COOLDOWN;
-        return;
-    }
-
-    // If not grabbing anyone, check for victims
-    if (_inst.state == 1) {
-        for (int i = 1; i <= MaxClients; i++) {
-            if (validLivingSur(i)) {
-                float sur_pos[3];
-                GetClientAbsOrigin(i, sur_pos);
-                if (GetVectorDistance(start_pos, sur_pos) < 64.0) {
-                    _inst.grabbed_victim = i;
-                    _inst.state = 2; // grabbing
-                    PrintHintText(client, "你抓住了 %N！", i);
-                    PrintHintText(i, "你被冲撞者抓住了！");
-                    break;
-                }
-            }
+        else {
+            PrintHintText(victim, "%t", "ChargerPerk_Hint_Released");
         }
     }
 
-    // If grabbing a victim, move them
-    if (_inst.state == 2) {
-        int victim = _inst.grabbed_victim;
-        if (validLivingSur(victim)) {
-            float victim_pos[3];
-            victim_pos = start_pos;
-            float offset[3];
-            offset = charge_vec;
-            ScaleVector(offset, 64.0);
-            AddVectors(victim_pos, offset, victim_pos);
-            TeleportEntity(victim, victim_pos, NULL_VECTOR, velocity);
-        } else {
-            // Victim died or disconnected
-            _inst.grabbed_victim = 0;
-            _inst.state = 1; // continue charging
-        }
+    if (hitWall)
+    {
+        PrintHintText(client, "%t", "ChargerPerk_Hint_WallHit");
+        SDKHooks_TakeDamage(client, client, client, CHARGER_WALL_DAMAGE, DMG_CRUSH);
+        TF2_StunPlayer(client, CHARGER_STUN_DURATION, 0.0, TF_STUNFLAGS_BIGBONK, client);
     }
-}
 
-FUNCTION(ChargerPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
-    // Reset state on death
-    _inst.state = 0;
-    _inst.timer = 0.0;
-    _inst.grabbed_victim = 0;
-}
-
-FUNCTION(ChargerPerk, updateCondStats), char[] buffer, int maxlen) {
-    switch (_inst.state) {
-        case 0: strcopy(buffer, maxlen, "冲锋已就绪");
-        case 1: strcopy(buffer, maxlen, "冲锋中！");
-        case 2: {
-            int victim = _inst.grabbed_victim;
-            if (validClient(victim)) {
-                Format(buffer, maxlen, "正拖着 %N", victim);
-            } else {
-                strcopy(buffer, maxlen, "冲锋中！");
-            }
-        }
-        case 3: {
-            int time_left = RoundFloat(_inst.timer - GetGameTime());
-            if (time_left > 0) {
-                Format(buffer, maxlen, "冷却中: %ds", time_left);
-            }
-        }
-    }
+    // Reset perk state at the very end
+    _inst.perk_state   = 0;
+    _inst.victim       = -1;
+    _inst.charge_timer = 0.0;
 }

@@ -19,6 +19,7 @@
 #include "zf_util_base.inc"
 #include "zf_util_fx.inc"
 #include "zf_util_pref.inc"
+#include "zf_zombie_visuals.inc"
 #include "perks/zombie/MarkedPerk.inc"
 #include "perks/zombie/SwarmingPerk.inc"
 ArrayList g_SurPerkTypes;
@@ -105,6 +106,7 @@ Handle zf_menuSurPerkList;
 Handle zf_menuZomPerkList;
 
 // CVARS
+Handle hCvarCripple;
 
 ////////////////////////////////////////////////////////////
 //
@@ -226,7 +228,7 @@ public void perkInit()
   AddCommandListener(hook_zfSelectPerk, "zf_perk_select");
   
   // Register CVARS
-  CreateConVar("sm_zf_cripple", "0", "0 = Crippling backstab disabled, 1 = Crippling backstab enabled.", FCVAR_REPLICATED|FCVAR_NOTIFY, true, 0.0, true, 1.0);
+  hCvarCripple = CreateConVar("sm_zf_cripple", "0", "0 = Crippling backstab disabled, 1 = Crippling backstab enabled.", FCVAR_REPLICATED|FCVAR_NOTIFY, true, 0.0, true, 1.0);
 
 }
 
@@ -747,6 +749,7 @@ stock void resetClient(int client)
   removeAura(client);
   removeIcon(client);
   removeItems(client);
+  RemoveZombieVisuals(client);
 
   // New Perk Object
   if (g_hPerks[client] != null)
@@ -755,6 +758,7 @@ stock void resetClient(int client)
       delete g_hPerks[client];
       g_hPerks[client] = null;
   }
+
 }
 
 stock void resetClientStats(int client)
@@ -997,7 +1001,7 @@ void updateHud(int client)
         {
           strHudPerk = "";
         }
-        SetHudTextParams(0.15, 0.90, 2.1, 200, 200, 200, 150);
+        SetHudTextParams(0.15, 0.80, 2.1, 200, 200, 200, 150);
         if (strcmp(zf_perkStr[client], "") != 0)
           ShowSyncHudText(client, zf_hudLine0, "%s (%s)", strHudPerk, zf_perkStr[client]);
         else 
@@ -1005,12 +1009,12 @@ void updateHud(int client)
         
         // HUD Element: Bonuses 1 (Attack, Defense)
         Format(strHudBonuses, sizeof(strHudBonuses), "%T", "ZF_HUD_Bonuses1", client, getStat(client, ZFStatAtt), getStat(client, ZFStatDef));
-        SetHudTextParams(0.15, 0.93, 2.1, 150, 150, 150, 150);
+        SetHudTextParams(0.15, 0.83, 2.1, 150, 150, 150, 150);
         ShowSyncHudText(client, zf_hudLine1, "%s", strHudBonuses);
         
         // HUD Element: Bonuses 2 (Crit, Speed)
         Format(strHudBonuses, sizeof(strHudBonuses), "%T", "ZF_HUD_Bonuses2", client, getStat(client, ZFStatCrit), getStat(client, ZFStatSpeed));
-        SetHudTextParams(0.15, 0.96, 2.1, 150, 150, 150, 150);
+        SetHudTextParams(0.15, 0.86, 2.1, 150, 150, 150, 150);
         ShowSyncHudText(client, zf_hudLine2, "%s", strHudBonuses);
       }
       else
@@ -1035,7 +1039,7 @@ void updateHud(int client)
           {
             strHudPerk = "";
           }
-          SetHudTextParams(0.15, 0.90, 2.1, 250, 200, 200, 150);
+          SetHudTextParams(0.15, 0.80, 2.1, 250, 200, 200, 150);
           ShowSyncHudText(client, zf_hudLine0, "%s", strHudPerk);
         }
       }
@@ -1062,7 +1066,7 @@ void updateHud(int client)
         {
           strHudPerk = "";
         }
-        SetHudTextParams(0.15, 0.90, 2.1, 250, 200, 200, 150);
+        SetHudTextParams(0.15, 0.80, 2.1, 250, 200, 200, 150);
         ShowSyncHudText(client, zf_hudLine0, "%s", strHudPerk);
       }
     }
@@ -2073,7 +2077,7 @@ public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float
   // This check is essential for stability. Perks that need to handle world damage (like fall damage)
   // should be aware that fall damage has attacker == victim, so it will pass this check.
   // This specifically blocks damage where the attacker is not a valid player.
-  if (attacker <= 0 || !IsClientInGame(attacker))
+  if (attacker <= 0 || !IsValidEdict(attacker))
   {
       return Plugin_Continue;
   }
@@ -2090,16 +2094,30 @@ public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float
     
   }
 
+  
+
   // 忽略对无敌玩家的伤害事件
   if(validClient(victim) && isUbered(victim))
   {
     return Plugin_Continue;
+  }
+
+  // Cripple logic for backstabs
+  if (GetConVarBool(hCvarCripple) && attackWasBackstab(attacker, inflictor, damage))
+  {
+      PrintHintText(attacker, "%t", "ZF_Cripple_Backstab_Success", victim);
+      PrintHintText(victim, "%t", "ZF_Cripple_Backstab_Victim", attacker);
+      damage = 90.0;
+      TF2_StunPlayer(victim, 5.0, _, TF_STUNFLAGS_LOSERSTATE, attacker);
+      return Plugin_Changed;
   }
   
   if (damage != originalDamage) {
       // Perk 已经修改了伤害，我们信任 perk 的计算，直接返回
       return Plugin_Changed;
   }
+
+  
 
   // 处理毒药伤害归属
   if(damagetype & ZF_DMGTYPE_POISON)
@@ -2122,16 +2140,17 @@ public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float
     def_bonus = float(getStat(victim, ZFStatDef));
   
 
-  // 步哨枪的攻击加成减半
-  if(entIsSentry(inflictor))
-  {
-    att_bonus /= 2.0;
-  }
+  
     
   // 应用攻击和防御加成
   fDamage = fDamage * (1.0 + att_bonus / 100.0);
   fDamage = fDamage * (1.0 - def_bonus / 100.0);
+  // 步哨枪的攻击加成减半
+  if(entIsSentry(inflictor))
+  {
 
+    fDamage = 4.0;
+  }
   // Marked Perk team damage bonus
   if (validLivingZom(attacker) && validLivingSur(victim))
   {
@@ -2406,11 +2425,11 @@ public void perk_OnPlayerSpawn(int client)
             PerkCreator creator;
             if (isSur(client))
             {
-                creator = view_as<PerkCreator>(g_SurPerkCreators.Get(nextPerk));
+                creator = g_SurPerkCreators.Get(nextPerk);
             }
             else
             {
-                creator = view_as<PerkCreator>(g_ZomPerkCreators.Get(nextPerk));
+                creator = g_ZomPerkCreators.Get(nextPerk);
             }
 
             if (creator != null)

@@ -10,12 +10,14 @@
 #include "../../zf_util_base.inc"
 #include <tf2>
 #include <entity_prop_stocks>
+#include <sdktools_trace>
 
 // --- Defines from new_perks.md ---
 #define ZF_PHANTASM_HEALTH_PENALTY -25
 #define ZF_PHANTASM_ATTACK_PENALTY -25
-#define ZF_PHANTASM_WALK_DURATION 4.0
+#define ZF_PHANTASM_WALK_DURATION 2.0
 #define ZF_PHANTASM_COOLDOWN 12.0
+#define ZF_PHANTASM_STUCK_DAMAGE 10
 
 // --- Data Slots ---
 #define PHANTASM_DATA_WALK_TIMER    (PERK_DATA_START_INDEX + 0)
@@ -69,7 +71,7 @@ stock BasePerk PhantasmPerkFnew(int client) {
 }
 
 FUNCTION(PhantasmPerk, getName), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Phantasm");
+    strcopy(buffer, maxlen, "PhantasmPerk_Name");
 }
 
 FUNCTION(PhantasmPerk, getShortdesc), char[] buffer, int maxlen) {
@@ -107,8 +109,23 @@ FUNCTION(PhantasmPerk, onCallForMedic)) {
         // Prevent attacking
         SetEntProp(client, Prop_Send, "m_fFlags", GetEntProp(client, Prop_Send, "m_fFlags") | FL_FROZEN);
 
-        PrintHintText(client, "你进入了虚空行走状态!");
+        PrintHintText(client, "%t", "PhantasmPerk_Enter_Void_Walk");
     }
+}
+
+stock bool IsPlayerStuck(int client) {
+    float pos[3];
+    GetClientAbsOrigin(client, pos);
+
+    if (TR_PointOutsideWorld(pos)) {
+        return true;
+    }
+
+    if (TR_GetPointContents(pos) & MASK_SOLID) {
+        return true;
+    }
+
+    return false;
 }
 
 FUNCTION(PhantasmPerk, onPeriodic)) {
@@ -117,22 +134,37 @@ FUNCTION(PhantasmPerk, onPeriodic)) {
         _inst.cooldown -= 1.0;
     }
 
-    if (_inst.walk_timer > 0.0 && GetGameTime() >= _inst.walk_timer) {
-        _inst.walk_timer = 0.0;
-        SetEntityMoveType(client, MOVETYPE_WALK);
-        SetEntityRenderMode(client, RENDER_NORMAL);
-        SetEntityRenderColor(client, 255, 255, 255, 255);
-        SetEntProp(client, Prop_Send, "m_fFlags", GetEntProp(client, Prop_Send, "m_fFlags") & ~FL_FROZEN);
-        PrintHintText(client, "虚空行走结束。");
+    if (_inst.walk_timer > 0.0) {
+        if (IsPlayerStuck(client)) {
+            SDKHooks_TakeDamage(client, client, client, float(ZF_PHANTASM_STUCK_DAMAGE), DMG_GENERIC);
+            PrintHintText(client, "%t", "PhantasmPerk_Stuck_Damage");
+        }
+
+        if (GetGameTime() >= _inst.walk_timer) {
+            _inst.walk_timer = 0.0;
+
+            if (IsPlayerStuck(client)) {
+                ForcePlayerSuicide(client);
+                PrintHintText(client, "%t", "PhantasmPerk_Stuck_Kill");
+            } else {
+                PrintHintText(client, "%t", "PhantasmPerk_Exit_Void_Walk");
+            }
+
+            // Reset player state regardless of whether they were killed or not
+            SetEntityMoveType(client, MOVETYPE_WALK);
+            SetEntityRenderMode(client, RENDER_NORMAL);
+            SetEntityRenderColor(client, 255, 255, 255, 255);
+            SetEntProp(client, Prop_Send, "m_fFlags", GetEntProp(client, Prop_Send, "m_fFlags") & ~FL_FROZEN);
+        }
     }
 }
 
 FUNCTION(PhantasmPerk, updateCondStats), char[] buffer, int maxlen) {
     if (_inst.walk_timer > 0.0) {
-        Format(buffer, maxlen, "虚空行走: %.1fs", _inst.walk_timer - GetGameTime());
+        Format(buffer, maxlen, "%t", "PhantasmPerk_Status_Active", _inst.walk_timer - GetGameTime());
     } else if (_inst.cooldown > 0.0) {
-        Format(buffer, maxlen, "冷却: %.0fs", _inst.cooldown);
+        Format(buffer, maxlen, "%t", "PhantasmPerk_Status_Cooldown", _inst.cooldown);
     } else {
-        Format(buffer, maxlen, "虚空行走已准备就绪");
+        Format(buffer, maxlen, "%t", "PhantasmPerk_Status_Ready");
     }
 }
