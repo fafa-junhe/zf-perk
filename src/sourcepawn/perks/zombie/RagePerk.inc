@@ -79,7 +79,7 @@ stock BasePerk RagePerkFnew(int client) {
 }
 
 FUNCTION(RagePerk, getName), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "RagePerk_Name");
+    strcopy(buffer, maxlen, "Rage");
 }
 
 FUNCTION(RagePerk, getShortdesc), char[] buffer, int maxlen) {

@@ -15,7 +15,8 @@
 // --- Defines from new_perks.md ---
 #define ZF_PHANTASM_HEALTH_PENALTY -25
 #define ZF_PHANTASM_ATTACK_PENALTY -25
-#define ZF_PHANTASM_WALK_DURATION 2.0
+#define ZF_PHANTASM_WALK_DURATION 0.5
+#define ZF_PHANTASM_STUN_DURATION 3.0
 #define ZF_PHANTASM_COOLDOWN 12.0
 #define ZF_PHANTASM_STUCK_DAMAGE 10
 
@@ -71,7 +72,7 @@ stock BasePerk PhantasmPerkFnew(int client) {
 }
 
 FUNCTION(PhantasmPerk, getName), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "PhantasmPerk_Name");
+    strcopy(buffer, maxlen, "Phantasm");
 }
 
 FUNCTION(PhantasmPerk, getShortdesc), char[] buffer, int maxlen) {
@@ -148,6 +149,7 @@ FUNCTION(PhantasmPerk, onPeriodic)) {
                 PrintHintText(client, "%t", "PhantasmPerk_Stuck_Kill");
             } else {
                 PrintHintText(client, "%t", "PhantasmPerk_Exit_Void_Walk");
+                TF2_StunPlayer(client, ZF_PHANTASM_STUN_DURATION, 0.0, TF_STUNFLAGS_BIGBONK);
             }
 
             // Reset player state regardless of whether they were killed or not

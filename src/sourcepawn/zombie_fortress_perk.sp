@@ -127,7 +127,8 @@ Handle zf_cvSwapOnAttdef;
 ////////////////////////////////////////////////////////////
 public void OnPluginStart()
 {
-  
+    ServerCommand("sm_cvar tf_forced_holiday 2");
+    ServerCommand("sm_cvar sv_noclipspeed 2");
     LoadTranslations("common.phrases.txt");
     LoadTranslations("zombie_fortress.phrases.txt");
     // TODO Doesn't register as true at this point. Where else can it be called?
@@ -269,6 +270,15 @@ public void OnMapEnd()
     setRoundState(RoundPost);
 
     perk_OnMapEnd();
+}
+
+public void OnPluginEnd()
+{
+    // Only perform cleanup if the plugin was active.
+    if (zf_bEnabled)
+    {
+        zfDisable();
+    }
 }
 
 public void OnClientPostAdminCheck(int client)
@@ -1207,7 +1217,8 @@ public Action timer_CheckPlayerAim(Handle timer, any client)
 
                 if (perkName[0] != '\0' && !StrEqual(perkName, "None", false))
                 {
-                    PrintCenterText(client, "%s's Perk:\n%s", targetName, perkName);
+                    Format(perkName, sizeof(perkName), "%t", perkName);
+                    PrintHintText(client, "%t", "ZF_HUD_Check_Teammate_Perk", targetName, perkName);
                 }
             }
         }
@@ -1686,6 +1697,12 @@ public void panel_PrintMain(int client)
     Format(buffer, sizeof(buffer), "%t", "ZF_Menu_PerkHelp");
     DrawPanelItem(panel, buffer, 0);
 
+    Format(buffer, sizeof(buffer), "%t", "ZF_Menu_Credits");
+    DrawPanelItem(panel, buffer, 0);
+
+    Format(buffer, sizeof(buffer), "%t", "ZF_Menu_Change_Language");
+    DrawPanelItem(panel, buffer, 0);
+
     Format(buffer, sizeof(buffer), "%t", "ZF_Menu_Close");
     DrawPanelItem(panel, buffer, 0);
     SendPanelToClient(panel, client, panel_HandleMain, 30);
@@ -1728,6 +1745,16 @@ public void panel_HandleMain(Handle menu, MenuAction action, int param1, int par
                 return;
             }
             case 6:
+            {
+                panel_PrintCredits(param1);
+                return;
+            }
+            case 7:
+            {
+                panel_ChangeLanguage(param1);
+                return;
+            }
+            case 8:    // Close
             {
                 return;
             }
@@ -2495,4 +2522,85 @@ stock void PrintMVPRankings()
         delete pack;
     }
     delete zomPlayers;
+}
+
+//
+// Main.Credits
+//
+public void panel_PrintCredits(int client)
+{
+  
+    Handle panel = CreatePanel();
+    char   buffer[256];
+
+    Format(buffer, sizeof(buffer), "%t", "ZF_Menu_Credits");
+    SetPanelTitle(panel, buffer, false);
+
+    DrawPanelText(panel, "----------------------------------------");
+    Format(buffer, sizeof(buffer), "%t", "ZF_Credits_Original");
+    DrawPanelText(panel, buffer);
+    Format(buffer, sizeof(buffer), "%t", "ZF_Credits_Recode");
+    DrawPanelText(panel, buffer);
+    Format(buffer, sizeof(buffer), "%t", "ZF_Credits_Original_Translation");
+    DrawPanelText(panel, buffer);
+    Format(buffer, sizeof(buffer), "%t", "ZF_Credits_Original_Balancing");
+    DrawPanelText(panel, buffer);
+    Format(buffer, sizeof(buffer), "%t", "ZF_Credits_Reremake");
+    DrawPanelText(panel, buffer);
+    Format(buffer, sizeof(buffer), "%t", "ZF_Credits_Special_thanks");
+    DrawPanelText(panel, buffer);
+    DrawPanelText(panel, "----------------------------------------");
+
+    Format(buffer, sizeof(buffer), "%t", "ZF_Menu_Back");
+    DrawPanelItem(panel, buffer, 0);
+
+    Format(buffer, sizeof(buffer), "%t", "ZF_Menu_Close");
+    DrawPanelItem(panel, buffer, 0);
+    SendPanelToClient(panel, client, panel_HandleCredits, 30);
+    CloseHandle(panel);
+}
+
+//
+// Main.Credits
+//
+public void panel_ChangeLanguage(int client)
+{
+  
+    Handle panel = CreatePanel();
+    char   buffer[256];
+
+    Format(buffer, sizeof(buffer), "%t", "ZF_Menu_Change_Language");
+    SetPanelTitle(panel, buffer, false);
+
+    DrawPanelText(panel, "----------------------------------------");
+    Format(buffer, sizeof(buffer), "%t", "ZF_Change_Language_Guide");
+    DrawPanelText(panel, buffer);
+    DrawPanelText(panel, "----------------------------------------");
+
+    Format(buffer, sizeof(buffer), "%t", "ZF_Menu_Back");
+    DrawPanelItem(panel, buffer, 0);
+
+    Format(buffer, sizeof(buffer), "%t", "ZF_Menu_Close");
+    DrawPanelItem(panel, buffer, 0);
+    SendPanelToClient(panel, client, panel_HandleCredits, 30);
+    CloseHandle(panel);
+}
+public void panel_HandleCredits(Handle menu, MenuAction action, int param1, int param2)
+{
+  
+    if (action == MenuAction_Select)
+    {
+        switch (param2)
+        {
+            case 1:    // Back
+            {
+                panel_PrintMain(param1);
+                return;
+            }
+            case 2:    // Close
+            {
+                return;
+            }
+        }
+    }
 }

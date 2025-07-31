@@ -14,7 +14,7 @@
 
 #define STATIC_FIELD_RADIUS 250.0
 #define STATIC_FIELD_DAMAGE_FACTOR 0.02 // 伤害系数，每秒根据速度造成伤害
-#define STATIC_FIELD_AURA_PARTICLE "particles/prof_stand_norm.pcf"
+#define STATIC_FIELD_AURA_PARTICLE "utaunt_electric_mist_parent"
 
 #define STATIC_FIELD_DATA_AURA_FX (PERK_DATA_START_INDEX + 0)
 

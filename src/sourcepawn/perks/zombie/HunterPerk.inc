@@ -79,7 +79,7 @@ stock BasePerk HunterPerkFnew(int client) {
 }
 
 FUNCTION(HunterPerk, getName), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "HunterPerk_Name");
+    strcopy(buffer, maxlen, "Hunter");
 }
 
 FUNCTION(HunterPerk, getShortdesc), char[] buffer, int maxlen) {

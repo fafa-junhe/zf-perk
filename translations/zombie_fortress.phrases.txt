@@ -27,7 +27,7 @@
 	"ZF_SurvivorClassChangeDisabled"
 	{
 		"en"	"[ZF] Survivors cannot change class after the round has started!"
-		"chi"	"[ZF]幸存者无法在回合开始后切换兵种!"
+		"chi"	"[ZF] 幸存者无法在回合开始后切换兵种!"
 	}
 	"ZF_SurvivorClasses"
 	{
@@ -183,6 +183,16 @@
 	{
 		"en"	"[Close]"
 		"chi"	"[关闭]"
+	}
+	"ZF_Menu_Credits"
+	{
+		"en"	"Credits"
+		"chi"	"制作人员"
+	}
+	"ZF_Menu_Change_Language"
+	{
+		"en"	"中文？"
+		"chi"	"English?"
 	}
 
 	//================================================================================
@@ -610,6 +620,11 @@
 	{
 		"en"	"Spectating Perk: %s "
 		"chi"	"观察目标职业: %s "
+	}
+	"ZF_HUD_Check_Teammate_Perk"
+	{
+		"en"    "%s 's Perk: %s"
+		"chi"   "%s 的职业为: %s"
 	}
 
 	//================================================================================
@@ -2093,6 +2108,11 @@
 		"en"	"Creep has been placed!"
 		"chi"	"菌毯已放置！"
 	}
+	"OverlordPerk_Creep_Reproduced"
+	{
+		"en"    "A creep tumor has reproduced!"
+		"chi"   "一个菌毯完成了自我复制！"
+	}
 	"OverlordPerk_Status_Cooldown"
 	{
 		"en"	"Creep Cooldown: %ds"
@@ -2434,12 +2454,12 @@
 	"VindictivePerk_shortdesc"
 	{
 		"en"	"Damages your killer on death"
-		"chi"	"死亡时对凶手造成伤害"
+		"chi"	"复仇僵尸(Vindictive)——击杀提高属性"
 	}
 	"VindictivePerk_desc"
 	{
 		"en"	"Upon death, you deal damage once to your killer."
-		"chi"	"死后对杀死你的敌人造成一次伤害。"
+		"chi"	"你的击杀与助攻能使你获得永久性的攻击力和防御力加成. \n \n“我想这是死去的智者.” \n推荐职业: 任何"
 	}
 
 	//------------------------------------------------
@@ -2469,5 +2489,47 @@
 	{
 		"en"	"Stored Energy: %.0f"
 		"chi"	"储存的能量: %.0f"
+	}
+
+	//================================================================================
+	// 9. 制作人员 (Credits)
+	//================================================================================
+	"ZF_Credits_Original"
+	{
+		"en"	"Original Author: Sirot"
+		"chi"	"原作者: Sirot"
+	}
+	"ZF_Credits_Recode"
+	{
+		"en"	"Recode Author: dirtyminuth"
+		"chi"	"重制作者: dirtyminuth"
+	}
+	"ZF_Credits_Original_Translation"
+	{
+		"en"    "Original translators: 晴天娃娃, Spectator, 233fafa_junhe and other enthusiastic players"
+		"chi"   "原始译者: 晴天娃娃、Spectator、233fafa_junhe等其他热心玩家"
+	}
+	"ZF_Credits_Original_Balancing"
+	{
+		"en"	"Balancing Perks: Spectator"
+		"chi"   "数值平衡: Spectator"
+	}
+	"ZF_Credits_Reremake"
+	{
+		"en"    "Reremake: 233fafa_junhe"
+		"chi"   "再次重做: 233fafa_junhe"
+	}
+	"ZF_Credits_Special_thanks"
+	{
+		"en"    "Special thanks to: Gemini 2.5 Pro for ideas and code\nAnd you"
+		"chi"   "特别感谢: Gemini 2.5 Pro 提供的想法和代码\n还有热爱zf的玩家们"
+	}
+	//================================================================================	
+	// 10. 其他
+	//================================================================================
+	"ZF_Change_Language_Guide"
+	{
+		"en"    "如果你看到这个插件是英文的，\n请通过服务器的 \"/lang\" 语言选择菜单来切换。"
+		"chi"   "If you see this plugin in Chinese,\n please switch it via the server's \"/lang\" language selection menu."
 	}
 }

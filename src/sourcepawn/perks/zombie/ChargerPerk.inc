@@ -251,7 +251,6 @@ FUNCTION(ChargerPerk, onPlayerRunCmd), int buttons, int impulse, float vel[3], f
 
     if (_inst.perk_state == 2)
     {
-        TF2_StunPlayer(_inst.victim, CHARGER_MAX_DURATION, 0.0, TF_STUNFLAGS_BIGBONK, client);
         float org[3];
         GetClientAbsOrigin(client, org);
 

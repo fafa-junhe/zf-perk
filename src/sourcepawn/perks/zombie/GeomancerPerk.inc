@@ -70,7 +70,7 @@ stock BasePerk GeomancerPerkFnew(int client) {
 }
 
 FUNCTION(GeomancerPerk, getName), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "GeomancerPerk_Name");
+    strcopy(buffer, maxlen, "Geomancer");
 }
 
 FUNCTION(GeomancerPerk, getShortdesc), char[] buffer, int maxlen) {

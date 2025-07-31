@@ -13,7 +13,7 @@
 
 #define GRAVITY_WARPER_RADIUS 350.0
 #define GRAVITY_WARPER_MULTIPLIER 1.75 // 大于1.0的重力会降低跳跃高度
-#define GRAVITY_WARPER_AURA_PARTICLE "particles/fluid_vortex_01.pcf"
+#define GRAVITY_WARPER_AURA_PARTICLE "teleporter_blue_exit_level3"
 
 #define GRAVITY_WARPER_DATA_AURA_FX (PERK_DATA_START_INDEX + 0)
 

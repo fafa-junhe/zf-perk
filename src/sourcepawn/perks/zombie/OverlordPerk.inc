@@ -88,7 +88,7 @@ stock int getCreepCount(DataPack creeps) {
 }
 
 FUNCTION(OverlordPerk, getName), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "OverlordPerk_Name");
+    strcopy(buffer, maxlen, "Overlord");
 }
 
 FUNCTION(OverlordPerk, getShortdesc), char[] buffer, int maxlen) {
@@ -119,15 +119,29 @@ FUNCTION(OverlordPerk, onCallForMedic)) {
     int client = _inst.client;
     _inst.cooldown = GetGameTime() + OVERLORD_COOLDOWN;
 
-    float pos[3];
-    GetClientAbsOrigin(client, pos);
-    
-    createCreepAt(_inst, pos);
-    PrintHintText(client, "%t", "OverlordPerk_Creep_Placed");
+    float start_pos[3];
+    GetClientAbsOrigin(client, start_pos);
+
+    // Find ground below player
+    float end_pos[3];
+    end_pos = start_pos;
+    end_pos[2] -= 512.0; // Trace down to find ground
+
+    Handle trace = TR_TraceRayEx(start_pos, end_pos, MASK_SOLID_BRUSHONLY, RayType_EndPoint);
+    if (TR_DidHit(trace)) {
+        float ground_pos[3];
+        TR_GetEndPosition(ground_pos, trace);
+        ground_pos[2] += 2.0; // Place slightly above ground
+        createCreepAt(_inst, ground_pos);
+        PrintHintText(client, "%t", "OverlordPerk_Creep_Placed");
+    }
+    CloseHandle(trace);
 }
 
 stock bool traceEntityFilter(int entity, int contentsMask) {
-    return false;
+    if (entity == entity && contentsMask == contentsMask)
+        return true;
+    return true;
 }
 
 stock void createCreepAt(OverlordPerk inst, float pos[3]) {
@@ -193,20 +207,24 @@ FUNCTION(OverlordPerk, onRemove)) {
 }
 
 FUNCTION(OverlordPerk, updateCondStats), char[] buffer, int maxlen) {
-    DataPack creeps = _inst.creeps;
+    DataPack old_creeps = _inst.creeps;
     DataPack new_creeps = new DataPack();
+    _inst.creeps = new_creeps; // Temporarily point the instance to the new datapack
 
-    creeps.Reset();
-    while(creeps.IsReadable()) {
-        int creep_entity = creeps.ReadCell();
-        float creation_time = creeps.ReadFloat();
-        float last_reproduce_time = creeps.ReadFloat();
+    int current_creep_count = getCreepCount(old_creeps);
+
+    old_creeps.Reset();
+    while(old_creeps.IsReadable()) {
+        int creep_entity = old_creeps.ReadCell();
+        float creation_time = old_creeps.ReadFloat();
+        float last_reproduce_time = old_creeps.ReadFloat();
 
         if (!IsValidEdict(creep_entity) || (GetGameTime() - creation_time) > OVERLORD_CREEP_LIFETIME) {
             if (IsValidEdict(creep_entity)) {
                 SDKUnhook(creep_entity, SDKHook_OnTakeDamage, onCreepTakeDamage);
                 fxDeleteModel(creep_entity);
             }
+            current_creep_count--;
             continue;
         }
 
@@ -215,7 +233,7 @@ FUNCTION(OverlordPerk, updateCondStats), char[] buffer, int maxlen) {
 
         // Reproduction logic
         float new_reproduce_time = last_reproduce_time;
-        if (getCreepCount(_inst.creeps) < OVERLORD_MAX_CREEPS && GetGameTime() - last_reproduce_time > OVERLORD_CREEP_REPRODUCE_TIME) {
+        if (current_creep_count < OVERLORD_MAX_CREEPS && (GetGameTime() - last_reproduce_time) > OVERLORD_CREEP_REPRODUCE_TIME) {
             float new_pos[3];
             for (int i = 0; i < 5; i++) { // Try 5 times to find a spot
                 float random_ang = GetRandomFloat(0.0, 360.0);
@@ -224,21 +242,34 @@ FUNCTION(OverlordPerk, updateCondStats), char[] buffer, int maxlen) {
                 new_pos[1] = creep_pos[1] + Sine(DegToRad(random_ang)) * random_dist;
                 new_pos[2] = creep_pos[2];
 
-                // Simple ground check
-                float start_pos[3];
+                // More robust ground check
+                float start_pos[3], end_pos[3];
                 start_pos = new_pos;
-                start_pos[2] += 50.0;
-                TR_TraceRayFilter(start_pos, {0.0, 0.0, -1.0}, MASK_SOLID_BRUSHONLY, RayType_Infinite, traceEntityFilter);
-                if (TR_DidHit()) {
-                    TR_GetEndPosition(new_pos);
-                    new_pos[2] += 5.0;
-                    createCreepAt(_inst, new_pos);
-                    new_reproduce_time = GetGameTime();
-                    break;
+                start_pos[2] += 32.0; // Start slightly above to avoid starting inside geometry
+                end_pos = new_pos;
+                end_pos[2] -= 256.0;   // End far below
+
+                Handle trace = TR_TraceRayEx(start_pos, end_pos, MASK_SOLID_BRUSHONLY, RayType_EndPoint);
+                if (TR_DidHit(trace)) {
+                    float normal[3];
+                    TR_GetPlaneNormal(trace, normal);
+                    // Check if the surface is flat enough (a floor)
+                    if (normal[2] > 0.7) {
+                        TR_GetEndPosition(new_pos, trace);
+                        new_pos[2] += 2.0; // Place it slightly above the ground
+                        createCreepAt(_inst, new_pos); // This now adds to new_creeps
+                        PrintHintText(_inst.client, "%t", "OverlordPerk_Creep_Reproduced");
+                        new_reproduce_time = GetGameTime();
+                        current_creep_count++;
+                        CloseHandle(trace);
+                        break;
+                    }
                 }
+                CloseHandle(trace);
             }
         }
         
+        // Add the original creep to the new list
         new_creeps.WriteCell(creep_entity);
         new_creeps.WriteFloat(creation_time);
         new_creeps.WriteFloat(new_reproduce_time);
@@ -256,8 +287,8 @@ FUNCTION(OverlordPerk, updateCondStats), char[] buffer, int maxlen) {
         }
     }
 
-    delete _inst.creeps;
-    _inst.creeps = new_creeps;
+    delete old_creeps; // The old data is now gone
+    // _inst.creeps still points to new_creeps, which is correct.
 
     // HUD String
     float cooldown_left = _inst.cooldown - GetGameTime();

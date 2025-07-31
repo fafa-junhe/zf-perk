@@ -80,15 +80,19 @@ stock void RemoveZombieVisuals(int client)
 	{
 		TF2Attrib_SetByName(client, "player skin override", 0.0);
 		TF2Attrib_SetByName(client, "zombiezombiezombiezombie", 0.0);
-		TF2Attrib_SetByName(client, "SPELL: Halloween voice modulation", 0.0);
+		TF2Attrib_SetByName(client, "SPELL: Halloween voice modulation", 0.0);			
 		SetEntProp(client, Prop_Send, "m_bForcedSkin", 0);
-		SetEntProp(client, Prop_Send, "m_nForcedSkin", 0);
+		SetEntProp(client, Prop_Send, "m_nForcedSkin", 0);			
 
 		g_bIsCosmeticZombie[client] = false;
+        
+		if (IsPlayerAlive(client)) {
+		    ForcePlayerSuicide(client);
+        }
 	}
 }
 
-stock void ZombieVisuals_OnPlayerInventory(int client)
+stock void ZombieVisuals_OnPlayerInventory(int client) 
 {
 	if(g_bIsCosmeticZombie[client])
 	{

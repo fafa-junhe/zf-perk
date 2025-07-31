@@ -2107,8 +2107,8 @@ public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float
   {
       PrintHintText(attacker, "%t", "ZF_Cripple_Backstab_Success", victim);
       PrintHintText(victim, "%t", "ZF_Cripple_Backstab_Victim", attacker);
-      damage = 90.0;
-      TF2_StunPlayer(victim, 5.0, _, TF_STUNFLAGS_LOSERSTATE, attacker);
+      damage = 40.0;
+      TF2_StunPlayer(victim, 3.0, _, TF_STUNFLAGS_LOSERSTATE, attacker);
       return Plugin_Changed;
   }
   
