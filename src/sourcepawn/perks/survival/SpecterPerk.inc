@@ -16,7 +16,7 @@
 #define SPECTER_PHASE_DURATION 10.0
 #define SPECTER_PHASE_COOLDOWN 20
 
-#define SPECTER_DATA_TIMER     (PERK_DATA_START_INDEX + 0)
+#define SPECTER_DATA_TIMER     (PERK_DATA_START_INDEX + 1)
 
 methodmap SpecterPerk < SurvivorBasePerk
 {
@@ -31,11 +31,12 @@ public     SpecterPerk(int client)
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, SpecterPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, SpecterPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, SpecterPerkFonPlayerSpawn);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_GRACE_END, SpecterPerkFonPlayerSpawn);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, SpecterPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, SpecterPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, SpecterPerkFupdateCondStats);
 
-        sm.Position = view_as<DataPackPos>(SPECTER_DATA_TIMER);
+        sm.Position = DP(SPECTER_DATA_TIMER);
         sm.WriteCell(0);
 
         return sm;
@@ -46,13 +47,13 @@ public     SpecterPerk(int client)
 
 public         get()
         {
-            this.Position = view_as<DataPackPos>(SPECTER_DATA_TIMER);
+            this.Position = DP(SPECTER_DATA_TIMER);
             return this.ReadCell();
         }
 
 public         set(int value)
         {
-            this.Position = view_as<DataPackPos>(SPECTER_DATA_TIMER);
+            this.Position = DP(SPECTER_DATA_TIMER);
             this.WriteCell(value);
         }
     }
@@ -102,7 +103,6 @@ FUNCTION(SpecterPerk, onPeriodic))
     if (GetClientHealth(client) > SPECTER_HEALTH)
     {
         SetEntityHealth(client, SPECTER_HEALTH);
-        _inst.perk_timer = 0;    // Reset cooldown to fix the bug.
     }
 
     if (_inst.perk_timer > 0)

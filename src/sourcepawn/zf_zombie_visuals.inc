@@ -4,6 +4,7 @@
 #define _zf_zombie_visuals_included
 
 #include <tf2attributes>
+#include <tf2_stocks>
 
 #define SPAWN_SOUND "/player/taunt_yeti_roar_first.wav"
 
@@ -44,10 +45,17 @@ public Action Timer_ApplyZombieAttributes(Handle timer, int client)
 		SetEntProp(client, Prop_Send, "m_bForcedSkin", 1);
 
         int skin = 0;
-        // Per user request, BLU team are zombies.
-        // Skin values from original script: 5 for BLU, 23 for BLU spy.
-        skin = (TF2_GetPlayerClass(client) == TFClass_Spy) ? 23 : 5;
-		SetEntProp(client, Prop_Send, "m_nForcedSkin", skin);
+        if (zomTeam() == view_as<int>(TFTeam_Red))
+        {
+            // RED team zombie skins
+            skin = (TF2_GetPlayerClass(client) == TFClass_Spy) ? 22 : 4;
+        }
+        else // BLU team is zombie
+        {
+            // BLU team zombie skins
+            skin = (TF2_GetPlayerClass(client) == TFClass_Spy) ? 23 : 5;
+        }
+  SetEntProp(client, Prop_Send, "m_nForcedSkin", skin);
 	}
 	return Plugin_Handled;	
 }
@@ -76,7 +84,7 @@ stock void ApplyZombieVisuals(int client)
 
 stock void RemoveZombieVisuals(int client)
 {
-	if (validClient(client) && g_bIsCosmeticZombie[client])
+	if (validClient(client))
 	{
 		TF2Attrib_SetByName(client, "player skin override", 0.0);
 		TF2Attrib_SetByName(client, "zombiezombiezombiezombie", 0.0);
@@ -85,10 +93,6 @@ stock void RemoveZombieVisuals(int client)
 		SetEntProp(client, Prop_Send, "m_nForcedSkin", 0);			
 
 		g_bIsCosmeticZombie[client] = false;
-        
-		if (IsPlayerAlive(client)) {
-		    ForcePlayerSuicide(client);
-        }
 	}
 }
 

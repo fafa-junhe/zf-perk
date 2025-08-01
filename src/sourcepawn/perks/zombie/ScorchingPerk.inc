@@ -61,6 +61,7 @@ FUNCTION(ScorchingPerk, getDesc), char[] buffer, int maxlen) {
 
 FUNCTION(ScorchingPerk, updatePermStats)) {
     addStat(_inst.client, ZFStatSpeed, ZFStatTypePerm, ZF_SCORCHING_SPEED);
+    addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, ZF_SCORCHING_ATTACK);
 }
 
 FUNCTION(ScorchingPerk, onPeriodic)) {
@@ -74,11 +75,6 @@ FUNCTION_FLOAT(ScorchingPerk, onTakeDamage), int victim, int attacker, int infli
     // If this perk's owner is the victim and is taking fire damage, grant immunity.
     if (victim == _inst.client && (damagetype & DMG_BURN)) {
         return 0.0;
-    }
-
-    // If this perk's owner is the attacker, apply damage modification.
-    if (attacker == _inst.client) {
-        return damage * (1.0 + float(ZF_SCORCHING_ATTACK) / 100.0);
     }
 
     // Default case: Do not interfere with the damage event.

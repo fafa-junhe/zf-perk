@@ -21,7 +21,7 @@
 #define CHARGER_CHARGE_COOLDOWN   12        // 冲锋冷却时间 (秒)
 #define CHARGER_WALL_DAMAGE       50.0      // 撞墙伤害
 #define CHARGER_STUN_DURATION     3.0       // 撞墙眩晕时间
-#define CHARGER_MAX_DURATION      8.0       // 最大冲锋持续时间
+#define CHARGER_MAX_DURATION      5.0       // 最大冲锋持续时间
 
 // --- Data Slots ---
 #define CHARGER_DATA_TIMER        (PERK_DATA_START_INDEX + 0)    // Cooldown
@@ -231,7 +231,7 @@ FUNCTION(ChargerPerk, onTouch), int toucher, int touchee)
     float fwdd[3];
     GetAngleVectors(ang, fwdd, NULL_VECTOR, NULL_VECTOR);    // 计算面对方向的单位向量
 
-    ScaleVector(fwdd, -40.0);      // 放大为 150 单位距离
+    ScaleVector(fwdd, -80.0);      // 放大为 150 单位距离
     AddVectors(org, fwdd, org);    // 加到原坐标上
 
     TeleportEntity(touchee, org, NULL_VECTOR, NULL_VECTOR);    // 移动 touchee
@@ -260,7 +260,7 @@ FUNCTION(ChargerPerk, onPlayerRunCmd), int buttons, int impulse, float vel[3], f
         float fwdd[3];
         GetAngleVectors(ang, fwdd, NULL_VECTOR, NULL_VECTOR);    // 计算面对方向的单位向量
 
-        ScaleVector(fwdd, -30.0);      // 放大为 -50 单位距离
+        ScaleVector(fwdd, -80.0);      // 放大为 -50 单位距离
         AddVectors(org, fwdd, org);    // 加到原坐标上
 
         TeleportEntity(_inst.victim, org, NULL_VECTOR, NULL_VECTOR);    // 移动 touchee
@@ -273,7 +273,7 @@ FUNCTION(ChargerPerk, onPlayerRunCmd), int buttons, int impulse, float vel[3], f
     float charge_vel[3];
     GetAngleVectors(charge_ang, charge_vel, NULL_VECTOR, NULL_VECTOR);
     ScaleVector(charge_vel, CHARGER_CHARGE_FORCE);
-    charge_vel[2] = 0.0;
+    charge_vel[2] = 150.0;    // Add a slight upward velocity to climb slopes
     TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, charge_vel);
     // --- Wall detection logic ---
     float start_pos[3], end_pos[3], fwd[3];
@@ -285,9 +285,14 @@ FUNCTION(ChargerPerk, onPlayerRunCmd), int buttons, int impulse, float vel[3], f
     end_pos = start_pos;
     ScaleVector(fwd, 45.0);    // Check 45 units ahead
     AddVectors(end_pos, fwd, end_pos);
-    end_pos[2]   = start_pos[2];
 
-    Handle trace = TR_TraceRayFilterEx(start_pos, end_pos, MASK_SOLID, RayType_EndPoint, TraceFilterCharger, client);
+    // We trace a hull instead of a ray to allow for moving on slopes.
+    // The hull is a small box that checks for obstacles in a volume, not just a single point.
+    // Raise the bottom of the hull to avoid hitting the ground on slopes
+    float mins[3] = { -12.0, -12.0, 5.0 };
+    float maxs[3] = { 12.0, 12.0, 40.0 };
+
+    Handle trace = TR_TraceHullFilterEx(start_pos, end_pos, mins, maxs, MASK_SOLID, TraceFilterCharger, client);
     if (TR_DidHit(trace))
     {
         CloseHandle(trace);

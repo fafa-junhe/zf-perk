@@ -11,9 +11,9 @@
 #include "../../zf_util_fx.inc"
 
 #define VOLATILE_ENERGY_STORE_RATIO 0.5 // 储存50%的伤害
-#define VOLATILE_ENERGY_DECAY 5.0      // 每秒衰减5点能量
-#define VOLATILE_MAX_ENERGY 500.0      // 最大能量
-#define VOLATILE_EXPLOSION_RADIUS 300.0
+#define VOLATILE_ENERGY_DECAY 8.0      // 每秒衰减5点能量
+#define VOLATILE_MAX_ENERGY 150.0      // 最大能量
+#define VOLATILE_EXPLOSION_RADIUS 200.0
 #define VOLATILE_SUICIDE_MULTIPLIER 0.5 // 主动引爆的伤害倍率
 
 #define VOLATILE_DATA_ENERGY (PERK_DATA_START_INDEX + 0)
@@ -85,7 +85,7 @@ FUNCTION(VolatilePerk, onDeath), int victim, int killer, int assist, int inflict
             explosion_damage *= VOLATILE_SUICIDE_MULTIPLIER;
         }
 
-        applyDamageRadialAtClient(_inst.client, RoundToNearest(explosion_damage), RoundToNearest(VOLATILE_EXPLOSION_RADIUS), DMG_BLAST);
+        applyDamageRadialAtClient(_inst.client, RoundToNearest(explosion_damage), RoundToNearest(VOLATILE_EXPLOSION_RADIUS), true);
         fxCreateParticle("explosions/explosion_medium.pcf", _inst.client, AttachBase, 2.0);
     }
 }

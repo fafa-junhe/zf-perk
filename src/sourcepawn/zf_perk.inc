@@ -1918,27 +1918,55 @@ public void perk_OnEntitySpawn(int entity)
 
 public Action perk_OnSetTransmit(int entity, int client)
 {
-  // ZF_LogDebug("perk_OnSetTransmit: entity=%d, client=%d", entity, client); // Spammy
-  if (g_hPerks[client] != null) {
-    g_hPerks[client].onSetTransmit(entity, client);
-  }
-  // 1. Check for self-respawn first
-  if (g_hPerks[client] != null)
-  {
-      char perkName[32];
-      g_hPerks[client].getName(perkName, sizeof(perkName));
-      if (StrEqual(perkName, "Friend"))
-      {
-        if(zf_icon[client][ICON_SPR] == entity)
-          return Plugin_Continue;
-      }
-      if (StrEqual(perkName, "Marked"))
-      {
-        if(zf_icon[client][ICON_SPR] == entity)
-          return Plugin_Continue;
-      }
-  }
-  return Plugin_Handled;
+    // ZF_LogDebug("perk_OnSetTransmit: entity=%d, client=%d", entity, client); // Spammy
+
+    // Find the owner of this icon entity
+    int owner = -1;
+    for (int i = 1; i <= MaxClients; i++)
+    {
+        if (g_hPerks[i] != null && zf_icon[i][ICON_SPR] == entity)
+        {
+            owner = i;
+            break;
+        }
+    }
+
+    // If no owner was found, it's not a perk icon, let the game handle it.
+    if (owner == -1)
+    {
+        return Plugin_Continue;
+    }
+
+    // Now we have the owner, apply visibility rules.
+    char perkName[32];
+    g_hPerks[owner].getName(perkName, sizeof(perkName));
+
+    if (StrEqual(perkName, "Friend"))
+    {
+        // Friend icon is visible to the owner and all survivors
+        if (client == owner || isSur(client))
+        {
+            return Plugin_Continue;
+        }
+        return Plugin_Handled; // Hide from others (zombies)
+    }
+    else if (StrEqual(perkName, "Marked"))
+    {
+        // Marked icon is visible to the owner and all zombies
+        if (client == owner || isZom(client))
+        {
+            return Plugin_Continue;
+        }
+        return Plugin_Handled; // Hide from others (survivors)
+    }
+
+    // Default visibility for all other perk icons: only the owner can see it.
+    if (client == owner)
+    {
+        return Plugin_Continue;
+    }
+    
+    return Plugin_Handled;
 }
 
 public Action perk_OnCharitableGiftTouched(int entity, int other)
@@ -2103,12 +2131,12 @@ public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float
   }
 
   // Cripple logic for backstabs
-  if (GetConVarBool(hCvarCripple) && attackWasBackstab(attacker, inflictor, damage))
+  if (GetConVarBool(hCvarCripple) && validZom(attacker) && attackWasBackstab(attacker, inflictor, damage))
   {
       PrintHintText(attacker, "%t", "ZF_Cripple_Backstab_Success", victim);
       PrintHintText(victim, "%t", "ZF_Cripple_Backstab_Victim", attacker);
-      damage = 40.0;
-      TF2_StunPlayer(victim, 3.0, _, TF_STUNFLAGS_LOSERSTATE, attacker);
+      damage = 60.0;
+      TF2_StunPlayer(victim, 5.0, _, TF_STUNFLAGS_LOSERSTATE, attacker);
       return Plugin_Changed;
   }
   
@@ -2210,7 +2238,7 @@ public void perk_OnTakeDamagePost(int victim, int attacker, int inflictor, float
 
 public void perk_OnDealDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype)
 {
-  if (g_hPerks[attacker] != null)
+  if (validClient(attacker) && g_hPerks[attacker] != null)
   {
     g_hPerks[attacker].onDealDamagePost(victim, attacker, inflictor, damage, damagetype);
   }
@@ -2490,7 +2518,7 @@ public void perk_OnPlayerDeath(int victim, int killer, int assist, int inflictor
     
     // 幸存者死亡后会变成僵尸，所以他们的技能对象必须被清除。
     // 僵尸死亡后仍然是僵尸，所以他们的技能对象被保留以便重生。
-    if (isSur(victim))
+    if (isSur(victim) && roundState() == RoundActive)
     {
         if (g_hPerks[victim] != null)
         {
@@ -2578,7 +2606,6 @@ public void perk_OnPlayerDeath(int victim, int killer, int assist, int inflictor
 
 public Action perk_OnCallForMedic(int client)
 {
-
   if(validLivingSur(client))
   {
     if (g_hPerks[client] != null) {

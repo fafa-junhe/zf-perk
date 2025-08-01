@@ -38,7 +38,7 @@
 #define VTABLE_ON_ASSIST_KILL               26
 #define VTABLE_ON_DEAL_DAMAGE_POST          35
 #define VTABLE_ON_KILL                      36
-#define VTABLE_ON_BUILDING_TAKE_DAMAGE_POST 37
+#define VTABLE_ON_BUILDING_TAKE_DAMAGE 37
 
 #define PERK_VTABLE_SIZE                    38
 

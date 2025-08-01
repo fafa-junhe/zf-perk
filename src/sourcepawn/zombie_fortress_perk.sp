@@ -72,7 +72,7 @@ int g_iLastSurvivorPerk[MAXPLAYERS+1];
 //
 // Plugin Information
 //
-#define PLUGIN_VERSION "4.2.0.17"
+#define PLUGIN_VERSION "4.5.0"
 
 public Plugin myinfo =
 {
@@ -127,8 +127,7 @@ Handle zf_cvSwapOnAttdef;
 ////////////////////////////////////////////////////////////
 public void OnPluginStart()
 {
-    ServerCommand("sm_cvar tf_forced_holiday 2");
-    ServerCommand("sm_cvar sv_noclipspeed 2");
+    
     LoadTranslations("common.phrases.txt");
     LoadTranslations("zombie_fortress.phrases.txt");
     // TODO Doesn't register as true at this point. Where else can it be called?
@@ -275,10 +274,7 @@ public void OnMapEnd()
 public void OnPluginEnd()
 {
     // Only perform cleanup if the plugin was active.
-    if (zf_bEnabled)
-    {
-        zfDisable();
-    }
+    zfDisable();
 }
 
 public void OnClientPostAdminCheck(int client)
@@ -306,6 +302,7 @@ public void OnClientDisconnect(int client)
 
     pref_OnClientDisconnect(client);
     perk_OnClientDisconnect(client);
+    g_bIsCosmeticZombie[client] = false;
 
     if (g_hPlayerAimTimer[client] != INVALID_HANDLE)
     {
@@ -326,10 +323,12 @@ public void OnGameFrame()
 public void OnEntityCreated(int entity,
                      const char[] classname)
 {
-    // ZF_LogDebug("OnEntityCreated: entity=%d, classname=%s", entity, classname);
     if (!zf_bEnabled) return;
 
-    perk_OnEntityCreated(entity, classname);
+    if (StrEqual(classname, "obj_sentrygun") || StrEqual(classname, "obj_dispenser") || StrEqual(classname, "obj_teleporter")){
+        PrintToServer("hooked %s %d ", classname, entity);
+        SDKHook(entity, SDKHook_OnTakeDamage, Hook_BuildingOnTakeDamage);
+    }
 }
 
 ////////////////////////////////////////////////////////////
@@ -383,12 +382,11 @@ public void OnTakeDamagePost(int victim, int attacker, int inflictor, float dama
     perk_OnDealDamagePost(victim, attacker, inflictor, damage, damagetype);
 }
 
-public Action Hook_BuildingOnTakeDamagePost ( int iBuilding, int & iAttacker, int & iInflictor, float  & flDamage, int & iDamagetype, int & iWeapon, float flDamageForce [ 3 ] , float vecDamagePosition [ 3 ] , int iDamagecustom )
+public Action Hook_BuildingOnTakeDamage ( int iBuilding, int & iAttacker, int & iInflictor, float  & flDamage, int & iDamagetype, int & iWeapon, float flDamageForce [ 3 ] , float vecDamagePosition [ 3 ] )
 {
-    
     if (validClient(iAttacker) && g_hPerks[iAttacker] != null)
     {
-        g_hPerks[iAttacker].onBuildingTakeDamagePost(iBuilding, iAttacker, iInflictor, flDamage, iDamagetype, iWeapon, flDamageForce, vecDamagePosition, iDamagecustom);
+        g_hPerks[iAttacker].onBuildingTakeDamage(iBuilding, iAttacker, iInflictor, flDamage, iDamagetype, iWeapon, flDamageForce, vecDamagePosition);
     }
     return Plugin_Continue;
 }
@@ -658,13 +656,15 @@ void remove_entity_all(char[] item, bool ammopack)
     {
         PrintToServer("delete entity (%s) %i", item, ent);
         float position[3];
+        float angles[3];
         GetEntPropVector(ent, Prop_Send, "m_vecOrigin", position);
+        GetEntPropVector(ent, Prop_Send, "m_angRotation", angles);
         if (ammopack)
         {
-            SpawnEntity("item_ammopack_small", position);
+            SpawnEntity("item_ammopack_small", position, angles);
         }
         else {
-            SpawnEntity("item_healthkit_small", position);
+            SpawnEntity("item_healthkit_small", position, angles);
         }
         AcceptEntityInput(ent, "Kill");
     }
@@ -678,7 +678,7 @@ void removeEntitiesByClassname(const char[] classname)
     }
 }
 
-void SpawnEntity(char[] entity, float origin[3], float rotation[3] = { 0.0, 0.0, 90.0 })
+void SpawnEntity(char[] entity, float origin[3], float rotation[3] = { 0.0, 0.0, 0.0 })
 {
     int ent = CreateEntityByName(entity);
     if (!IsValidEntity(ent))
@@ -972,13 +972,21 @@ public Action event_PlayerDeath(Handle event,
     // Handle survivor death logic, active round only.
     if (validSur(victim))
     {
-        if (validZom(killer)) zf_spawnSurvivorsKilledCounter--;
+        // Grace period suicide/class change respawn
+        if (roundState() == RoundGrace && (killer == 0 || killer == victim))
+        {
+            CreateTimer(0.1, timer_instantRespawn, victim, TIMER_FLAG_NO_MAPCHANGE);
+        }
+        else
+        {
+            if (validZom(killer)) zf_spawnSurvivorsKilledCounter--;
 
-        g_eLastSurvivorClass[victim] = TF2_GetPlayerClass(victim);
-        g_iLastSurvivorPerk[victim] = prefGet(victim, SurPerk);
+            g_eLastSurvivorClass[victim] = TF2_GetPlayerClass(victim);
+            g_iLastSurvivorPerk[victim] = prefGet(victim, SurPerk);
 
-        // Transfer player to zombie team.
-        CreateTimer(6.0, timer_zombify, victim, TIMER_FLAG_NO_MAPCHANGE);
+            // Transfer player to zombie team.
+            CreateTimer(6.0, timer_zombify, victim, TIMER_FLAG_NO_MAPCHANGE);
+        }
     }
 
     // Handle zombie death logic, active round only.
@@ -1011,10 +1019,10 @@ public Action event_PlayerBuiltObject(Handle event,
         SetEntProp(index, Prop_Send, "m_bDisabled", 1);
         SetEntProp(index, Prop_Send, "m_iMaxHealth", 250);
     }
-    SDKHook(index, SDKHook_OnTakeDamageAlivePost, Hook_BuildingOnTakeDamagePost);
 
     return Plugin_Continue;
 }
+
 
 public void event_post_inventory_application(Handle event, const char[] name, bool dontBroadcast)
 {
@@ -1189,6 +1197,15 @@ public Action timer_zombify(Handle timer, any client)
         spawnClient(client, zomTeam());
     }
 
+    return Plugin_Continue;
+}
+
+public Action timer_instantRespawn(Handle timer, any client)
+{
+    if (validClient(client) && !IsPlayerAlive(client))
+    {
+        TF2_RespawnPlayer(client);
+    }
     return Plugin_Continue;
 }
 
@@ -1480,6 +1497,9 @@ void zfEnable()
     // Adjust gameplay CVars.
     SetConVarInt(FindConVar("mp_autoteambalance"), 0);
     SetConVarInt(FindConVar("mp_teams_unbalance_limit"), 0);
+    SetConVarInt(FindConVar("tf_forced_holiday"), 2);                    // for zombie skin
+    SetConVarInt(FindConVar("sv_noclipspeed"), 2);                       // for phantasm perk
+
     // Engineer
     SetConVarInt(FindConVar("tf_obj_upgrade_per_hit"), 0);
     SetConVarInt(FindConVar("tf_sentrygun_metal_per_shell"), 201);
@@ -1492,7 +1512,6 @@ void zfEnable()
     SetConVarFloat(FindConVar("tf_spy_invis_time"), 0.5);               // Time (in s) between cloak command actual cloak.
     SetConVarFloat(FindConVar("tf_spy_invis_unstealth_time"), 0.75);    // Time (in s) between decloak command and actual decloak.
     SetConVarFloat(FindConVar("tf_spy_cloak_no_attack_time"), 1.0);     // Time (in s) between decloak and first attack.
-
     // [Re]Enable periodic timers.
     if (zf_tMain != INVALID_HANDLE)
         CloseHandle(zf_tMain);
@@ -1523,20 +1542,20 @@ void zfDisable()
     setRoundState(RoundInit2);
 
     // Adjust gameplay CVars.
-    SetConVarInt(FindConVar("mp_autoteambalance"), 1);
-    SetConVarInt(FindConVar("mp_teams_unbalance_limit"), 1);
+    ResetConVar(FindConVar("mp_autoteambalance"));
+    ResetConVar(FindConVar("mp_teams_unbalance_limit"));
     // Engineer
-    SetConVarInt(FindConVar("tf_obj_upgrade_per_hit"), 25);
-    SetConVarInt(FindConVar("tf_sentrygun_metal_per_shell"), 1);
+    ResetConVar(FindConVar("tf_obj_upgrade_per_hit"));
+    ResetConVar(FindConVar("tf_sentrygun_metal_per_shell"));
     // Medic
-    SetConVarInt(FindConVar("weapon_medigun_charge_rate"), 40);
-    SetConVarInt(FindConVar("weapon_medigun_chargerelease_rate"), 8);
-    SetConVarFloat(FindConVar("tf_max_health_boost"), 1.5);
-    SetConVarInt(FindConVar("tf_boost_drain_time"), 15);
+    ResetConVar(FindConVar("weapon_medigun_charge_rate"));
+    ResetConVar(FindConVar("weapon_medigun_chargerelease_rate"));
+    ResetConVar(FindConVar("tf_max_health_boost"));
+    ResetConVar(FindConVar("tf_boost_drain_time"));
     // Spy
-    SetConVarFloat(FindConVar("tf_spy_invis_time"), 1.0);
-    SetConVarFloat(FindConVar("tf_spy_invis_unstealth_time"), 2.0);
-    SetConVarFloat(FindConVar("tf_spy_cloak_no_attack_time"), 2.0);
+    ResetConVar(FindConVar("tf_spy_invis_time"));
+    ResetConVar(FindConVar("tf_spy_invis_unstealth_time"));
+    ResetConVar(FindConVar("tf_spy_cloak_no_attack_time"));
 
     // Disable periodic timers.
     if (zf_tMain != INVALID_HANDLE)
@@ -1840,7 +1859,7 @@ public void panel_PrintHelp(int client)
     Handle panel = CreatePanel();
     char   buffer[128];
 
-    Format(buffer, sizeof(buffer), "%t", "ZF_Menu_Help");
+    Format(buffer, sizeof(buffer), "%t", "ZF_Menu_Help", PLUGIN_VERSION);
     SetPanelTitle(panel, buffer, false);
 
     Format(buffer, sizeof(buffer), "%t", "ZF_Help_Overview");

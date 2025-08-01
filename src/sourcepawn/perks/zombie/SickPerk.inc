@@ -397,6 +397,14 @@ FUNCTION(SickPerk, onGameFrame)) {
             continue; // 投射物已失效
         }
 
+        // --- 修复: 增加实体类型检查 ---
+        // 检查实体类名，确保它仍然是我们期望的投射物，防止因实体索引重用而导致崩溃。
+        char classname[64];
+        GetEdictClassname(projectile, classname, sizeof(classname));
+        if (!StrEqual(classname, "tf_projectile_jar")) {
+            continue; // 实体已不再是投射物，跳过
+        }
+
         GetEntPropVector(projectile, Prop_Send, "m_vecOrigin", current_pos);
 
         // 检查最大距离

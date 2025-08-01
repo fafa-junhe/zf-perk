@@ -98,7 +98,7 @@ FUNCTION(MountaineerPerk, getDesc), char[] buffer, int maxlen)
 
 FUNCTION_FLOAT(MountaineerPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype)
 {
-    if (victim == _inst.client && (damagetype & DMG_FALL))
+    if (victim == _inst.client && damagetype == TF2_DMGTYPE_FALL)
     {
         return 0.0;
     }

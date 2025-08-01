@@ -71,8 +71,8 @@
 	}
 	"ZF_GameDescription"
 	{
-		"en"	"Zombie Fortress (%s)"
-		"chi"	"僵尸要塞 (%s)"
+		"en"	"Zombie Fortress Perk (%s)"
+		"chi"	"僵尸要塞职业版 (%s)"
 	}
 
 	//================================================================================
@@ -86,8 +86,8 @@
 	}
 	"ZF_Menu_Title"
 	{
-		"en"	"ZF Mode Menu"
-		"chi"	"ZF模式菜单"
+		"en"	"Zombie Fortress Perk Remake (Ver %s)"
+		"chi"	"僵尸要塞职业版重制版 (版本 %s)"
 	}
 	"ZF_Menu_SelectSurPerk"
 	{
@@ -1255,13 +1255,13 @@
 	}
 	"ResourcefulPerk_shortdesc"
 	{
-		"en"	"/BUG/ Resourceful - Friends with supplies"
-		"chi"	"/BUG/计划通(Resourceful)——和补给品做朋友"
+		"en"	"Resourceful - Friends with supplies"
+		"chi"	"计划通(Resourceful)——和补给品做朋友"
 	}
 	"ResourcefulPerk_desc"
 	{
-		"en"	"/This perk has a bug, please do not play it/\nEach of your kills will replenish your bullets,\nhealth, and metal. Ammo packs will give you a\ntemporary attack bonus, and medkits will give\nyou a defense bonus.\n"
-		"chi"	"/该职业有漏洞,请勿游玩/\n你的每个击杀都会为你补充子弹、生命值和金属。\n弹药包会给你临时的攻击力加成,\n医疗包则是防御力加成。"
+		"en"	"Each of your kills will replenish your bullets,\nhealth, and metal. Ammo packs will give you a\ntemporary attack bonus, and medkits will give\nyou a defense bonus.\n"
+		"chi"	"你的每个击杀都会为你补充子弹、生命值和金属。\n弹药包会给你临时的攻击力加成,\n医疗包则是防御力加成。"
 	}
 
 	//------------------------------------------------
@@ -1390,13 +1390,13 @@
 	}
 	"StashPerk_shortdesc"
 	{
-		"en"	"/BUG/ Stash - Place a stash"
-		"chi"	"/BUG/仓鼠(Stash)——放置藏身处"
+		"en"	"Stash - Place a stash"
+		"chi"	"仓鼠(Stash)——放置藏身处"
 	}
 	"StashPerk_desc"
 	{
-		"en"	"/This perk has a bug, please do not play it/\nYou can place a stash by crouching and calling\nfor a medic. The stash needs to be far from other\nsurvivors or stashes. The stash will replenish\nyour ammo, health, and provide temporary buffs.\nThe stash lasts for 30 seconds and has a 30-second\ncooldown."
-		"chi"	"/该职业有漏洞,请勿游玩/\n你可以通过蹲下来发医生语音来放置一个藏身处。\n藏身处需要远离其他幸存者或藏身处。\n藏身处会为你补充弹药、生命,并提供临时加成。\n藏身处持续时间30秒,冷却时间30秒。"
+		"en"	"You can place a stash by crouching and calling\nfor a medic. The stash needs to be far from other\nsurvivors or stashes. The stash will replenish\nyour ammo, health, and provide temporary buffs.\nThe stash lasts for 30 seconds and has a 30-second\ncooldown."
+		"chi"	"你可以通过蹲下来发医生语音来放置一个藏身处。\n藏身处需要远离其他幸存者或藏身处。\n藏身处会为你补充弹药、生命,并提供临时加成。\n藏身处持续时间30秒,冷却时间30秒。"
 	}
 	"StashPerk_Hint_Ready"
 	{
@@ -1841,7 +1841,26 @@
 		"en"	"Stone Wall Ready"
 		"chi"	"石墙已准备就绪"
 	}
-
+	"GeomancerPerk_Hint_Crouch"
+	{
+		"en"	"You must crouch to place a stone wall."
+		"chi"	"你必须蹲下才能放置石墙。"
+	}
+	"GeomancerPerk_Hint_Full"
+	{
+		"en"	"You have reached the maximum number of walls!"
+		"chi"	"你建造的石墙已达上限！"
+	}
+	"GeomancerPerk_Hint_NoGround"
+	{
+		"en"	"Cannot place a stone wall: No valid ground found."
+		"chi"	"无法放置石墙：找不到合适的地面。"
+	}
+	"GeomancerPerk_Hint_TooClose"
+	{
+		"en"	"Cannot place a stone wall: Too close to your position."
+		"chi"	"无法放置石墙：离你太近了。"
+	}
 	//------------------------------------------------
 	// Gravity Warper (重力扭曲者)
 	//------------------------------------------------
@@ -2453,13 +2472,13 @@
 	}
 	"VindictivePerk_shortdesc"
 	{
-		"en"	"Damages your killer on death"
-		"chi"	"复仇僵尸(Vindictive)——击杀提高属性"
+		"en"	"Kills and assists grant permanent damage and resistance."
+		"chi"	"击杀与助攻能获得永久性的攻击力和防御力加成。"
 	}
 	"VindictivePerk_desc"
 	{
-		"en"	"Upon death, you deal damage once to your killer."
-		"chi"	"你的击杀与助攻能使你获得永久性的攻击力和防御力加成. \n \n“我想这是死去的智者.” \n推荐职业: 任何"
+		"en"	"Your kills and assists grant you permanent damage and resistance bonuses. 'I guess this is the dead Wise one.' Recommended for: Any."
+		"chi"	"你的击杀与助攻能使你获得永久性的攻击力和防御力加成。\n“我想这是死去的智者。”\n推荐职业: 任何"
 	}
 
 	//------------------------------------------------
@@ -2531,5 +2550,21 @@
 	{
 		"en"    "如果你看到这个插件是英文的，\n请通过服务器的 \"/lang\" 语言选择菜单来切换。"
 		"chi"   "If you see this plugin in Chinese,\n please switch it via the server's \"/lang\" language selection menu."
+	}
+
+	"ToxicPerk_Status_Active"
+	{
+		"en"		"Aura Active"
+		"chi"		"毒性光环已激活"
+	}
+	"ToxicPerk_Status_Charging"
+	{
+		"en"		"Aura charging: %ds"
+		"chi"		"光环充能中: %d秒"
+	}
+	"ToxicPerk_Status_Gone"
+	{
+		"en"		"Move to charge aura"
+		"chi"		"移动以充能光环"
 	}
 }

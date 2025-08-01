@@ -20,7 +20,10 @@
 #include <sdktools_functions>
 
 // Defines from all_perks.md
-#define ZF_VINDICTIVE_DAMAGE 75.0
+#define ZF_VINDICTIVE_KILL_DAMAGE_BONUS 5
+#define ZF_VINDICTIVE_KILL_RESIST_BONUS 3
+#define ZF_VINDICTIVE_ASSIST_DAMAGE_BONUS 2
+#define ZF_VINDICTIVE_ASSIST_RESIST_BONUS 1
 
 methodmap VindictivePerk < ZombieBasePerk {
     public VindictivePerk(int client) {
@@ -30,7 +33,8 @@ methodmap VindictivePerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, VindictivePerkFgetName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, VindictivePerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, VindictivePerkFgetDesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, VindictivePerkFonDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, VindictivePerkFonKill);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_ASSIST_KILL, VindictivePerkFonAssistKill);
 
         return sm;
     }
@@ -52,8 +56,12 @@ FUNCTION(VindictivePerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "VindictivePerk_desc");
 }
 
-FUNCTION(VindictivePerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
-    if (validLivingSur(killer)) {
-        SDKHooks_TakeDamage(killer, _inst.client, _inst.client, ZF_VINDICTIVE_DAMAGE, DMG_BLAST);
-    }
+FUNCTION(VindictivePerk, onKill), int victim, int killer, int assist, int inflictor, int damagetype) {
+    addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, ZF_VINDICTIVE_KILL_DAMAGE_BONUS);
+    addStat(_inst.client, ZFStatDef, ZFStatTypePerm, ZF_VINDICTIVE_KILL_RESIST_BONUS);
+}
+
+FUNCTION(VindictivePerk, onAssistKill), int victim, int killer, int assist, int inflictor, int damagetype) {
+    addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, ZF_VINDICTIVE_ASSIST_DAMAGE_BONUS);
+    addStat(_inst.client, ZFStatDef, ZFStatTypePerm, ZF_VINDICTIVE_ASSIST_RESIST_BONUS);
 }

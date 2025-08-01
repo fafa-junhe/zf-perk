@@ -590,3 +590,408 @@
     *   `perk_tZenlikeAttack` (定时器回调): 玩家的 `zf_perkState` 减少 `ZF_ZENLIKE_CRIT_DEC`，下限为0。
 
 ---
+## 僵尸职业 (Zombie Perks)
+
+共有 `TOTAL_ZOM_PERKS` (18) 个僵尸职业。
+
+---
+
+### 1. 零号僵尸 (Alpha)
+
+*   **ID:** `ZF_PERK_ALPHA` (1)
+*   **介绍:** 零号僵尸(Alpha)——召唤僵尸随从
+*   **详细描述:** 你能通过击杀幸存者或为随从助攻,使得死去的人类成为自己的随从。附近的每个僵尸和随从都能让你获得生命恢复和攻击加成。发医生语音可以召唤最多5个随从到身边,冷却时间15秒。“来自黑暗寒冬的仆人们、士兵们!听从我的召唤!” 推荐职业: 侦察兵、机枪手。
+*   **参数 (Defines):**
+    *   `ZF_ALPHA_RADIUSSQ = (500 * 500);`
+    *   `ZF_ALPHA_ATTACK = 5;`
+    *   `ZF_ALPHA_ATTACK_MINION = 10;`
+    *   `ZF_ALPHA_REGEN = 4;`
+    *   `ZF_ALPHA_REGEN_MINION = 12;`
+    *   `ZF_ALPHA_SUMMON_LIMIT = 5;`
+    *   `ZF_ALPHA_TIMER_MINION = 15;`
+*   **逻辑处理:**
+    *   **状态变量:** `zf_perkAlphaMaster[client]` 存储每个僵尸的“主人”ID。如果一个僵尸的 `zf_perkAlphaMaster` 指向一个零号僵尸，它就是随从。
+    *   **核心功能 (`doAlphaSummon`):**
+        *   遍历所有玩家，找出所有主人是自己的随从 (`zf_perkAlphaMaster[i] == client`)。
+        *   随机选择最多 `ZF_ALPHA_SUMMON_LIMIT` 个随从，将他们传送到自己身边 (`TeleportEntity`)。
+    *   **条件逻辑 (`updateCondStats`):**
+        *   遍历所有僵尸，根据与自己的距离 (`ZF_ALPHA_RADIUSSQ`) 计算加成。
+        *   每个普通僵尸提供 `ZF_ALPHA_ATTACK` 攻击和 `ZF_ALPHA_REGEN` 回复。
+        *   每个随从提供 `ZF_ALPHA_ATTACK_MINION` 攻击和 `ZF_ALPHA_REGEN_MINION` 回复。
+        *   `zf_perkTimer` 用于管理召唤技能的冷却。
+*   **事件处理:**
+    *   `perk_OnPlayerDeath`: 当零号僵尸击杀或助攻击杀幸存者时，该幸存者（复活为僵尸后）的 `zf_perkAlphaMaster` 会被设为该零号僵尸的ID。
+    *   `perk_OnCallForMedic`: 检查冷却等条件后，调用 `doAlphaSummon` 召唤随从，并根据召唤数量设置冷却时间。
+
+---
+
+### 2. 自爆僵尸 (Combustible)
+
+*   **ID:** `ZF_PERK_COMBUSTIBLE` (2)
+*   **介绍:** 自爆僵尸(Combustible)——尸如其名
+*   **详细描述:** 你的防御力大幅降低。被远程武器击杀后,你会爆炸并造成伤害。你不可以使用隐身手表或者原子能饮料。(远程武器包括一切非近战武器)“*将Boomer先推开再攻击*” 推荐职业: 侦察兵、机枪手。
+*   **参数 (Defines):**
+    *   `ZF_COMBUSTIBLE_DAMAGE = 120;`
+    *   `ZF_COMBUSTIBLE_DAMAGE_HEAVY = 200;`
+    *   `ZF_COMBUSTIBLE_DEFEND = -200;`
+    *   `ZF_COMBUSTIBLE_RADIUS = 300;`
+    *   `Float:ZF_COMBUSTIBLE_RESPAWNTIME = 4.5;`
+*   **逻辑处理:**
+    *   **永久属性:** 在 `updateClientPermStats` 中，应用 `ZF_COMBUSTIBLE_DEFEND` 的防御惩罚。
+    *   **条件逻辑 (`updateCondStats`):** 播放微小的爆炸特效 (`fxExplosionTiny`) 来提示该职业。
+*   **事件处理:**
+    *   `OnPlayerRunCmd`: 禁用原子能饮料 (`ZFWEAP_BONK`) 和隐形手表。
+    *   `perk_OnPlayerDeath`:
+        *   如果被幸存者以非近战方式 (`!attackWasMelee`) 击杀，则会爆炸。
+        *   根据职业（是否为机枪手）造成 `ZF_COMBUSTIBLE_DAMAGE` 或 `ZF_COMBUSTIBLE_DAMAGE_HEAVY` 的范围伤害。
+        *   创建一个定时器 `perk_tSpawnClient`，在 `ZF_COMBUSTIBLE_RESPAWNTIME` 秒后强制重生。
+
+---
+
+### 3. 惊吓僵尸 (Horrifying)
+
+*   **ID:** `ZF_PERK_HORRIFYING` (3)
+*   **介绍:** 惊吓僵尸(Horrifying)——攻击削弱人类
+*   **详细描述:** 你的攻击力降低,但你的攻击能降低幸存者的攻击力、防御力和攻击速度。减益效果持续15秒。你死亡后,这个效果也随即消失。“敲骨吸髓。” 推荐职业: 机枪手、间谍。
+*   **参数 (Defines):**
+    *   `HORRIFYING_ATTACK = -20;`
+    *   `HORRIFYING_ATTACK_HEAVY = -30;`
+    *   `HORRIFYING_DEFEND = 0;`
+    *   `HORRIFYING_DEFEND_HEAVY = 0;`
+    *   `HORRIFYING_ROF_HEAVY = -10;`
+    *   `Float:HORRIFYING_PENALTYPCT_KILL = 0.75;`
+    *   `Float:HORRIFYING_PENALTYPCT_ASSIST = 0.25;`
+    *   `HORRIFYING_DURATION = 15;`
+    *   `HORRIFYING_DURATION_HEAVY = 30;`
+*   **逻辑处理:**
+    *   **永久特效:** 在 `updateClientPermEffects` 中，创建蓝色外光环 (`ZFPART_AURAOUTBLU`)。
+*   **事件处理:**
+    *   `perk_OnTakeDamage`: 当该僵尸用近战攻击幸存者时，会通过 `addStatTempStack` 给幸存者施加一个临时的负面状态（降低攻击、防御、攻速），持续 `HORRIFYING_DURATION` 或 `HORRIFYING_DURATION_HEAVY` 秒。
+    *   `perk_OnPlayerDeath`: 当该僵尸被幸存者击杀或助攻击杀时，幸存者身上的负面状态会按 `HORRIFYING_PENALTYPCT_KILL` 或 `HORRIFYING_PENALTYPCT_ASSIST` 的比例减轻 (`scaleStatTempPct`)。
+
+---
+
+### 4. 猎手僵尸 (Hunter)
+
+*   **ID:** `ZF_PERK_HUNTER` (4)
+*   **介绍:** 猎手僵尸(Hunter)——手动放置重生点
+*   **详细描述:** 发医生语音来放置你的重生点。从自己的重生点重生时,你的重生时间较短,并获得临时的攻击加成。每次重生后,你只能放置一次重生点。注意!幸存者可以摧毁你的重生点。“你将成为我的猎物!” 推荐职业: 任何。
+*   **参数 (Defines):**
+    *   `ZF_HUNTER_ATTACK = 50;`
+    *   `ZF_HUNTER_DURATION = 10;`
+    *   `ZF_HUNTER_RADIUSSQ = (85 * 85);`
+    *   `Float:ZF_HUNTER_RESPAWNTIME = 5.5;`
+*   **逻辑处理:**
+    *   **状态变量:**
+        *   `zf_perkState[client]`: 标记本轮是否已放置重生点 (1=已放置)。
+        *   `zf_aura[client]`: 存储重生点光环实体的ID。
+    *   **条件逻辑 (`updateCondStats`):**
+        *   检查是否有幸存者靠近了重生点 (`ZF_HUNTER_RADIUSSQ`)。
+        *   如果有，则移除光环 (`removeAura`)，重生点被破坏。
+*   **事件处理:**
+    *   `perk_OnCallForMedic`:
+        *   检查是否已放置过重生点。
+        *   如果没有，则设置 `zf_perkState` 为1，并调用 `createAura` 在当前位置创建一个光环作为重生点。
+    *   `perk_OnPlayerSpawn`:
+        *   重置 `zf_perkState` 为0。
+        *   如果重生点 (`zf_aura`) 存在，则将玩家传送到重生点位置，并给予 `ZF_HUNTER_ATTACK` 的临时攻击加成，持续 `ZF_HUNTER_DURATION` 秒。
+    *   `perk_OnPlayerDeath`:
+        *   显示重生点光环 (`showAura`)。
+        *   创建一个定时器，在 `ZF_HUNTER_RESPAWNTIME` 秒后强制重生。
+
+---
+
+### 5. 飞跃僵尸 (Leap)
+
+*   **ID:** `ZF_PERK_LEAP` (5)
+*   **介绍:** 飞跃僵尸(Leap)——大跳飞向空中
+*   **详细描述:** 你的攻击力与防御力降低,但不受坠落伤害。发医生语音来施展大跳,冷却时间4秒。“起飞!” 推荐职业: 侦察兵、间谍。
+*   **参数 (Defines):**
+    *   `ZF_LEAP_COMBAT = -20;`
+    *   `ZF_LEAP_COOLDOWN = 4;`
+    *   `Float:ZF_LEAP_FORCE = 900.0;`
+    *   `Float:ZF_LEAP_FORCE_SCOUT = 1500.0;`
+*   **逻辑处理:**
+    *   **永久属性:** 在 `updateClientPermStats` 中，应用 `ZF_LEAP_COMBAT` 的攻击和防御惩罚。
+    *   **条件逻辑 (`updateCondStats`):** `zf_perkTimer` 用于管理飞跃技能的冷却。
+*   **事件处理:**
+    *   `perk_OnTakeDamage`: 免疫坠落伤害 (`attackWasSelfFall`)。
+    *   `perk_OnCallForMedic`:
+        *   检查冷却、是否在地面等条件。
+        *   满足后，设置冷却时间，并调用 `fxJump` 让玩家跳跃。跳跃力度根据是否为侦察兵而不同。
+
+---
+
+### 6. 磁化僵尸 (Magnetic)
+
+*   **ID:** `ZF_PERK_MAGNETIC` (6)
+*   **介绍:** 磁化僵尸(Magnetic)——瘫痪附近建筑
+*   **详细描述:** 你能使附近的步哨和地雷失效。“I will murder your toys as well.” 推荐职业: 任何。
+*   **参数 (Defines):**
+    *   `ZF_MAGNETIC_RADIUSSQ = (500 * 500);`
+*   **逻辑处理:**
+    *   **条件逻辑 (`updateCondStats`):**
+        *   遍历地图上所有的步哨枪 (`obj_sentrygun`)。
+        *   检查是否有磁化僵尸在步哨的 `ZF_MAGNETIC_RADIUSSQ` 范围内。
+        *   如果有，则通过 `SetEntProp` 设置步哨的 `m_bDisabled` 属性为1，使其失效，并播放火花特效。
+        *   如果没有，则设为0，使其恢复正常。
+*   **事件处理:**
+    *   `perk_OnPlayerSpawn`: 为玩家添加 `TF_COND_NO_TARGET` 状态，使步哨不会主动攻击自己。
+    *   `updateCondStats` (在陷阱大师的逻辑中): 磁化僵尸可以使陷阱大师的地雷失效。
+
+---
+
+### 7. 标记僵尸 (Marked)
+
+*   **ID:** `ZF_PERK_MARKED` (7)
+*   **介绍:** 标记僵尸(Marked)——瞄准特定目标
+*   **详细描述:** 系统会随机选择一名幸存者作为你的目标。你对目标能造成极高伤害,但是对其他人造成较低伤害。当前目标死亡后,若剩余的幸存者超过1个,10秒后将自动选择一个新目标。“目标已经标记出来了!” 推荐职业: 侦察兵、机枪手。
+*   **参数 (Defines):**
+    *   `ZF_MARKED_ATTACK_ON_MARK = 200;`
+    *   `ZF_MARKED_ATTACK_OFF_MARK = -10;`
+    *   `ZF_MARKED_MIN_SURVIVORS = 1;`
+    *   `ZF_MARKED_TIMER = 10;`
+*   **逻辑处理:**
+    *   **状态变量:**
+        *   `zf_perkState[client]`: 存储被标记的幸存者ID。0表示正在选择，-1表示无法选择。
+        *   `zf_perkTimer[client]`: 重新选择目标的冷却计时器。
+    *   **核心功能 (`doMarkedSelect`):**
+        *   在存活的幸存者中随机选择一个作为目标。
+        *   设置 `zf_perkState`，并在目标头顶创建图标 (`createIcon`)。
+    *   **条件逻辑 (`updateCondStats`):**
+        *   如果目标死亡，则将 `zf_perkState` 设为0，并启动 `ZF_MARKED_TIMER` 秒的冷却。
+        *   冷却结束后，调用 `doMarkedSelect` 选择新目标。
+*   **事件处理:**
+    *   `perk_OnGraceEnd`: 准备阶段结束后，调用 `doMarkedSelect` 选择第一个目标。
+    *   `perk_OnTakeDamage`:
+        *   当该僵尸攻击幸存者时，检查受害者是否为标记目标 (`zf_perkState[attacker] == victim`)。
+        *   如果是，则获得 `ZF_MARKED_ATTACK_ON_MARK` 的巨额攻击加成。
+        *   如果不是，则受到 `ZF_MARKED_ATTACK_OFF_MARK` 的攻击惩罚。
+
+---
+
+### 8. 狂怒僵尸 (Rage)
+
+*   **ID:** `ZF_PERK_RAGE` (8)
+*   **介绍:** 狂怒僵尸(Rage)——短时间加强属性
+*   **详细描述:** 发医生语音来激活愤怒。愤怒使你获得150%的生命和速度加成。生命低于80%后,已有的愤怒会消失,也无法激活愤怒。冷却时间20秒。“Taaaaaaaaaank!” 推荐职业: 机枪手。
+*   **参数 (Defines):**
+    *   `ZF_RAGE_COOLDOWN = 20;`
+    *   `ZF_RAGE_SPEED = 100;`
+    *   `Float:ZF_RAGE_HEALTHPCT_TOUSE = 0.80;`
+    *   `Float:ZF_RAGE_HEALTHPCT_ONUSE = 0.50;`
+*   **逻辑处理:**
+    *   **状态变量:**
+        *   `zf_perkState[client]`: 标记愤怒状态是否激活 (1=激活)。
+        *   `zf_perkTimer[client]`: 管理技能冷却。
+    *   **条件逻辑 (`updateCondStats`):**
+        *   如果愤怒已激活，检查生命值百分比是否低于 `ZF_RAGE_HEALTHPCT_TOUSE`。
+        *   如果低于，则愤怒状态结束，移除光环。
+        *   如果未激活，`zf_perkTimer` 每秒递减。
+*   **事件处理:**
+    *   `perk_OnCallForMedic`:
+        *   检查冷却和生命值百分比是否高于 `ZF_RAGE_HEALTHPCT_TOUSE`。
+        *   满足后，激活愤怒，设置冷却，增加 `ZF_RAGE_HEALTHPCT_ONUSE` 的生命值，并获得 `ZF_RAGE_SPEED` 速度加成和特效。
+
+---
+
+### 9. 咆哮僵尸 (Roar)
+
+*   **ID:** `ZF_PERK_ROAR` (9)
+*   **介绍:** 咆哮僵尸(Roar)——咆哮击退幸存者
+*   **详细描述:** 发医生语音来激活咆哮。咆哮造成击退效果并暂时降低幸存者防御力,冷却时间15秒。“哈!” 推荐职业: 任何。
+*   **参数 (Defines):**
+    *   `ZF_ROAR_COOLDOWN = 15;`
+    *   `ZF_ROAR_DURATION = 20;`
+    *   `ZF_ROAR_DURATION_HEAVY = 60;`
+    *   `Float:ZF_ROAR_FORCE = 1200.0;`
+    *   `Float:ZF_ROAR_FORCE_HEAVY = 3000.0;`
+    *   `ZF_ROAR_RADIUS = 450;`
+*   **逻辑处理:**
+    *   **条件逻辑 (`updateCondStats`):** `zf_perkTimer` 用于管理技能冷却。
+*   **事件处理:**
+    *   `perk_OnCallForMedic`:
+        *   检查冷却、是否在地面等条件。
+        *   满足后，设置冷却，并以自己为中心造成一次范围伤害 (`applyDamageRadialAtClient`)。这个伤害本身很小，主要目的是为了触发 `perk_OnTakeDamage`。
+    *   `perk_OnTakeDamage`:
+        *   当幸存者受到上述范围伤害时 (`attackWasEnvExplosion`)，会根据距离和攻击者职业，受到不同力度的击退 (`fxKnockback`)。
+        *   同时，幸存者会获得一个持续 `ZF_ROAR_DURATION` 或 `ZF_ROAR_DURATION_HEAVY` 秒的 `ZFCondIntimidated` 状态，该状态会降低其防御力。
+
+---
+
+### 10. 火焰僵尸 (Scorching)
+
+*   **ID:** `ZF_PERK_SCORCHING` (10)
+*   **介绍:** 火焰僵尸(Scorching)——烧死他们!
+*   **详细描述:** 你的攻击力降低,但获得速度加成,并免疫火焰伤害。幸存者撞到你或被你近战击中时会着火。你不可以使用原子能饮料。“孙哥我火了!” 推荐职业: 侦察兵。
+*   **参数 (Defines):**
+    *   `ZF_SCORCHING_ATTACK = -50;`
+    *   `ZF_SCORCHING_SPEED = 50;`
+*   **逻辑处理:**
+    *   **永久属性:** 在 `updateClientPermStats` 中，应用 `ZF_SCORCHING_SPEED` 速度加成。
+    *   **条件逻辑 (`updateCondStats`):** 如果不在水中，则持续点燃自己 (`TF2_IgnitePlayer`)。
+*   **事件处理:**
+    *   `OnPlayerRunCmd`: 禁用原子能饮料。
+    *   `perk_OnTakeDamage`:
+        *   免疫火焰伤害 (`attackWasFire`)。
+        *   近战攻击时，点燃目标，并受到 `ZF_SCORCHING_ATTACK` 的攻击惩罚。
+    *   `perk_OnTouch`: 当接触到幸存者时，如果自己处于着火状态，则点燃对方。
+
+---
+
+### 11. 吐酸僵尸 (Sick)
+
+*   **ID:** `ZF_PERK_SICK` (11)
+*   **介绍:** 吐酸僵尸(Sick)——吐出有害的酸液
+*   **详细描述:** 你的防御力大幅降低,但可以发医生语音来吐出酸液。酸液会持续35秒或直到你死亡。酸液造成的伤害与你和酸液之间的距离成正比。“*古怪的嚎叫声*” 推荐职业: 侦察兵。
+*   **参数 (Defines):**
+    *   `ZF_SICK_MAX_ITEMS = 5;`
+    *   `ZF_SICK_DEFEND = -75;`
+    *   `ZF_SICK_DAMAGE = 15;`
+    *   `ZF_SICK_DAMAGE_RADIUS = 150;`
+    *   `ZF_SICK_TIMER = 15;`
+*   **逻辑处理:**
+    *   **永久属性:** 在 `updateClientPermStats` 中，应用 `ZF_SICK_DEFEND` 防御惩罚。
+    *   **条件逻辑 (`updateCondStats`):**
+        *   `zf_perkTimer` 用于管理酸液持续时间。时间到后，移除所有酸液 (`removeItems`)。
+        *   遍历所有酸液池 (`zf_item`)，对 `ZF_SICK_DAMAGE_RADIUS` 范围内的幸存者造成 `ZF_SICK_DAMAGE` 的伤害。
+    *   **核心功能 (`perk_tSickSpit`):**
+        *   这是一个定时器回调，用于连续吐出酸液。
+        *   调用 `doItemThrow` 扔出一个酸液弹。
+    *   **弹道逻辑 (`perk_OnGameFrame`):**
+        *   检查酸液弹是否与地形碰撞 (`doItemCollide`)。
+        *   碰撞后，移除弹体，并在碰撞点生成一个酸液池 (`doItemImpact`)。
+*   **事件处理:**
+    *   `perk_OnCallForMedic`:
+        *   检查冷却等条件。
+        *   满足后，设置计时器，并创建多个 `perk_tSickSpit` 定时器来连续吐出酸液弹。
+
+---
+
+### 12. 招魂僵尸 (Swarming)
+
+*   **ID:** `ZF_PERK_SWARMING` (12)
+*   **介绍:** 招魂僵尸(Swarming)——快速复活僵尸
+*   **详细描述:** 你有移速加成,但你的攻击和防御力降低。你能使自己与身边的队友快速重生。“嘿!速生不是投票关掉了吗?” 推荐职业: 侦察兵。
+*   **参数 (Defines):**
+    *   `ZF_SWARMING_COMBAT = -20;`
+    *   `ZF_SWARMING_RADIUSSQ = (400 * 400);`
+    *   `ZF_SWARMING_SPEED = 50;`
+    *   `Float:ZF_SWARMING_RESPAWNTIME = 0.5;`
+*   **逻辑处理:**
+    *   **永久属性:** 在 `updateClientPermStats` 中，应用 `ZF_SWARMING_COMBAT` 的攻防惩罚和 `ZF_SWARMING_SPEED` 的速度加成。
+    *   **永久特效:** 在 `updateClientPermEffects` 中，创建苍蝇光环 (`ZFPART_AURAFLIES`)。
+*   **事件处理:**
+    *   `perk_OnPlayerDeath`:
+        *   **自己死亡:** 创建一个定时器，在 `ZF_SWARMING_RESPAWNTIME` 秒后强制重生。
+        *   **队友死亡:** 如果有队友在该僵尸的 `ZF_SWARMING_RADIUSSQ` 范围内死亡，也会为该队友创建一个快速重生定时器。
+
+---
+
+### 13. 吐油僵尸 (Tarred)
+
+*   **ID:** `ZF_PERK_TARRED` (13)
+*   **介绍:** 吐油僵尸(Tarred)——吐出减速的焦油
+*   **详细描述:** 发医生语音来吐出焦油。焦油能降低幸存者的移动速度与攻击速度,持续30秒或直到你死亡。你的近战攻击附带焦油效果。“*古怪的嚎叫声*” 推荐职业: 侦察兵。
+*   **参数 (Defines):**
+    *   `ZF_TARRED_MAX_ITEMS = 5;`
+    *   `ZF_TARRED_DURATION_MELEE = 10;`
+    *   `ZF_TARRED_DURATION_SLICK = 30;`
+    *   `ZF_TARRED_ROF = -20;`
+    *   `ZF_TARRED_SPEED_MELEE = -40;`
+    *   `ZF_TARRED_SPEED_SLICK = -30;`
+    *   `ZF_TARRED_SPEED_LIMIT = -100;`
+    *   `ZF_TARRED_TIMER = 30;`
+    *   `ZF_TARRED_RADIUS = 75;`
+*   **逻辑处理:**
+    *   与吐酸僵尸类似，但效果是减速。
+    *   **条件逻辑 (`updateCondStats`):**
+        *   `zf_perkTimer` 管理焦油持续时间。
+        *   焦油池对范围内的幸存者造成极低伤害，以触发 `perk_OnTakeDamage`。
+        *   玩家模型会被染黑 (`fxSetClientColor`)。
+*   **事件处理:**
+    *   `perk_OnTakeDamage`:
+        *   **近战攻击:** 当该僵尸近战攻击幸存者时，通过 `addStatTempStack` 施加 `ZF_TARRED_SPEED_MELEE` 的减速效果。
+        *   **焦油池:** 当幸存者踩到焦油池时，施加 `ZF_TARRED_SPEED_SLICK` 的减速效果。
+    *   `perk_OnCallForMedic`: 类似吐酸僵尸，吐出焦油弹。
+
+---
+
+### 14. 潜行僵尸 (Thieving)
+
+*   **ID:** `ZF_PERK_THIEVING` (14)
+*   **介绍:** 潜行僵尸(Thieving)——偷走人类的弹药和武器
+*   **详细描述:** 你的攻击力降低,但你的近战攻击可以偷取幸存者的弹药、金属与uber。如果对方的主武器没有后备弹药,你就可以偷走并使用自己的有部分弹药的主武器。(请确保自己装备的主武器在白名单内,不然无法获得.)“这可比拳头好使多了!” 推荐职业: 任何。
+*   **参数 (Defines):**
+    *   `Float:ZF_THIEVING_AMMOPCT = 0.30;`
+    *   `ZF_THIEVING_ATTACK = -66;`
+    *   `ZF_THIEVING_METAL = 100;`
+    *   `Float:ZF_THIEVING_UBERPCT = 0.50;`
+*   **逻辑处理:**
+    *   **永久属性:** 在 `updateClientPermStats` 中，应用 `ZF_THIEVING_ATTACK` 攻击惩罚。
+    *   **核心功能 (`doThievingSteal`, `doThievingLimit`):**
+        *   `doThievingSteal`: 移除受害者的武器 (`stripWeaponSlot`)，并为攻击者重新生成武器并给予少量弹药。
+        *   `doThievingLimit`: 限制偷来的武器的弹药量，弹药用完后武器消失 (`stripWeaponSlot`)。
+    *   **游戏循环 (`perk_OnGameFrame`):** 持续调用 `doThievingLimit` 检查并限制弹药。
+*   **事件处理:**
+    *   `perk_OnTakeDamage`:
+        *   当该僵尸近战攻击幸存者时，根据幸存者当前手持的武器槽位，偷取不同资源：
+            *   主武器槽：偷取 `ZF_THIEVING_AMMOPCT` 的备用弹药。如果备弹为0，则调用 `doThievingSteal` 偷走武器。
+            *   副武器槽：偷取 `ZF_THIEVING_UBERPCT` 的Uber和备弹。
+            *   近战槽：偷取 `ZF_THIEVING_METAL` 的金属。
+
+---
+
+### 15. 剧毒僵尸 (Toxic)
+
+*   **ID:** `ZF_PERK_TOXIC` (15)
+*   **介绍:** 剧毒僵尸(Toxic)——攻击附带剧毒
+*   **详细描述:** 直接攻击时,你的攻击力大幅降低。但当你近战击中幸存者或被近战攻击时,目标将会中毒,受到剧毒伤害,持续12秒。当你保持不动时, 能对附近的幸存者持续造成伤害。“记住这个职业:Toxic.” 推荐职业: 侦察兵、间谍。
+*   **参数 (Defines):**
+    *   `ZF_TOXIC_ATTACK = -90;`
+    *   `ZF_TOXIC_DURATION_POISON = 10;`
+    *   `ZF_TOXIC_DAMAGE_PASSIVE = 5;`
+    *   `ZF_TOXIC_RADIUSSQ = (400 * 400);`
+*   **逻辑处理:**
+    *   **永久属性:** 在 `updateClientPermStats` 中，应用 `ZF_TOXIC_ATTACK` 攻击惩罚。
+    *   **条件逻辑 (`updateCondStats`):**
+        *   如果僵尸不动 (`isNotMoving`) 且未隐身，则对 `ZF_TOXIC_RADIUSSQ` 范围内的幸存者造成 `ZF_TOXIC_DAMAGE_PASSIVE` 的毒性伤害 (`SDKHooks_TakeDamage`)。
+        *   玩家模型会被染绿 (`fxSetClientColor`)。
+*   **事件处理:**
+    *   `perk_OnTakeDamage`:
+        *   **攻击幸存者:** 当该僵尸近战攻击幸存者时，给予幸存者 `ZF_TOXIC_DURATION_POISON` 秒的 `ZFCondPoisoned` 状态。
+        *   **被幸存者攻击:** 当该僵尸被幸存者近战攻击时，同样给予攻击者中毒状态。
+
+---
+
+### 16. 吸血僵尸 (Vampiric)
+
+*   **ID:** `ZF_PERK_VAMPIRIC` (16)
+*   **介绍:** 吸血僵尸(Vampiric)——攻击大量回血
+*   **详细描述:** 你有生命值回复加成。你的攻击附带吸血效果。“不靠近你,怎么把你给揍扁呢.” 推荐职业: 侦察兵、机枪手。
+*   **参数 (Defines):**
+    *   `Float:ZF_VAMPIRIC_HEALTHPCT = 1.00;` // Percent of damage leeched when hit.
+    *   `ZF_VAMPIRIC_REGEN = 15;` // Regeneration bonus when using perk.
+*   **逻辑处理:**
+    *   **条件逻辑 (`updateCondStats`):** 每秒回复 `ZF_VAMPIRIC_REGEN` 的生命值。
+*   **事件处理:**
+    *   `perk_OnTakeDamagePost`: 当该僵尸用近战攻击对幸存者造成伤害后，会回复 `伤害值 * ZF_VAMPIRIC_HEALTHPCT` 的生命值。
+
+---
+
+### 17. 复仇僵尸 (Vindictive)
+
+*   **ID:** `ZF_PERK_VINDICTIVE` (17)
+*   **介绍:** 复仇僵尸(Vindictive)——击杀提高属性
+*   **详细描述:** 你的击杀与助攻能使你获得永久性的攻击力和防御力加成。“我想这是死去的智者.” 推荐职业: 任何。
+*   **参数 (Defines):**
+    *   `ZF_VINDICTIVE_ATTACK = 20;`
+    *   `ZF_VINDICTIVE_ATTACK_ASSIST = 10;`
+    *   `ZF_VINDICTIVE_DEFEND = 10;`
+    *   `ZF_VINDICTIVE_DEFEND_ASSIST = 5;`
+*   **逻辑处理:**
+    *   与幸存者的“智者”职业类似，完全由事件驱动，修改永久属性。
+*   **事件处理:**
+    *   `perk_OnPlayerDeath`:
+        *   当该僵尸击杀幸存者时，通过 `addStat` 增加 `ZF_VINDICTIVE_ATTACK` 的永久攻击和 `ZF_VINDICTIVE_DEFEND` 的永久防御。
+        *   助攻同理，增加 `ZF_VINDICTIVE_ATTACK_ASSIST` 和 `ZF_VINDICTIVE_DEFEND_ASSIST`。

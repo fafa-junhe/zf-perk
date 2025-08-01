@@ -173,8 +173,8 @@
 #define FUNCTION(%1,%2) public void %1F%2(%1 _inst
 #define FUNCTION_FLOAT(%1,%2) public float %1F%2(%1 _inst
 
-#define PERK_IMPL_onBuildingTakeDamagePost(%0,%1,%2,%3,%4,%5,%6,%7,%8) \
-    START_VTABLE_CALL(VTABLE_ON_BUILDING_TAKE_DAMAGE_POST); \
+#define PERK_IMPL_onBuildingTakeDamage(%0,%1,%2,%3,%4,%5,%6,%7) \
+    START_VTABLE_CALL(VTABLE_ON_BUILDING_TAKE_DAMAGE); \
     Call_PushCell(%0); \
     Call_PushCell(%1); \
     Call_PushCell(%2); \
@@ -183,5 +183,4 @@
     Call_PushCell(%5); \
     Call_PushArray(%6, sizeof(%6)); \
     Call_PushArray(%7, sizeof(%7)); \
-    Call_PushCell(%8); \
     Call_Finish()

@@ -241,7 +241,7 @@ stock void utilFxPrecache()
   PrecacheModel("models/props_junk/garbage_milkcarton002a.mdl", true);
   PrecacheModel("models/props_fortifications/fort_blocker_64.mdl", true);
   PrecacheModel("models/props_halloween/hwn_flask_vial.mdl", true);
-  PrecacheModel("models/props_mining/rock001.mdl", true);
+  PrecacheModel("models/props_mining/rock005.mdl", true);
   for(int i = 0; i < 1; i++)
     PrecacheModel(ZFMDL_TOTEM[i], true);
   for(int i = 0; i < 1; i++)    

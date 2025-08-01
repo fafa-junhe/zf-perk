@@ -36,6 +36,7 @@ public     TrapperPerk(int client)
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, TrapperPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, TrapperPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, TrapperPerkFonDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, TrapperPerkFonPeriodic);
 
         return sm;
     }
@@ -146,7 +147,7 @@ public bool TraceFilter_JustWorld(int entity, int contentsMask)
 FUNCTION(TrapperPerk, onPeriodic))
 {
     int client = _inst.client;
-    if (zf_perkTimer[client] > 0 && zf_perkTimer[client] == 0)
+    if (zf_perkTimer[client] > 0)
     {
         zf_perkTimer[client]--;
     }

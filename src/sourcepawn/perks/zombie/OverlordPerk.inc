@@ -12,8 +12,8 @@
 #include <sdkhooks>
 
 // --- Defines ---
-#define OVERLORD_DEFEND 75      // 极高生命值 (通过防御模拟)
-#define OVERLORD_SPEED -40      // 移动速度非常慢
+#define OVERLORD_DEFEND 25      // 极高生命值 (通过防御模拟)
+#define OVERLORD_SPEED -50      // 移动速度非常慢
 #define OVERLORD_COOLDOWN 30.0  // 冷却时间
 #define OVERLORD_MAX_CREEPS 8   // 最多8个菌毯
 #define OVERLORD_CREEP_HEALTH 400 // 菌毯生命值
