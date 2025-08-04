@@ -10,7 +10,7 @@
 #include "../../zf_util_base.inc"
 #include "../../zf_util_fx.inc"
 
-#define ALCHEMIST_POTION_GEN_TIME  40
+#define ALCHEMIST_POTION_GEN_TIME  25
 #define ALCHEMIST_MAX_POTIONS      3
 #define ALCHEMIST_AOE_DURATION     7.0
 #define ALCHEMIST_AOE_RADIUS       180.0
@@ -18,7 +18,7 @@
 #define ALCHEMIST_ALLY_HEAL        5
 #define ALCHEMIST_ALLY_SPEED_BONUS 20
 #define ALCHEMIST_ZOMBIE_SLOW      -30
-#define ALCHEMIST_ZOMBIE_DAMAGE    5.0
+#define ALCHEMIST_ZOMBIE_DAMAGE    10.0
 #define ALCHEMIST_POTION_MODEL     "models/props_halloween/hwn_flask_vial.mdl"
 
 // Data slots
@@ -91,7 +91,7 @@ FUNCTION(AlchemistPerk, getDesc), char[] buffer, int maxlen)
 FUNCTION(AlchemistPerk, onPlayerSpawn))
 {
     int client           = _inst.client;
-    zf_perkState[client] = 0;                            // Potion count
+    zf_perkState[client] = 1;                            // Start with 1 potion
     zf_perkTimer[client] = ALCHEMIST_POTION_GEN_TIME;    // Time to next potion
     // Clean up any existing puddles from this player
     AlchemistPerkFonRemove(_inst);
@@ -115,6 +115,50 @@ FUNCTION(AlchemistPerk, onPeriodic))
             zf_perkState[client]++;
             zf_perkTimer[client] = ALCHEMIST_POTION_GEN_TIME;
             PrintHintText(client, "%t", "AlchemistPerk_Hint_PotionReady", zf_perkState[client]);
+        }
+    }
+    
+    // --- Puddle effect logic (Existing) ---
+    for (int i = 0; i < ALCHEMIST_MAX_PUDDLES; i++)
+    {
+        int puddle = zf_item[client][i];
+        if (IsValidEntity(puddle))
+        {
+            if (!HasEntProp(puddle, Prop_Data, "m_ModelName"))
+            {
+                zf_item[client][i] = -1;
+                continue;
+            }
+            char model_name[PLATFORM_MAX_PATH];
+            GetEntPropString(puddle, Prop_Data, "m_ModelName", model_name, sizeof(model_name));
+            if (strcmp(model_name, ALCHEMIST_POTION_MODEL) != 0)
+            {
+                zf_item[client][i] = -1;
+                continue;
+            }
+
+            float puddle_pos[3];
+            GetEntPropVector(puddle, Prop_Send, "m_vecOrigin", puddle_pos);
+
+            for (int p = 1; p <= MaxClients; p++)
+            {
+                if (!IsClientInGame(p) || !IsPlayerAlive(p)) continue;
+
+                float player_pos[3];
+                GetClientAbsOrigin(p, player_pos);
+
+                if (GetVectorDistance(player_pos, puddle_pos, true) < ALCHEMIST_AOE_RADIUS_SQ)
+                {
+                    if (validSur(p))
+                    {
+                        addStat(p, ZFStatSpeed, ZFStatTypeCond, ALCHEMIST_ALLY_SPEED_BONUS);
+                    }
+                    else if (validZom(p)) {
+                        SDKHooks_TakeDamage(p, client, client, 1.0);
+                        addStat(p, ZFStatSpeed, ZFStatTypeCond, ALCHEMIST_ZOMBIE_SLOW);
+                    }
+                }
+            }
         }
     }
 }
@@ -158,8 +202,6 @@ FUNCTION(AlchemistPerk, onCallForMedic))
 
 FUNCTION(AlchemistPerk, onGameFrame))
 {
-    int      client      = _inst.client;
-
     // --- Projectile collision logic (New) ---
     DataPack projectiles = _inst.projectiles;
     if (projectiles != null && projectiles != INVALID_HANDLE)
@@ -205,50 +247,6 @@ FUNCTION(AlchemistPerk, onGameFrame))
         _inst.projectiles = new_projectiles;
     }
 
-    // --- Puddle effect logic (Existing) ---
-    for (int i = 0; i < ALCHEMIST_MAX_PUDDLES; i++)
-    {
-        int puddle = zf_item[client][i];
-        if (IsValidEntity(puddle))
-        {
-            if (!HasEntProp(puddle, Prop_Data, "m_ModelName"))
-            {
-                zf_item[client][i] = -1;
-                continue;
-            }
-            char model_name[PLATFORM_MAX_PATH];
-            GetEntPropString(puddle, Prop_Data, "m_ModelName", model_name, sizeof(model_name));
-            if (strcmp(model_name, ALCHEMIST_POTION_MODEL) != 0)
-            {
-                zf_item[client][i] = -1;
-                continue;
-            }
-
-            float puddle_pos[3];
-            GetEntPropVector(puddle, Prop_Send, "m_vecOrigin", puddle_pos);
-
-            for (int p = 1; p <= MaxClients; p++)
-            {
-                if (!IsClientInGame(p) || !IsPlayerAlive(p)) continue;
-
-                float player_pos[3];
-                GetClientAbsOrigin(p, player_pos);
-
-                if (GetVectorDistance(player_pos, puddle_pos, true) < ALCHEMIST_AOE_RADIUS_SQ)
-                {
-                    if (validSur(p))
-                    {
-                        addStat(p, ZFStatSpeed, ZFStatTypeCond, ALCHEMIST_ALLY_SPEED_BONUS);
-                    }
-                    else if (validZom(p)) {
-                        if (GetRandomInt(0, 30) > 27)
-                            SDKHooks_TakeDamage(p, client, client, 1.0);
-                        addStat(p, ZFStatSpeed, ZFStatTypeCond, ALCHEMIST_ZOMBIE_SLOW);
-                    }
-                }
-            }
-        }
-    }
 }
 
 FUNCTION(AlchemistPerk, updateCondStats), char[] buffer, int maxlen)

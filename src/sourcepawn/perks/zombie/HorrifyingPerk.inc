@@ -17,15 +17,13 @@
 #include "../../perk_macros.inc"
 
 // Defines from all_perks.md
-#define HORRIFYING_ATTACK -20
-#define HORRIFYING_ATTACK_HEAVY -30
-#define HORRIFYING_DEFEND 0
-#define HORRIFYING_DEFEND_HEAVY 0
-#define HORRIFYING_ROF_HEAVY -10
-#define HORRIFYING_PENALTYPCT_KILL 0.75
-#define HORRIFYING_PENALTYPCT_ASSIST 0.25
-#define HORRIFYING_DURATION 15
-#define HORRIFYING_DURATION_HEAVY 30
+#define HORRIFYING_ATTACK -8
+#define HORRIFYING_ATTACK_HEAVY -8
+#define HORRIFYING_DEFEND -15
+#define HORRIFYING_DEFEND_HEAVY -15
+#define HORRIFYING_DURATION 10
+#define HORRIFYING_DURATION_HEAVY 20
+#define HORRIFYING_ROF -25
 
 methodmap HorrifyingPerk < ZombieBasePerk {
     public HorrifyingPerk(int client) {
@@ -37,7 +35,6 @@ methodmap HorrifyingPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, HorrifyingPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, HorrifyingPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE_POST, HorrifyingPerkFonTakeDamagePost);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, HorrifyingPerkFonDeath);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, HorrifyingPerkFonRemove);
 
         return sm;
@@ -62,6 +59,7 @@ FUNCTION(HorrifyingPerk, getDesc), char[] buffer, int maxlen) {
 
 FUNCTION(HorrifyingPerk, updateClientPermStats)) {
     addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, HORRIFYING_ATTACK);
+    addStat(_inst.client, ZFStatRof, ZFStatTypePerm, HORRIFYING_ROF);
     createAura(_inst.client, ZFPART_AURAOUTBLU, AttachBase);
 }
 
@@ -85,22 +83,10 @@ FUNCTION(HorrifyingPerk, onTakeDamagePost), int victim, int attacker, int inflic
     int defend_debuff = isHeavyAttacker ? HORRIFYING_DEFEND_HEAVY : HORRIFYING_DEFEND;
     
     addStatTempStack(victim, ZFStatAtt, attack_debuff, duration);
-    addStatTempStack(victim, ZFStatDef, defend_debuff, duration);
+    addStatTempStack(victim, ZFStatDef, attack_debuff, duration);
 
-    if (isHeavyAttacker) {
-        addStatTempStack(victim, ZFStatRof, HORRIFYING_ROF_HEAVY, duration);
-    }
-}
+    addStatTempStack(victim, ZFStatSpeed, defend_debuff, duration);
+    addStatTempStack(victim, ZFStatCrit, defend_debuff, duration);
+    TF2_StunPlayer(victim, 0.3, 0.0, TF_STUNFLAGS_GHOSTSCARE, attacker);
 
-FUNCTION(HorrifyingPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
-    // When the horrifying zombie dies, remove the debuffs from ALL survivors.
-    for (int i = 1; i <= MaxClients; i++) {
-        if (validSur(i)) {
-            // Reset the temporary stats applied by this perk.
-            // We use scaleStatTempPct with a 0.0 multiplier to effectively clear them.
-            scaleStatTempPct(i, ZFStatAtt, 0.0);
-            scaleStatTempPct(i, ZFStatDef, 0.0);
-            scaleStatTempPct(i, ZFStatRof, 0.0);
-        }
-    }
 }

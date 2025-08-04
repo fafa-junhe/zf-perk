@@ -1,6 +1,6 @@
 
 #if defined __CowardlyPerk_included
-#endinput
+    #endinput
 #endif
 #define __CowardlyPerk_included
 
@@ -15,17 +15,20 @@
 #include "../../perk_vtable.inc"
 #include "../../perk_macros.inc"
 
-#define ZF_COWARDLY_DEFEND 50
-#define ZF_COWARDLY_SPEED 200
-#define ZF_COWARDLY_DURATION_SCARED 5
-#define ZF_COWARDLY_DURATION_COOLDOWN 30
+#define ZF_COWARDLY_DEFEND            50
+#define ZF_COWARDLY_SPEED             200
+#define ZF_COWARDLY_DURATION_SCARED   5
+#define ZF_COWARDLY_DURATION_COOLDOWN 20
 
-#define COWARDLY_DATA_TIMER (PERK_DATA_START_INDEX + 0)
+#define COWARDLY_DATA_TIMER           (PERK_DATA_START_INDEX + 0)
 
-methodmap CowardlyPerk < SurvivorBasePerk {
-    public CowardlyPerk(int client) {
+methodmap CowardlyPerk < SurvivorBasePerk
+{
+
+public     CowardlyPerk(int client)
+    {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
-        CowardlyPerk sm = view_as<CowardlyPerk>(sm_base);
+        CowardlyPerk     sm      = view_as<CowardlyPerk>(sm_base);
 
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, CowardlyPerkFgetName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, CowardlyPerkFgetShortdesc);
@@ -39,66 +42,88 @@ methodmap CowardlyPerk < SurvivorBasePerk {
         return sm;
     }
 
-    property int perk_timer {
-        public get() {
+    property int perk_timer
+    {
+
+public         get()
+        {
             this.Position = view_as<DataPackPos>(COWARDLY_DATA_TIMER);
             return this.ReadCell();
         }
-        public set(int value) {
+
+public         set(int value)
+        {
             this.Position = view_as<DataPackPos>(COWARDLY_DATA_TIMER);
             this.WriteCell(value);
         }
     }
 }
 
-stock SurvivorBasePerk CowardlyPerkFnew(int client) {
+stock SurvivorBasePerk CowardlyPerkFnew(int client)
+{
     return new CowardlyPerk(client);
 }
 
-
-FUNCTION(CowardlyPerk, getName), char[] buffer, int maxlen) {
+FUNCTION(CowardlyPerk, getName), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "Cowardly");
 }
 
-FUNCTION(CowardlyPerk, getShortdesc), char[] buffer, int maxlen) {
+FUNCTION(CowardlyPerk, getShortdesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "CowardlyPerk_shortdesc");
 }
 
-FUNCTION(CowardlyPerk, getDesc), char[] buffer, int maxlen) {
+FUNCTION(CowardlyPerk, getDesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "CowardlyPerk_desc");
 }
 
-FUNCTION_FLOAT(CowardlyPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype) {
-    if ((_inst.client != victim)) {
+FUNCTION_FLOAT(CowardlyPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype)
+{
+    if ((_inst.client != victim))
+    {
         return damage;
     }
-    if (((_inst.perk_timer == 0)) && (validClient(attacker)) && (validZom(attacker))) {
-        if ((damagetype & (1 << 3))) {
+    if (((_inst.perk_timer == 0)) && (validClient(attacker)) && (validZom(attacker)))
+    {
+        if ((damagetype & (1 << 3)))
+        {
             _inst.perk_timer = (ZF_COWARDLY_DURATION_SCARED + ZF_COWARDLY_DURATION_COOLDOWN);
             fxCreateSoundToClient("player/vo/yikes.wav", _inst.client);
-PrintHintText(_inst.client, "%t", "CowardlyPerk_Hint_Panicked");            return 0.0;
+            PrintHintText(_inst.client, "%t", "CowardlyPerk_Hint_Panicked");
+            return 0.0;
         }
     }
     return damage;
 }
 
-FUNCTION(CowardlyPerk, onPeriodic)) {
-    if ((_inst.perk_timer > 0)) {
+FUNCTION(CowardlyPerk, onPeriodic))
+{
+    if ((_inst.perk_timer > 0))
+    {
         _inst.perk_timer -= 1;
-        if ((_inst.perk_timer == ZF_COWARDLY_DURATION_COOLDOWN)) {
-PrintHintText(_inst.client, "%t", "CowardlyPerk_Hint_WornOff");        }
+        if ((_inst.perk_timer == ZF_COWARDLY_DURATION_COOLDOWN))
+        {
+            PrintHintText(_inst.client, "%t", "CowardlyPerk_Hint_WornOff");
+        }
         else {
-            if ((_inst.perk_timer == 0)) {
-PrintHintText(_inst.client, "%t", "CowardlyPerk_Hint_Ready");            }
+            if ((_inst.perk_timer == 0))
+            {
+                PrintHintText(_inst.client, "%t", "CowardlyPerk_Hint_Ready");
+            }
         }
     }
 }
 
-FUNCTION(CowardlyPerk, updateCondStats), char[] buffer, int maxlen) {
-    if ((_inst.perk_timer > ZF_COWARDLY_DURATION_COOLDOWN)) {
+FUNCTION(CowardlyPerk, updateCondStats), char[] buffer, int maxlen)
+{
+    if ((_inst.perk_timer > ZF_COWARDLY_DURATION_COOLDOWN))
+    {
         addStat(_inst.client, ZFStatDef, ZFStatTypeCond, ZF_COWARDLY_DEFEND);
         addStat(_inst.client, ZFStatSpeed, ZFStatTypeCond, ZF_COWARDLY_SPEED);
-    } else if (_inst.perk_timer == 0) {
-Format(buffer, maxlen, "%t", "CowardlyPerk_Status_Ready");    }
+    }
+    else if (_inst.perk_timer == 0) {
+        Format(buffer, maxlen, "%t", "CowardlyPerk_Status_Ready");
+    }
 }
-

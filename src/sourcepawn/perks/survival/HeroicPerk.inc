@@ -12,7 +12,8 @@
 #pragma newdecls required
 
 // --- Constants
-#define HEROIC_COMBAT                 15
+#define HEROIC_ATTACK_BONUS           10
+#define HEROIC_DEFENSE_BONUS          10
 #define HEROIC_CRITTIME_INIT          30
 #define HEROIC_CRITTIME_KILL          3
 #define HEROIC_CRITTIME_KILL_ACTIVE   0
@@ -31,7 +32,7 @@ public     HeroicPerk(int client)
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, HeroicPerkFgetName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, HeroicPerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, HeroicPerkFgetDesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, HeroicPerkFonPlayerSpawn);
+        PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, HeroicPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, HeroicPerkFonKill);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_ASSIST_KILL, HeroicPerkFonAssistKill);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, HeroicPerkFupdateCondStats);
@@ -60,12 +61,12 @@ FUNCTION(HeroicPerk, getDesc), char[] buffer, int maxlen)
     strcopy(buffer, maxlen, "HeroicPerk_desc");
 }
 
-FUNCTION(HeroicPerk, onPlayerSpawn), int client)
+FUNCTION(HeroicPerk, updateClientPermStats))
 {
-    if (client != _inst.client) return;
+    int client = _inst.client;
 
-    addStat(client, ZFStatAtt, ZFStatTypePerm, HEROIC_COMBAT);
-    addStat(client, ZFStatDef, ZFStatTypePerm, HEROIC_COMBAT);
+    addStat(client, ZFStatAtt, ZFStatTypePerm, HEROIC_ATTACK_BONUS);
+    addStat(client, ZFStatDef, ZFStatTypePerm, HEROIC_DEFENSE_BONUS);
     zf_perkTimer[client] = HEROIC_CRITTIME_INIT;
     zf_perkState[client] = 0;
 }

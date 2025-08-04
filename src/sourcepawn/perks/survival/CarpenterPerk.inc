@@ -1,5 +1,5 @@
 #if defined __CarpenterPerk_included
-#endinput
+    #endinput
 #endif
 #define __CarpenterPerk_included
 
@@ -13,20 +13,23 @@
 #include "../../zf_perk.inc"
 #include "../../zf_util_base.inc"
 #include "../../zf_util_fx.inc"
-#define CARPENTER_ATTACK -40
-#define CARPENTER_DEFEND 25
-#define CARPENTER_BARRICADE_HEALTH 500
-#define CARPENTER_COOLDOWN 25
-#define CARPENTER_MAX_ITEMS 4
+#define CARPENTER_ATTACK               -40
+#define CARPENTER_DEFEND               25
+#define CARPENTER_BARRICADE_HEALTH     500
+#define CARPENTER_COOLDOWN             25
+#define CARPENTER_MAX_ITEMS            4
 #define CARPENTER_DROP_RADSQ_BARRICADE (250 * 250)
-#define CARPENTER_DROP_RADSQ_CLIENT (150 * 150)
+#define CARPENTER_DROP_RADSQ_CLIENT    (150 * 150)
 
-float g_fCarpenterCooldown[MAXPLAYERS+1];
- 
-methodmap CarpenterPerk < SurvivorBasePerk {
-    public CarpenterPerk(int client) {
+float     g_fCarpenterCooldown[MAXPLAYERS + 1];
+
+methodmap CarpenterPerk < SurvivorBasePerk
+{
+
+public     CarpenterPerk(int client)
+    {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
-        CarpenterPerk sm = view_as<CarpenterPerk>(sm_base);
+        CarpenterPerk    sm      = view_as<CarpenterPerk>(sm_base);
 
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, CarpenterPerkFgetName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, CarpenterPerkFgetShortdesc);
@@ -39,40 +42,55 @@ methodmap CarpenterPerk < SurvivorBasePerk {
     }
 }
 
-stock SurvivorBasePerk CarpenterPerkFnew(int client) {
+stock SurvivorBasePerk CarpenterPerkFnew(int client)
+{
     return new CarpenterPerk(client);
 }
 
-FUNCTION(CarpenterPerk, getName), char[] buffer, int maxlen) {
+FUNCTION(CarpenterPerk, getName), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "Carpenter");
 }
 
-FUNCTION(CarpenterPerk, getShortdesc), char[] buffer, int maxlen) {
+FUNCTION(CarpenterPerk, getShortdesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "CarpenterPerk_shortdesc");
 }
 
-FUNCTION(CarpenterPerk, getDesc), char[] buffer, int maxlen) {
+FUNCTION(CarpenterPerk, getDesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "CarpenterPerk_desc");
 }
 
-FUNCTION(CarpenterPerk, updateClientPermStats)) {
+FUNCTION(CarpenterPerk, updateClientPermStats))
+{
     addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, CARPENTER_ATTACK);
     addStat(_inst.client, ZFStatDef, ZFStatTypePerm, CARPENTER_DEFEND);
 }
 
-FUNCTION(CarpenterPerk, updateCondStats), char[] buffer, int maxlen) {
-    int client = _inst.client;
+FUNCTION(CarpenterPerk, updateCondStats), char[] buffer, int maxlen)
+{
+    int client    = _inst.client;
     int time_left = RoundFloat(g_fCarpenterCooldown[client] - GetGameTime());
 
-    if (time_left > 0) {
-Format(buffer, maxlen, "%t", "CarpenterPerk_Status_Cooldown", time_left);    } else {
-        if (getFreeItemIndex(client, CARPENTER_MAX_ITEMS) == -1) {
-Format(buffer, maxlen, "%t", "CarpenterPerk_Status_Full");        } else {
-Format(buffer, maxlen, "%t", "CarpenterPerk_Status_Ready");        }
+    if (time_left > 0)
+    {
+        Format(buffer, maxlen, "%t", "CarpenterPerk_Status_Cooldown", time_left);
+    }
+    else {
+        if (getFreeItemIndex(client, CARPENTER_MAX_ITEMS) == -1)
+        {
+            Format(buffer, maxlen, "%t", "CarpenterPerk_Status_Full");
+        }
+        else {
+            Format(buffer, maxlen, "%t", "CarpenterPerk_Status_Ready");
+        }
     }
 }
-stock bool isCarpenter(int client) {
-    if (!validClient(client) || g_hPerks[client] == null) {
+stock bool isCarpenter(int client)
+{
+    if (!validClient(client) || g_hPerks[client] == null)
+    {
         return false;
     }
     char perkName[32];
@@ -80,35 +98,44 @@ stock bool isCarpenter(int client) {
     return StrEqual(perkName, "Carpenter");
 }
 // vvvvvvvvvvvvvvvvvv MODIFIED LOGIC BELOW vvvvvvvvvvvvvvvvvv
-FUNCTION(CarpenterPerk, onCallForMedic)) {
+FUNCTION(CarpenterPerk, onCallForMedic))
+{
     int client = _inst.client;
-
 
     if (g_fCarpenterCooldown[client] > GetGameTime())
         return;
 
-    if (!isGrounded(client)) {
-PrintHintText(client, "%t", "CarpenterPerk_Hint_NotGrounded");        return;
+    if (!isGrounded(client))
+    {
+        PrintHintText(client, "%t", "CarpenterPerk_Hint_NotGrounded");
+        return;
     }
 
-    if (!isCrouching(client)) {
-PrintHintText(client, "%t", "CarpenterPerk_Hint_NotCrouching");        return;
+    if (!isCrouching(client))
+    {
+        PrintHintText(client, "%t", "CarpenterPerk_Hint_NotCrouching");
+        return;
     }
 
-    bool clientsNearby = false;
-    bool barricadesNearby = false;
+    bool  clientsNearby    = false;
+    bool  barricadesNearby = false;
     float clientPos[3], otherPos[3];
 
     GetClientAbsOrigin(client, clientPos);
 
-    for (int i = 1; i <= MaxClients; i++) {
+    for (int i = 1; i <= MaxClients; i++)
+    {
         if (!IsClientInGame(i) || !IsPlayerAlive(i)) continue;
 
         // 检查障碍物
-        if (isSur(i) && isCarpenter(i)) {
-            for (int j = 0; j < CARPENTER_MAX_ITEMS; j++) {
-                if (validItem(i, j)) {
-                    if (GetVectorDistance(clientPos, zf_perkPos[i][j], true) <= CARPENTER_DROP_RADSQ_BARRICADE) {
+        if (isSur(i) && isCarpenter(i))
+        {
+            for (int j = 0; j < CARPENTER_MAX_ITEMS; j++)
+            {
+                if (validItem(i, j))
+                {
+                    if (GetVectorDistance(clientPos, zf_perkPos[i][j], true) <= CARPENTER_DROP_RADSQ_BARRICADE)
+                    {
                         barricadesNearby = true;
                         break;
                     }
@@ -120,19 +147,24 @@ PrintHintText(client, "%t", "CarpenterPerk_Hint_NotCrouching");        return;
         // 检查玩家
         if (i == client) continue;
         GetClientAbsOrigin(i, otherPos);
-        if (GetVectorDistance(clientPos, otherPos, true) <= CARPENTER_DROP_RADSQ_CLIENT) {
+        if (GetVectorDistance(clientPos, otherPos, true) <= CARPENTER_DROP_RADSQ_CLIENT)
+        {
             clientsNearby = true;
             break;
         }
     }
 
-    if (clientsNearby) {
-PrintHintText(client, "%t", "CarpenterPerk_Hint_PlayersNearby");        return;
+    if (clientsNearby)
+    {
+        PrintHintText(client, "%t", "CarpenterPerk_Hint_PlayersNearby");
+        return;
     }
 
-    if (barricadesNearby) {
-PrintHintText(client, "%t", "CarpenterPerk_Hint_BarricadesNearby");        return;
-    }
+    // if (barricadesNearby)
+    // {
+    //     PrintHintText(client, "%t", "CarpenterPerk_Hint_BarricadesNearby");
+    //     return;
+    // }
 
     int itemIndex = getFreeItemIndex(client, CARPENTER_MAX_ITEMS);
     if (itemIndex < 0)
@@ -144,30 +176,30 @@ PrintHintText(client, "%t", "CarpenterPerk_Hint_BarricadesNearby");        retur
 
     // 生成障碍物并记录位置
     float physPos[3];
-    zf_item[client][itemIndex] = doCarpenterBuild(client, physPos);
+    zf_item[client][itemIndex]    = doCarpenterBuild(client, physPos);
     zf_perkPos[client][itemIndex] = physPos;
 
     setItemMetadata(zf_item[client][itemIndex], CARPENTER_BARRICADE_HEALTH);
     SDKHook(zf_item[client][itemIndex], SDKHook_OnTakeDamage, perk_OnFenceTakeDamage);
 }
-stock doCarpenterBuild(client, Float:physPos[3])
+stock doCarpenterBuild(int client, float physPos[3])
 {
-    decl Float:pos[3];
-    decl Float:ang[3];
-    decl Float:vecFwd[3];
-    decl Float:vecRgt[3];
+    float pos[3];
+    float ang[3];
+    float vecFwd[3];
+    float vecRgt[3];
     GetClientAbsOrigin(client, pos);
     GetClientAbsAngles(client, ang);
 
     // Move item in front of client.
     GetAngleVectors(ang, vecFwd, vecRgt, NULL_VECTOR);
     ScaleVector(vecFwd, 45.0);
-    ScaleVector(vecRgt, -30.0);           // Adjust for ZFMDL_FENCE
-    AddVectors(pos, vecFwd, pos);         // Adjust for ZFMDL_FENCE
-    AddVectors(pos, vecRgt, pos);         // Adjust for ZFMDL_FENCE
+    ScaleVector(vecRgt, -30.0);      // Adjust for ZFMDL_FENCE
+    AddVectors(pos, vecFwd, pos);    // Adjust for ZFMDL_FENCE
+    AddVectors(pos, vecRgt, pos);    // Adjust for ZFMDL_FENCE
     pos[2] += 120.0;
-    ang[0] += GetRandomFloat(-4.0, 4.0);  // Adjust for ZFMDL_FENCE
-    ang[1] += GetRandomFloat(85.0, 95.0); // Adjust for ZFMDL_FENCE
+    ang[0] += GetRandomFloat(-4.0, 4.0);     // Adjust for ZFMDL_FENCE
+    ang[1] += GetRandomFloat(85.0, 95.0);    // Adjust for ZFMDL_FENCE
 
     // Calculate physical position (used for distance calculations)
     physPos[0] = pos[0];
@@ -176,7 +208,7 @@ stock doCarpenterBuild(client, Float:physPos[3])
     SubtractVectors(physPos, vecRgt, physPos);
 
     // Barricade build effects
-    new Float:off[3] = {0.0,...};
+    float off[3] = { 0.0, ... };
     AddVectors(off, vecFwd, off);
     fxCreateParticle(ZFPART_PUFFBIG, client, AttachNone, 4.0, off);
 
@@ -192,7 +224,7 @@ stock doCarpenterBuild(client, Float:physPos[3])
     SubtractVectors(vecFwd, vecRgt, off);
     fxCreateParticle(ZFPART_PUFFBIG, client, AttachNone, 4.0, off);
 
-    fxCreateSoundToAll(ZFSND_WOOD_HIT[GetRandomInt(0,1)], client);
+    fxCreateSoundToAll(ZFSND_WOOD_HIT[GetRandomInt(0, 1)], client);
 
     // Build solid item in front of client.
     return fxCreateModelStatic(ZFMDL_FENCE, client, false, true, pos, ang);

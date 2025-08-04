@@ -77,16 +77,12 @@ FUNCTION_FLOAT(VolatilePerk, onTakeDamage), int victim, int attacker, int inflic
 }
 
 FUNCTION(VolatilePerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
-    if (victim == _inst.client && _inst.energy > 0) {
-        float explosion_damage = _inst.energy; // Default to full damage
-
-        // If the player killed themselves (either via 'E' or other means), halve the damage.
-        if (killer == victim) {
-            explosion_damage *= VOLATILE_SUICIDE_MULTIPLIER;
-        }
+    // Only explode if the player killed themselves (via 'E' key or suicide command)
+    if (victim == _inst.client && killer == victim && _inst.energy > 0) {
+        float explosion_damage = _inst.energy * VOLATILE_SUICIDE_MULTIPLIER;
 
         applyDamageRadialAtClient(_inst.client, RoundToNearest(explosion_damage), RoundToNearest(VOLATILE_EXPLOSION_RADIUS), true);
-        fxCreateParticle("explosions/explosion_medium.pcf", _inst.client, AttachBase, 2.0);
+        fxCreateParticle("rocket_explosion_classic_crit_red", _inst.client, AttachNone, 2.0);
     }
 }
 

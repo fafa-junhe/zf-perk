@@ -15,13 +15,14 @@
 
 // --- Constants ---
 #define CHARGER_DEF_BONUS         25        // 防御力加成
-#define CHARGER_ATT_PENALTY       -15       // 攻击力惩罚
+#define CHARGER_ATT_PENALTY       -20       // 攻击力惩罚
 #define CHARGER_SPEED_PENALTY     -20       // 移速惩罚
 #define CHARGER_CHARGE_FORCE      1000.0    // 冲锋力量
-#define CHARGER_CHARGE_COOLDOWN   12        // 冲锋冷却时间 (秒)
-#define CHARGER_WALL_DAMAGE       50.0      // 撞墙伤害
-#define CHARGER_STUN_DURATION     3.0       // 撞墙眩晕时间
+#define CHARGER_CHARGE_COOLDOWN   30        // 冲锋冷却时间 (秒)
+#define CHARGER_WALL_DAMAGE       80.0      // 撞墙伤害
+#define CHARGER_STUN_DURATION     2.0       // 撞墙眩晕时间
 #define CHARGER_MAX_DURATION      5.0       // 最大冲锋持续时间
+#define CHARGER_AIR_CHARGE_FORCE  500.0     // 空中冲刺速度
 
 // --- Data Slots ---
 #define CHARGER_DATA_TIMER        (PERK_DATA_START_INDEX + 0)    // Cooldown
@@ -47,6 +48,7 @@ public     ChargerPerk(int client)
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, ChargerPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TOUCH, ChargerPerkFonTouch);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_RUN_CMD, ChargerPerkFonPlayerRunCmd);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, ChargerPerkFonPlayerSpawn);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, ChargerPerkFonDeath);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, ChargerPerkFonRemove);
         PERK_REGISTER_VTABLE(sm, VTABLE_DO_CHARGE_END, ChargerPerkFdoChargeEnd);
@@ -272,7 +274,14 @@ FUNCTION(ChargerPerk, onPlayerRunCmd), int buttons, int impulse, float vel[3], f
 
     float charge_vel[3];
     GetAngleVectors(charge_ang, charge_vel, NULL_VECTOR, NULL_VECTOR);
-    ScaleVector(charge_vel, CHARGER_CHARGE_FORCE);
+
+    float charge_force = CHARGER_CHARGE_FORCE;
+    if (!(GetEntityFlags(client) & FL_ONGROUND))
+    {
+        charge_force = CHARGER_AIR_CHARGE_FORCE;
+    }
+    ScaleVector(charge_vel, charge_force);
+
     charge_vel[2] = 150.0;    // Add a slight upward velocity to climb slopes
     TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, charge_vel);
     // --- Wall detection logic ---
@@ -353,6 +362,17 @@ FUNCTION(ChargerPerk, onRemove))
     }
 }
 
+FUNCTION(ChargerPerk, onPlayerSpawn))
+{
+    // If the player died mid-charge and onDeath didn't clean up, do it now.
+    if (_inst.perk_state != 0)
+    {
+        _inst.doChargeEnd(false);
+    }
+    // Reset cooldown for the new life.
+    _inst.perk_timer = 0;
+}
+
 FUNCTION(ChargerPerk, doChargeEnd), bool hitWall)
 {
     int client = _inst.client;
@@ -375,16 +395,41 @@ FUNCTION(ChargerPerk, doChargeEnd), bool hitWall)
         // Restore collision and state
         AcceptEntityInput(victim, "ClearParent");
         SetEntityMoveType(victim, MOVETYPE_WALK);
-        TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, zero_vel);
         TF2_RemoveCondition(victim, TFCond_Dazed);
 
         if (hitWall)
         {
+            // --- NEW LOGIC TO PREVENT STICKING ---
+            float charger_pos[3], charger_ang[3], fwd[3], safe_pos[3];
+            GetClientAbsOrigin(client, charger_pos);
+            GetClientEyeAngles(client, charger_ang);
+            GetAngleVectors(charger_ang, fwd, NULL_VECTOR, NULL_VECTOR);
+
+            // Calculate a position behind the charger
+            fwd[2] = 0.0;    // Horizontal pushback
+            NormalizeVector(fwd, fwd);
+            ScaleVector(fwd, -64.0);    // Push back 64 units from charger's front
+            AddVectors(charger_pos, fwd, safe_pos);
+
+            // Find the nearest clear spot for the victim's hull
+            float hull_min[3] = { -16.0, -16.0, 0.0 };
+            float hull_max[3] = { 16.0, 16.0, 72.0 };
+            TR_TraceHull(safe_pos, safe_pos, hull_min, hull_max, MASK_PLAYERSOLID);
+            if (TR_DidHit())
+            {
+                TR_GetEndPosition(safe_pos);
+            }
+
+            TeleportEntity(victim, safe_pos, NULL_VECTOR, zero_vel);
+            // --- END NEW LOGIC ---
+
             PrintHintText(victim, "%t", "ChargerPerk_Hint_WallHitVictim");
             SDKHooks_TakeDamage(victim, client, client, CHARGER_WALL_DAMAGE, DMG_CRUSH);
             TF2_StunPlayer(victim, CHARGER_STUN_DURATION, 0.0, TF_STUNFLAGS_BIGBONK, client);
         }
-        else {
+        else
+        {
+            TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, zero_vel);
             PrintHintText(victim, "%t", "ChargerPerk_Hint_Released");
         }
     }

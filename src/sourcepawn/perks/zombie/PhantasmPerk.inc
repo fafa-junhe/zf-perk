@@ -17,7 +17,7 @@
 #define ZF_PHANTASM_ATTACK_PENALTY -25
 #define ZF_PHANTASM_WALK_DURATION 1.0
 #define ZF_PHANTASM_STUN_DURATION 2.0
-#define ZF_PHANTASM_COOLDOWN 12.0
+#define ZF_PHANTASM_COOLDOWN 17.0
 #define ZF_PHANTASM_STUCK_DAMAGE 10
 
 // --- Data Slots ---
@@ -99,6 +99,12 @@ FUNCTION(PhantasmPerk, updateClientPermStats)) {
 
 FUNCTION(PhantasmPerk, onCallForMedic)) {
     int client = _inst.client;
+
+    if (roundState() == RoundGrace) {
+        PrintHintText(client, "%t", "Ability_Cannot_Use_Grace");
+        return;
+    }
+
     if (_inst.cooldown <= 0.0) {
         _inst.cooldown = ZF_PHANTASM_COOLDOWN;
         _inst.walk_timer = GetGameTime() + ZF_PHANTASM_WALK_DURATION;
@@ -111,6 +117,8 @@ FUNCTION(PhantasmPerk, onCallForMedic)) {
         SetEntProp(client, Prop_Send, "m_fFlags", GetEntProp(client, Prop_Send, "m_fFlags") | FL_FROZEN);
 
         PrintHintText(client, "%t", "PhantasmPerk_Enter_Void_Walk");
+    } else {
+        PrintHintText(client, "%t", "Ability_On_Cooldown", RoundToNearest(_inst.cooldown));
     }
 }
 

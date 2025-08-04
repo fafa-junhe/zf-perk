@@ -20,10 +20,14 @@
 #include <sdktools_functions>
 
 // Defines from all_perks.md
-#define ZF_VINDICTIVE_KILL_DAMAGE_BONUS 5
-#define ZF_VINDICTIVE_KILL_RESIST_BONUS 3
-#define ZF_VINDICTIVE_ASSIST_DAMAGE_BONUS 2
-#define ZF_VINDICTIVE_ASSIST_RESIST_BONUS 1
+#define ZF_VINDICTIVE_KILL_DAMAGE_BONUS 10
+#define ZF_VINDICTIVE_KILL_RESIST_BONUS 10
+#define ZF_VINDICTIVE_ASSIST_DAMAGE_BONUS 5
+#define ZF_VINDICTIVE_ASSIST_RESIST_BONUS 5
+#define ZF_VINDICTIVE_KILL_SPEED_BONUS 10
+#define ZF_VINDICTIVE_KILL_CRIT_BONUS 10
+#define ZF_VINDICTIVE_ASSIST_SPEED_BONUS 5
+#define ZF_VINDICTIVE_ASSIST_CRIT_BONUS 5
 
 methodmap VindictivePerk < ZombieBasePerk {
     public VindictivePerk(int client) {
@@ -59,9 +63,13 @@ FUNCTION(VindictivePerk, getDesc), char[] buffer, int maxlen) {
 FUNCTION(VindictivePerk, onKill), int victim, int killer, int assist, int inflictor, int damagetype) {
     addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, ZF_VINDICTIVE_KILL_DAMAGE_BONUS);
     addStat(_inst.client, ZFStatDef, ZFStatTypePerm, ZF_VINDICTIVE_KILL_RESIST_BONUS);
+    addStat(_inst.client, ZFStatSpeed, ZFStatTypePerm, ZF_VINDICTIVE_KILL_SPEED_BONUS);
+    addStat(_inst.client, ZFStatCrit, ZFStatTypePerm, ZF_VINDICTIVE_KILL_CRIT_BONUS);
 }
 
 FUNCTION(VindictivePerk, onAssistKill), int victim, int killer, int assist, int inflictor, int damagetype) {
     addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, ZF_VINDICTIVE_ASSIST_DAMAGE_BONUS);
     addStat(_inst.client, ZFStatDef, ZFStatTypePerm, ZF_VINDICTIVE_ASSIST_RESIST_BONUS);
+    addStat(_inst.client, ZFStatSpeed, ZFStatTypePerm, ZF_VINDICTIVE_ASSIST_SPEED_BONUS);
+    addStat(_inst.client, ZFStatCrit, ZFStatTypePerm, ZF_VINDICTIVE_ASSIST_CRIT_BONUS);
 }

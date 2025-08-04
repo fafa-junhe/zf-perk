@@ -14,10 +14,12 @@
 #include "../../perk_vtable.inc"
 #include "../../perk_macros.inc"
 
-#define ZF_WISE_ATTACK_KILL 1
-#define ZF_WISE_ATTACK_ASSIST 0
+#define ZF_WISE_ATTACK_KILL 3
+#define ZF_WISE_ATTACK_ASSIST 2
 #define ZF_WISE_DEFEND 1
 #define ZF_WISE_DEFEND_LIMIT 20
+#define ZF_WISE_ATTACK_DEBUFF -10
+#define ZF_WISE_DEFEND_DEBUFF -10
 
 methodmap WisePerk < SurvivorBasePerk {
     public WisePerk(int client) {
@@ -27,6 +29,7 @@ methodmap WisePerk < SurvivorBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, WisePerkFgetName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, WisePerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, WisePerkFgetDesc);
+        PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, WisePerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, WisePerkFonTakeDamage);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, WisePerkFonKill);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_ASSIST_KILL, WisePerkFonAssistKill);
@@ -49,6 +52,11 @@ FUNCTION(WisePerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(WisePerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "WisePerk_desc");
+}
+
+FUNCTION(WisePerk, updateClientPermStats)) {
+    addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, ZF_WISE_ATTACK_DEBUFF);
+    addStat(_inst.client, ZFStatDef, ZFStatTypePerm, ZF_WISE_DEFEND_DEBUFF);
 }
 
 FUNCTION_FLOAT(WisePerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype) {

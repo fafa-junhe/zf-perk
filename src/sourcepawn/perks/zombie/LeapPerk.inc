@@ -21,9 +21,9 @@
 
 // Defines from all_perks.md
 #define ZF_LEAP_COMBAT      -20
-#define ZF_LEAP_COOLDOWN    4
-#define ZF_LEAP_FORCE       900.0
-#define ZF_LEAP_FORCE_SCOUT 1500.0
+#define ZF_LEAP_COOLDOWN    15
+#define ZF_LEAP_FORCE       1300.0
+#define ZF_LEAP_FORCE_SCOUT 1900.0
 
 // Data slots
 #define LEAP_DATA_TIMER     (PERK_DATA_START_INDEX + 0)
@@ -44,6 +44,7 @@ public     LeapPerk(int client)
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, LeapPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, LeapPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, LeapPerkFupdateCondStats);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, LeapPerkFonPlayerSpawn);
 
         // Initialize data
         sm.Position = view_as<DataPackPos>(LEAP_DATA_TIMER);
@@ -140,6 +141,7 @@ FUNCTION(LeapPerk, onCallForMedic))
     // 5. 将这个力应用到玩家身上
     // 注意：这不是与当前速度相加，而是直接设置一个新速度，效果更明显
     TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, leap_velocity);
+    fxCreateSoundToAll(ZFSND_PUSHBACK, client)
 
     _inst.perk_timer = ZF_LEAP_COOLDOWN;
 }
@@ -161,4 +163,10 @@ FUNCTION(LeapPerk, updateCondStats), char[] buffer, int maxlen)
     else {
         Format(buffer, maxlen, "%t", "LeapPerk_Status_Ready");
     }
+}
+
+FUNCTION(LeapPerk, onPlayerSpawn))
+{
+    // Reset cooldown on new life
+    _inst.perk_timer = 0;
 }

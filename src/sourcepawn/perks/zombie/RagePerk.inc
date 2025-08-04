@@ -22,8 +22,9 @@
 // Defines from all_perks.md
 #define ZF_RAGE_COOLDOWN 20
 #define ZF_RAGE_SPEED 150
+#define ZF_RAGE_SPEED_DURATION 5
 #define ZF_RAGE_HEALTHPCT_TOUSE 0.80
-#define ZF_RAGE_HEALTHPCT_ONUSE 1.50
+#define ZF_RAGE_HEALTHPCT_ONUSE 1.3
 
 // Data slots
 #define RAGE_DATA_STATE (PERK_DATA_START_INDEX + 0)
@@ -41,6 +42,7 @@ methodmap RagePerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, RagePerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, RagePerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, RagePerkFonRemove);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, RagePerkFonPlayerSpawn);
 
         // Initialize data
         sm.Position = view_as<DataPackPos>(RAGE_DATA_STATE);
@@ -116,7 +118,7 @@ FUNCTION(RagePerk, onCallForMedic)) {
     int health_bonus = RoundFloat(float(GetClientHealth(client)) * ZF_RAGE_HEALTHPCT_ONUSE);
     int currentHealth = GetClientHealth(client);
     SetEntityHealth(client, currentHealth + health_bonus);
-    addStat(client, ZFStatSpeed, ZFStatTypeCond, ZF_RAGE_SPEED);
+    addStatTempStack(client, ZFStatSpeed, ZF_RAGE_SPEED, ZF_RAGE_SPEED_DURATION);
     createAura(client, ZFPART_AURAINRED, AttachBase);
     PrintHintText(client, "%t", "RagePerk_Activated");
 }
@@ -148,4 +150,16 @@ FUNCTION(RagePerk, updateCondStats), char[] buffer, int maxlen) {
             Format(buffer, maxlen, "%t", "RagePerk_Status_Ready");
         }
     }
+}
+
+FUNCTION(RagePerk, onPlayerSpawn)) {
+    int client = _inst.client;
+    // If player died while raging, clean up the effects
+    if (_inst.perk_state == 1) {
+        if (validAura(client)) removeAura(client);
+        resetClientStatType(client, ZFStatTypeCond);
+        _inst.perk_state = 0;
+    }
+    // Reset cooldown on new life
+    _inst.perk_timer = 0;
 }

@@ -1,5 +1,5 @@
 #if defined __ZenlikePerk_included
-#endinput
+    #endinput
 #endif
 #define __ZenlikePerk_included
 
@@ -16,13 +16,16 @@
 
 #define ZF_ZENLIKE_CRIT_INC 3
 #define ZF_ZENLIKE_CRIT_DEC 25
-#define ZF_ZENLIKE_HEAL 1
-#define ZF_ZENLIKE_REGEN 1
+#define ZF_ZENLIKE_HEAL     1
+#define ZF_ZENLIKE_REGEN    1
 
-methodmap ZenlikePerk < SurvivorBasePerk {
-    public ZenlikePerk(int client) {
+methodmap ZenlikePerk < SurvivorBasePerk
+{
+
+public     ZenlikePerk(int client)
+    {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
-        ZenlikePerk sm = view_as<ZenlikePerk>(sm_base);
+        ZenlikePerk      sm      = view_as<ZenlikePerk>(sm_base);
 
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, ZenlikePerkFgetName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, ZenlikePerkFgetShortdesc);
@@ -34,48 +37,60 @@ methodmap ZenlikePerk < SurvivorBasePerk {
     }
 }
 
-stock SurvivorBasePerk ZenlikePerkFnew(int client) {
+stock SurvivorBasePerk ZenlikePerkFnew(int client)
+{
     return new ZenlikePerk(client);
 }
 
-FUNCTION(ZenlikePerk, getName), char[] buffer, int maxlen) {
+FUNCTION(ZenlikePerk, getName), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "Zenlike");
 }
 
-FUNCTION(ZenlikePerk, getShortdesc), char[] buffer, int maxlen) {
+FUNCTION(ZenlikePerk, getShortdesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "ZenlikePerk_shortdesc");
 }
 
-FUNCTION(ZenlikePerk, getDesc), char[] buffer, int maxlen) {
+FUNCTION(ZenlikePerk, getDesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "ZenlikePerk_desc");
 }
 
-FUNCTION(ZenlikePerk, updateCondStats), char[] buffer, int maxlen) {
+FUNCTION(ZenlikePerk, updateCondStats), char[] buffer, int maxlen)
+{
     int client = _inst.client;
 
-    if (isGrounded(client) && isCrouching(client) && isNotMoving(client)) {
+    if (isGrounded(client) && isCrouching(client) && isNotMoving(client))
+    {
         zf_perkState[client] = min(100, zf_perkState[client] + ZF_ZENLIKE_CRIT_INC);
-        if (!getCond(client, ZFCondPoisoned)) {
+        if (!getCond(client, ZFCondPoisoned))
+        {
             addHealth(client, ZF_ZENLIKE_REGEN);
         }
         // Assuming a function to heal poison exists, like `healPoison(client, ZF_ZENLIKE_HEAL);`
     }
-    
+
     addStat(client, ZFStatCrit, ZFStatTypeCond, zf_perkState[client]);
 
-    if (zf_perkState[client] > 0) {
-Format(buffer, maxlen, "%t", "ZenlikePerk_Status_Crit", zf_perkState[client]);
-    } else {
+    if (zf_perkState[client] > 0)
+    {
+        Format(buffer, maxlen, "%t", "ZenlikePerk_Status_Crit", zf_perkState[client]);
+    }
+    else {
         strcopy(buffer, maxlen, "");
     }
 }
 
-FUNCTION(ZenlikePerk, onCalcIsAttackCritical)) {
+FUNCTION(ZenlikePerk, onCalcIsAttackCritical))
+{
     CreateTimer(0.1, tZenlikeAttack, _inst.client);
 }
 
-public Action tZenlikeAttack(Handle timer, any client) {
-    if (validLivingSur(client)) {
+public Action tZenlikeAttack(Handle timer, any client)
+{
+    if (validLivingSur(client))
+    {
         zf_perkState[client] = max(0, zf_perkState[client] - ZF_ZENLIKE_CRIT_DEC);
     }
     return Plugin_Stop;

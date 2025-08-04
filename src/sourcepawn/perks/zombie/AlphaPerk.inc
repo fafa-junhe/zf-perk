@@ -21,7 +21,7 @@
 
 // Defines from all_perks.md
 #define ZF_ALPHA_RADIUSSQ (500.0 * 500.0)
-#define ZF_ALPHA_ATTACK 5
+#define ZF_ALPHA_ATTACK 10
 #define ZF_ALPHA_ATTACK_MINION 10
 #define ZF_ALPHA_REGEN 4
 #define ZF_ALPHA_REGEN_MINION 12

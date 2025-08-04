@@ -17,6 +17,8 @@
 #define ZF_STIRCRAZY_DIST_MIN 150.0
 #define ZF_STIRCRAZY_DIST_MAX 750.0
 #define ZF_STIRCRAZY_ATTACK 30
+#define ZF_STIRCRAZY_SPEED_ON_KILL 1
+#define ZF_STIRCRAZY_DEFEND -15
 
 methodmap StirCrazyPerk < SurvivorBasePerk {
     public StirCrazyPerk(any client) {
@@ -28,6 +30,8 @@ methodmap StirCrazyPerk < SurvivorBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, StirCrazyPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, StirCrazyPerkFonPlayerSpawn);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, StirCrazyPerkFupdateCondStats);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, StirCrazyPerkFonKill);
+        PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, StirCrazyPerkFupdateClientPermStats);
 
         return sm;
     }
@@ -83,4 +87,14 @@ FUNCTION(StirCrazyPerk, updateCondStats)) {
         int attack_bonus = RoundToCeil(float(ZF_STIRCRAZY_ATTACK) * factor);
         addStat(client, ZFStatAtt, ZFStatTypeCond, attack_bonus);
     }
+}
+
+FUNCTION(StirCrazyPerk, onKill), int victim, int killer, int assist, int inflictor, int damagetype) {
+    if (validZom(victim)) {
+        addStat(_inst.client, ZFStatSpeed, ZFStatTypePerm, ZF_STIRCRAZY_SPEED_ON_KILL);
+    }
+}
+
+FUNCTION(StirCrazyPerk, updateClientPermStats)) {
+    addStat(_inst.client, ZFStatDef, ZFStatTypePerm, ZF_STIRCRAZY_DEFEND);
 }

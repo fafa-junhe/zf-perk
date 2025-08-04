@@ -23,7 +23,7 @@
 #define ZF_SICK_SPIT_COUNT 5
 #define ZF_SICK_SPIT_INTERVAL 0.2
 #define ZF_SICK_PROJECTILE_SPEED 900.0
-#define ZF_SICK_PROJECTILE_MODEL "models/props_junk/garbage_milkcarton002a.mdl"
+#define ZF_SICK_PROJECTILE_MODEL "models/props_halloween/hwn_flask_vial.mdl"
 // Data slots
 #define SICK_DATA_COOLDOWN (PERK_DATA_START_INDEX + 0)
 #define SICK_DATA_POOLS_HANDLE (PERK_DATA_START_INDEX + 1)
@@ -141,6 +141,7 @@ FUNCTION(SickPerk, onPlayerSpawn)) {
     }
     // 重置吐痰计数器
     _inst.spit_count = 0;
+    _inst.cooldown = 0.0; // 重置冷却时间
     if (_inst.spit_timer_handle != null) {
         KillTimer(_inst.spit_timer_handle);
         _inst.spit_timer_handle = null;
@@ -235,58 +236,41 @@ public Action timer_SpitProjectile(Handle timer, DataPack pack) {
         return Plugin_Stop;
     }
 
-    int projectile = CreateEntityByName("tf_projectile_jar");
-    if (projectile == -1) {
-        return Plugin_Continue;
-    }
-
     float eye_pos[3], eye_ang[3];
     GetClientEyePosition(client, eye_pos);
     GetClientEyeAngles(client, eye_ang);
 
     eye_ang[0] += GetRandomFloat(-20.0, -10.0); // Pitch (-90.0 is up, 90.0 is down)
     eye_ang[1] += GetRandomFloat(-6.0, 6.0);    // Yaw
-    DispatchSpawn(projectile);
-    SetEntPropEnt(projectile, Prop_Send, "m_hOwnerEntity", client);
-    SetEntProp(projectile, Prop_Send, "m_iTeamNum", zomTeam());
-    SetEntityModel(projectile, ZF_SICK_PROJECTILE_MODEL);
-    SetEntProp(projectile, Prop_Send, "m_nSkin", 1);
 
-    float vec_forward[3];
-    GetAngleVectors(eye_ang, vec_forward, NULL_VECTOR, NULL_VECTOR);
+    int color[3] = {100, 255, 100}; // Sickly green
     
-    // --- 修正开始 ---
+    LogMessage("SickPerk: Attempting to throw sick projectile for client %d.", client);
+    int item_index = getFreeItemIndex(client, ZF_SICK_SPIT_COUNT);
+    if (item_index == -1)
+    {
+        // This should ideally not happen if logic is correct, but as a safeguard:
+        PrintHintText(client, "Too many projectiles active.");
+        return Plugin_Continue;
+    }
+
+    int projectile = fxCreateModelThrown(ZF_SICK_PROJECTILE_MODEL, client, eye_pos, eye_ang, ZF_SICK_PROJECTILE_SPEED, color);
+
+    if (projectile == -1) {
+        LogMessage("SickPerk: Failed to create sick projectile for client %d.", client);
+        return Plugin_Continue;
+    }
+    LogMessage("SickPerk: Successfully created sick projectile with entity index: %d for item index %d", projectile, item_index);
     
-    // 1. 计算生成点 (spawn_pos)
-    float spawn_offset[3];
-    // 复制前向向量到 offset
-    spawn_offset = vec_forward; 
-    // 原地缩放 offset
-    ScaleVector(spawn_offset, 32.0); 
-    
-    float spawn_pos[3];
-    // spawn_pos = eye_pos + spawn_offset
-    AddVectors(eye_pos, spawn_offset, spawn_pos); 
-    
-    // 2. 计算速度向量 (velocity_vec)
-    float velocity_vec[3];
-    // 复制前向向量到 velocity_vec
-    velocity_vec = vec_forward; 
-    
-    // 原地缩放 velocity_vec
-    ScaleVector(velocity_vec, ZF_SICK_PROJECTILE_SPEED);
-    
-    // 3. 在 spawn_pos 处生成，并赋予速度 velocity_vec
-    TeleportEntity(projectile, spawn_pos, NULL_VECTOR, velocity_vec);
-    
-    // --- 修正结束 ---
-    
+    setItemMetadata(projectile, item_index); // Store our item index in the item's metadata
+    zf_item[client][item_index] = projectile;
+
     // 将投射物添加到追踪列表
     DataPack projectiles = sick_perk.projectiles;
     projectiles.WriteCell(projectile);
-    projectiles.WriteFloat(spawn_pos[0]);
-    projectiles.WriteFloat(spawn_pos[1]);
-    projectiles.WriteFloat(spawn_pos[2]);
+    projectiles.WriteFloat(eye_pos[0]);
+    projectiles.WriteFloat(eye_pos[1]);
+    projectiles.WriteFloat(eye_pos[2]);
     
     sick_perk.spit_count--;
     
@@ -317,7 +301,14 @@ stock void createAcidPool(int owner, int projectile, const float pos[3], const f
     if (IsValidEdict(pool_entity)) {
         sick_perk.pools.WriteCell(pool_entity);
         sick_perk.pools.WriteFloat(GetGameTime());
-    } 
+    }
+
+    // Clean up the projectile from zf_item array
+    int item_index = getItemMetadata(projectile);
+    if (item_index >= 0 && item_index < ZF_SICK_SPIT_COUNT)
+    {
+        zf_item[owner][item_index] = -1;
+    }
 
     if (IsValidEdict(projectile)) {
         AcceptEntityInput(projectile, "Kill");
@@ -379,58 +370,87 @@ FUNCTION(SickPerk, onPeriodic)) {
 }
 
 FUNCTION(SickPerk, onGameFrame)) {
-    // --- 投射物碰撞检测 ---
+    // --- Projectile collision detection ---
     DataPack projectiles = _inst.projectiles;
-    if (projectiles == null || projectiles == INVALID_HANDLE) return;
+    if (projectiles == null || projectiles == INVALID_HANDLE)
+    {
+        return;
+    }
 
-    DataPack new_projectiles = new DataPack();
+    DataPack kept_projectiles = new DataPack();
     projectiles.Reset();
     float prev_pos[3], current_pos[3], hit_pos[3], hit_vec[3];
 
+    if (projectiles.IsReadable()) {
+        LogMessage("SickPerk.onGameFrame: Start tracking projectiles for client %d.", _inst.client);
+    }
+
     while (projectiles.IsReadable()) {
         int projectile = projectiles.ReadCell();
-        prev_pos[0] = projectiles.ReadFloat();
-        prev_pos[1] = projectiles.ReadFloat();
-        prev_pos[2] = projectiles.ReadFloat();
+        prev_pos[0]    = projectiles.ReadFloat();
+        prev_pos[1]    = projectiles.ReadFloat();
+        prev_pos[2]    = projectiles.ReadFloat();
 
         if (!IsValidEdict(projectile)) {
-            continue; // 投射物已失效
+            LogMessage("SickPerk.onGameFrame: Projectile %d is no longer valid.", projectile);
+            continue;    // 投射物已失效
         }
 
-        // --- 修复: 增加实体类型检查 ---
-        // 检查实体类名，确保它仍然是我们期望的投射物，防止因实体索引重用而导致崩溃。
-        char classname[64];
-        GetEdictClassname(projectile, classname, sizeof(classname));
-        if (!StrEqual(classname, "tf_projectile_jar")) {
-            continue; // 实体已不再是投射物，跳过
+        // 检查模型名称，确保它仍然是我们期望的投射物
+        if (!HasEntProp(projectile, Prop_Data, "m_ModelName"))
+        {
+            LogMessage("SickPerk.onGameFrame: HasEntProp can't %d", projectile);
+            continue;
+        }
+        char model_name[PLATFORM_MAX_PATH];
+        GetEntPropString(projectile, Prop_Data, "m_ModelName", model_name, sizeof(model_name));
+        if (strcmp(model_name, ZF_SICK_PROJECTILE_MODEL) != 0)
+        {
+            LogMessage("strcmp can't %d", projectile);
+            continue;
         }
 
         GetEntPropVector(projectile, Prop_Send, "m_vecOrigin", current_pos);
+        LogMessage("SickPerk.onGameFrame: Projectile %d, PrevPos: (%.2f, %.2f, %.2f), CurrPos: (%.2f, %.2f, %.2f)",
+                   projectile, prev_pos[0], prev_pos[1], prev_pos[2], current_pos[0], current_pos[1], current_pos[2]);
 
         // 检查最大距离
         float owner_pos[3];
         GetClientAbsOrigin(_inst.client, owner_pos);
         if (GetVectorDistance(owner_pos, current_pos) > ZF_SICK_MAX_DIST) {
+            LogMessage("SickPerk.onGameFrame: Projectile %d exceeded max distance. Killing.", projectile);
             AcceptEntityInput(projectile, "Kill");
             continue;
         }
 
         if (doItemCollide(projectile, prev_pos, hit_pos, hit_vec)) {
+            LogMessage("SickPerk.onGameFrame: Projectile %d collided at (%.2f, %.2f, %.2f). Creating acid pool.",
+                       projectile, hit_pos[0], hit_pos[1], hit_pos[2]);
             float hit_ang[3];
             GetVectorAngles(hit_vec, hit_ang);
             createAcidPool(_inst.client, projectile, hit_pos, hit_ang);
             // 不再追踪此投射物
-        } else {
+        }
+        else {
             // 未碰撞，继续追踪
-            new_projectiles.WriteCell(projectile);
-            new_projectiles.WriteFloat(current_pos[0]);
-            new_projectiles.WriteFloat(current_pos[1]);
-            new_projectiles.WriteFloat(current_pos[2]);
+            kept_projectiles.WriteCell(projectile);
+            kept_projectiles.WriteFloat(current_pos[0]);
+            kept_projectiles.WriteFloat(current_pos[1]);
+            kept_projectiles.WriteFloat(current_pos[2]);
         }
     }
 
-    delete _inst.projectiles;
-    _inst.projectiles = new_projectiles;
+    // Clear the original pack and copy the kept projectiles back into it
+    projectiles.Reset();
+    kept_projectiles.Reset();
+    while (kept_projectiles.IsReadable())
+    {
+        projectiles.WriteCell(kept_projectiles.ReadCell());
+        projectiles.WriteFloat(kept_projectiles.ReadFloat());
+        projectiles.WriteFloat(kept_projectiles.ReadFloat());
+        projectiles.WriteFloat(kept_projectiles.ReadFloat());
+    }
+    delete kept_projectiles;
 }
 
 FUNCTION(SickPerk, updateCondStats), char[] buffer, int maxlen) {

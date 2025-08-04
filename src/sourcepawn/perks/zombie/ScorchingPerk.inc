@@ -72,9 +72,16 @@ FUNCTION(ScorchingPerk, onPeriodic)) {
 }
 
 FUNCTION_FLOAT(ScorchingPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype) {
-    // If this perk's owner is the victim and is taking fire damage, grant immunity.
-    if (victim == _inst.client && (damagetype & DMG_BURN)) {
-        return 0.0;
+    if (victim == _inst.client) {
+        // Grant immunity to all fire damage
+        if (damagetype & DMG_BURN) {
+            return 0.0;
+        }
+
+        // Grant immunity to all pyro damage except melee
+        if (isPyro(attacker) && !(damagetype & DMG_CLUB)) {
+            return 0.0;
+        }
     }
 
     // Default case: Do not interfere with the damage event.

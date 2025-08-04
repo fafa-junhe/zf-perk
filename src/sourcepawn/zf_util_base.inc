@@ -50,10 +50,6 @@
 // Bits 15-08 : Max clip ammo
 // Bits 07-00 : Max reserve ammo
 //
-#define M_MAXRESAMMO    0x000000FF
-#define S_MAXRESAMMO    0
-#define M_MAXCLIPAMMO   0x0000FF00
-#define S_MAXCLIPAMMO   8
 #define F_ISAUTO        0x00010000
 #define F_ISBULLET      0x00020000
 #define F_NOSTRIP       0x00040000
@@ -602,13 +598,13 @@ static int oNextSecAttack;
 //
 // ZF Class Objects
 //
-static const TFClassType ZF_SURVIVORS[6] = {
-  TFClass_Sniper, TFClass_Soldier, TFClass_DemoMan, 
+static const TFClassType ZF_SURVIVORS[5] = {
+  TFClass_Soldier, TFClass_DemoMan,
   TFClass_Medic,  TFClass_Pyro,    TFClass_Engineer};
-static const TFClassType ZF_ZOMBIES[3] = {
-  TFClass_Scout,  TFClass_Heavy,   TFClass_Spy};
-static const int ZF_VALIDSURVIVOR[10] = {0,0,1,1,1,1,0,1,0,1};
-static const int ZF_VALIDZOMBIE[10]   = {0,1,0,0,0,0,1,0,1,0};
+static const TFClassType ZF_ZOMBIES[4] = {
+  TFClass_Scout,  TFClass_Heavy,   TFClass_Spy, TFClass_Sniper};
+static const int ZF_VALIDSURVIVOR[10] = {0,0,0,1,1,1,0,1,0,1};
+static const int ZF_VALIDZOMBIE[10]   = {0,1,1,0,0,0,1,0,1,0};
 
 //
 // ZF Team / Round State
@@ -632,6 +628,7 @@ int zf_surTeam = view_as<int>(TFTeam_Red);
 ////////////////////////////////////////////////////////////
 void utilBaseInit()
 {
+    OnPluginStart_RegisterWeaponData();
   //
   // Initialize offsets.
   //
@@ -650,12 +647,12 @@ void utilBaseInit()
   // Initialize weapon data.
   //
   // Scout
-  ZF_WEAPON_DATA[ZFWEAP_SCATTERGUN]   = F_ISBULLET          | (6 << 8) | (32 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_FORCEANATURE] = F_ISBULLET          | (2 << 8) | (32 << 0);  
-  ZF_WEAPON_DATA[ZFWEAP_SHORTSTOP]    = F_ISBULLET          | (4 << 8) | (36 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_SCOUTPISTOL]  = F_ISAUTO|F_ISBULLET | (12 << 8) | (36 << 0);
+  ZF_WEAPON_DATA[ZFWEAP_SCATTERGUN]   = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_FORCEANATURE] = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_SHORTSTOP]    = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_SCOUTPISTOL]  = F_ISAUTO|F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_BONK]         = F_NOSTRIP;
-  ZF_WEAPON_DATA[ZFWEAP_LUGERMORPH]   = F_ISAUTO|F_ISBULLET | (12 << 8) | (36 << 0);
+  ZF_WEAPON_DATA[ZFWEAP_LUGERMORPH]   = F_ISAUTO|F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_CRITACOLA]    = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_MADMILK]      = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_BAT]          = F_NOSTRIP;
@@ -665,15 +662,15 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_BOSTONBASHER] = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_SUNONASTICK]  = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_FANOWAR]      = F_NOSTRIP;
-  ZF_WEAPON_DATA[ZFWEAP_SODA_POPPER]         = F_ISBULLET | (2 << 8) | (32 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_BABY_FACES_BLASTER]  = F_ISBULLET | (4 << 8) | (32 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_BACK_SCATTER]       = F_ISBULLET | (4 << 8) | (32 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_WINGER]             = F_ISAUTO|F_ISBULLET | (5 << 8) | (36 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_POCKET_PISTOL]      = F_ISAUTO|F_ISBULLET | (9 << 8) | (36 << 0); // Vanilla is 12 clip, this is correct for Pocket Pistol
+  ZF_WEAPON_DATA[ZFWEAP_SODA_POPPER]         = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_BABY_FACES_BLASTER]  = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_BACK_SCATTER]       = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_WINGER]             = F_ISAUTO|F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_POCKET_PISTOL]      = F_ISAUTO|F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_FLYING_GUILLOTINE]  = 0;
   ZF_WEAPON_DATA[ZFWEAP_MUTATED_MILK]       = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_FESTIVE_BONK]       = F_NOSTRIP;
-  ZF_WEAPON_DATA[ZFWEAP_CAPPER]             = F_ISAUTO|F_ISBULLET | (6 << 8) | (24 << 0); // Similar to Spy Revolver
+  ZF_WEAPON_DATA[ZFWEAP_CAPPER]             = F_ISAUTO|F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_ATOMIZER]           = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_THREE_RUNE_BLADE]   = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_UNARMED_COMBAT]     = F_NOSTRIP;
@@ -729,24 +726,24 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_BLITZKRIEG_PISTOL] = ZF_WEAPON_DATA[ZFWEAP_SCOUTPISTOL];
 
   // Soldier
-  ZF_WEAPON_DATA[ZFWEAP_ROCKETLAUNCHER]  =              (4 << 8) | (20 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_DIRECTHIT]       =              (4 << 8) | (20 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_BLACKBOX]        =              (3 << 8) | (20 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_ROCKETJUMPER]    =              (4 << 8) | (60 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_LIBERTY_LAUNCHER]   = (5 << 8) | (20 << 0); // Correct clip is 5
-  ZF_WEAPON_DATA[ZFWEAP_COW_MANGLER_5000]  = (4 << 8) | (100 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_ORIGINAL]           = (4 << 8) | (20 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_AIR_STRIKE]         = (4 << 8) | (20 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_BEGGARS_BAZOOKA]    = (0 << 8) | (20 << 0); // Clip of 0 is correct
-  ZF_WEAPON_DATA[ZFWEAP_SOLDIERSHOTGUN]  = F_ISBULLET | (6 << 8) | (32 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_RESERVE_SHOOTER] = F_ISBULLET | (4 << 8) | (16 << 0); // Correct clip is 4
+  ZF_WEAPON_DATA[ZFWEAP_ROCKETLAUNCHER]  =              0;
+  ZF_WEAPON_DATA[ZFWEAP_DIRECTHIT]       =              0;
+  ZF_WEAPON_DATA[ZFWEAP_BLACKBOX]        =              0;
+  ZF_WEAPON_DATA[ZFWEAP_ROCKETJUMPER]    =              0;
+  ZF_WEAPON_DATA[ZFWEAP_LIBERTY_LAUNCHER]   = 0;
+  ZF_WEAPON_DATA[ZFWEAP_COW_MANGLER_5000]  = 0;
+  ZF_WEAPON_DATA[ZFWEAP_ORIGINAL]           = 0;
+  ZF_WEAPON_DATA[ZFWEAP_AIR_STRIKE]         = 0;
+  ZF_WEAPON_DATA[ZFWEAP_BEGGARS_BAZOOKA]    = 0;
+  ZF_WEAPON_DATA[ZFWEAP_SOLDIERSHOTGUN]  = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_RESERVE_SHOOTER] = F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_BUFFBANNER]      = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_BATTALIONBACKUP] = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_CONCHEROR]       = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_BASE_JUMPER]     = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_GUNBOATS]        = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_MANTREADS]       = F_NOSTRIP;
-  ZF_WEAPON_DATA[ZFWEAP_RIGHTEOUS_BISON] = (4 << 8) | (100 << 0);
+  ZF_WEAPON_DATA[ZFWEAP_RIGHTEOUS_BISON] = 0;
   ZF_WEAPON_DATA[ZFWEAP_SHOVEL]          = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_EQUALIZER]       = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_ESCAPE_PLAN]     = F_NOSTRIP;
@@ -754,7 +751,7 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_HALFZATOICHI]    = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_DISCIPLINARY_ACTION] = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_MARKET_GARDENER]    = F_NOSTRIP;
-  ZF_WEAPON_DATA[ZFWEAP_PANIC_ATTACK]       = F_ISBULLET | (4 << 8) | (32 << 0); // Correct clip is 4
+  ZF_WEAPON_DATA[ZFWEAP_PANIC_ATTACK]       = F_ISBULLET;
   // Reskins & Upgrades
   ZF_WEAPON_DATA[ZFWEAP_ROCKETLAUNCHER_UPGRADE] = ZF_WEAPON_DATA[ZFWEAP_ROCKETLAUNCHER];
   ZF_WEAPON_DATA[ZFWEAP_SHOTGUN_UPGRADE]        = ZF_WEAPON_DATA[ZFWEAP_SOLDIERSHOTGUN];
@@ -794,17 +791,17 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_RED_BEAR_SG] = ZF_WEAPON_DATA[ZFWEAP_SOLDIERSHOTGUN];
   
   // Pyro
-  ZF_WEAPON_DATA[ZFWEAP_FLAMETHROWER]    = F_ISAUTO   | (0 << 8) | (200 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_BACKBURNER]      = F_ISAUTO   | (0 << 8) | (200 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_DEGREASER]       = F_ISAUTO   | (0 << 8) | (200 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_PHLOGISTINATOR]  = F_ISAUTO   | (0 << 8) | (200 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_RAINBLOWER]      = F_ISAUTO   | (0 << 8) | (200 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_DRAGONS_FURY]    =              (1 << 8) | (40 << 0); // Single shot, uses "flame" ammo type
-  ZF_WEAPON_DATA[ZFWEAP_PYROSHOTGUN]     = F_ISBULLET | (6 << 8) | (32 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_FLAREGUN]        =              (1 << 8) | (16 << 0); // Clip of 1 is correct
-  ZF_WEAPON_DATA[ZFWEAP_MANMELTER]       =              (1 << 8) | (16 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_SCORCH_SHOT]     =              (1 << 8) | (16 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_DETONATOR]       =              (1 << 8) | (16 << 0);
+  ZF_WEAPON_DATA[ZFWEAP_FLAMETHROWER]    = F_ISAUTO;
+  ZF_WEAPON_DATA[ZFWEAP_BACKBURNER]      = F_ISAUTO;
+  ZF_WEAPON_DATA[ZFWEAP_DEGREASER]       = F_ISAUTO;
+  ZF_WEAPON_DATA[ZFWEAP_PHLOGISTINATOR]  = F_ISAUTO;
+  ZF_WEAPON_DATA[ZFWEAP_RAINBLOWER]      = F_ISAUTO;
+  ZF_WEAPON_DATA[ZFWEAP_DRAGONS_FURY]    = 0;
+  ZF_WEAPON_DATA[ZFWEAP_PYROSHOTGUN]     = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_FLAREGUN]        = 0;
+  ZF_WEAPON_DATA[ZFWEAP_MANMELTER]       = 0;
+  ZF_WEAPON_DATA[ZFWEAP_SCORCH_SHOT]     = 0;
+  ZF_WEAPON_DATA[ZFWEAP_DETONATOR]       = 0;
   ZF_WEAPON_DATA[ZFWEAP_GAS_PASSER]      = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_THERMAL_THRUSTER] = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_FIREAXE]         = F_NOSTRIP;
@@ -851,16 +848,16 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_WARHAWK_FT] = ZF_WEAPON_DATA[ZFWEAP_FLAMETHROWER];
   
   // Demoman
-  ZF_WEAPON_DATA[ZFWEAP_GRENADELAUNCHER]    =             (4 << 8) | (16 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_LOCHNLOAD]          =             (3 << 8) | (16 << 0); // Correct clip is 3
-  ZF_WEAPON_DATA[ZFWEAP_IRON_BOMBER]        =             (4 << 8) | (16 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_LOOSE_CANNON]       =             (4 << 8) | (16 << 0);
+  ZF_WEAPON_DATA[ZFWEAP_GRENADELAUNCHER]    = 0;
+  ZF_WEAPON_DATA[ZFWEAP_LOCHNLOAD]          = 0;
+  ZF_WEAPON_DATA[ZFWEAP_IRON_BOMBER]        = 0;
+  ZF_WEAPON_DATA[ZFWEAP_LOOSE_CANNON]       = 0;
   ZF_WEAPON_DATA[ZFWEAP_ALI_BABAS_WEE_BOOTIES] = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_BOOTLEGGER]         = F_NOSTRIP;
-  ZF_WEAPON_DATA[ZFWEAP_STICKYLAUNCHER]     =             (8 << 8) | (24 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_QUICKIEBOMB_LAUNCHER] =            (4 << 8) | (24 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_SCOTTISHRESISTANCE] =             (8 << 8) | (36 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_STICKYJUMPER]       =             (2 << 8) | (48 << 0); // Correct clip is 2
+  ZF_WEAPON_DATA[ZFWEAP_STICKYLAUNCHER]     = 0;
+  ZF_WEAPON_DATA[ZFWEAP_QUICKIEBOMB_LAUNCHER] = 0;
+  ZF_WEAPON_DATA[ZFWEAP_SCOTTISHRESISTANCE] = 0;
+  ZF_WEAPON_DATA[ZFWEAP_STICKYJUMPER]       = 0;
   ZF_WEAPON_DATA[ZFWEAP_CHARGINTARGE]       = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_SPLENDID_SCREEN]    = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_TIDE_TURNER]        = F_NOSTRIP;
@@ -912,14 +909,14 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_BUTCHER_BIRD_GL] = ZF_WEAPON_DATA[ZFWEAP_GRENADELAUNCHER];
   
   // Heavy
-  ZF_WEAPON_DATA[ZFWEAP_SASHA]          = F_ISAUTO|F_ISBULLET | (0 << 8) | (200 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_NATASCHA]       = F_ISAUTO|F_ISBULLET | (0 << 8) | (200 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_IRONCURTAIN]    = F_ISAUTO|F_ISBULLET | (0 << 8) | (200 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_BRASSBEAST]     = F_ISAUTO|F_ISBULLET | (0 << 8) | (200 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_TOMISLAV]       = F_ISAUTO|F_ISBULLET | (0 << 8) | (200 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_HUO_LONG_HEATER]= F_ISAUTO|F_ISBULLET | (0 << 8) | (200 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_HEAVYSHOTGUN]   = F_ISBULLET          | (6 << 8) | (32 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_FAMILY_BUSINESS]= F_ISBULLET          | (8 << 8) | (32 << 0);
+  ZF_WEAPON_DATA[ZFWEAP_SASHA]          = F_ISAUTO|F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_NATASCHA]       = F_ISAUTO|F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_IRONCURTAIN]    = F_ISAUTO|F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_BRASSBEAST]     = F_ISAUTO|F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_TOMISLAV]       = F_ISAUTO|F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_HUO_LONG_HEATER]= F_ISAUTO|F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_HEAVYSHOTGUN]   = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_FAMILY_BUSINESS]= F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_SANDVICH]       = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_DALOKOHSBAR]    = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_BUFFALOSTEAK]   = F_NOSTRIP;
@@ -969,14 +966,14 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_BUTCHER_BIRD_MINIGUN] = ZF_WEAPON_DATA[ZFWEAP_SASHA];
   
   // Engineer
-  ZF_WEAPON_DATA[ZFWEAP_ENGINEERSHOTGUN]     = F_ISBULLET          | (6 << 8) | (32 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_FRONTIERJUSTICE]     = F_ISBULLET          | (3 << 8) | (32 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_WIDOWMAKER]          = F_ISBULLET          | (0 << 8) | (30 << 0); // Uses metal as ammo, clip=0
-  ZF_WEAPON_DATA[ZFWEAP_POMSON_6000]         = (4 << 8) | (100 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_RESCUE_RANGER]       = (4 << 8) | (16 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_ENGINEERPISTOL]      = F_ISAUTO|F_ISBULLET | (12 << 8) | (200 << 0);
+  ZF_WEAPON_DATA[ZFWEAP_ENGINEERSHOTGUN]     = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_FRONTIERJUSTICE]     = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_WIDOWMAKER]          = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_POMSON_6000]         = 0;
+  ZF_WEAPON_DATA[ZFWEAP_RESCUE_RANGER]       = 0;
+  ZF_WEAPON_DATA[ZFWEAP_ENGINEERPISTOL]      = F_ISAUTO|F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_WRANGLER]            = 0;
-  ZF_WEAPON_DATA[ZFWEAP_SHORT_CIRCUIT]       = (5 << 8) | (100 << 0); // Uses metal as ammo
+  ZF_WEAPON_DATA[ZFWEAP_SHORT_CIRCUIT]       = 0;
   ZF_WEAPON_DATA[ZFWEAP_GIGER_COUNTER]       = F_NOSTRIP; // Reskin of wrangler? Set to 0 to be safe
   ZF_WEAPON_DATA[ZFWEAP_WRENCH]              = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_GOLDENWRENCH]        = F_NOSTRIP;
@@ -1010,10 +1007,10 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_AIRWOLF_WRENCH] = ZF_WEAPON_DATA[ZFWEAP_WRENCH];
 
   // Medic
-  ZF_WEAPON_DATA[ZFWEAP_SYRINGEGUN]        = F_ISAUTO | (40 << 8) | (150 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_BLUTSAUGER]        = F_ISAUTO | (40 << 8) | (150 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_CRUSADERSCROSSBOW] =            (1 << 8) | (75 << 0); // Correct reserve is 75
-  ZF_WEAPON_DATA[ZFWEAP_OVERDOSE]          = F_ISAUTO | (40 << 8) | (150 << 0);
+  ZF_WEAPON_DATA[ZFWEAP_SYRINGEGUN]        = F_ISAUTO;
+  ZF_WEAPON_DATA[ZFWEAP_BLUTSAUGER]        = F_ISAUTO;
+  ZF_WEAPON_DATA[ZFWEAP_CRUSADERSCROSSBOW] = 0;
+  ZF_WEAPON_DATA[ZFWEAP_OVERDOSE]          = F_ISAUTO;
   ZF_WEAPON_DATA[ZFWEAP_MEDIGUN]           = 0;
   ZF_WEAPON_DATA[ZFWEAP_KRITZKRIEG]        = 0;
   ZF_WEAPON_DATA[ZFWEAP_QUICK_FIX]         = 0;
@@ -1053,15 +1050,15 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_CORSAIR_MEDI_GUN] = ZF_WEAPON_DATA[ZFWEAP_MEDIGUN];
   
   // Sniper
-  ZF_WEAPON_DATA[ZFWEAP_SNIPERRIFLE]   = F_ISBULLET          | (1 << 8) | (25 << 0); // Clip of 1 is correct
-  ZF_WEAPON_DATA[ZFWEAP_HUNTSMAN]      =                       (1 << 8) | (12 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_SYDNEYSLEEPER] = F_ISBULLET          | (1 << 8) | (25 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_BAZAAR_BARGAIN]= F_ISBULLET          | (1 << 8) | (25 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_MACHINA]       = F_ISBULLET          | (1 << 8) | (25 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_HITMANS_HEATMAKER] = F_ISBULLET      | (1 << 8) | (25 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_CLASSIC]       = F_ISBULLET          | (1 << 8) | (25 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_SMG]           = F_ISAUTO|F_ISBULLET | (25 << 8) | (75 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_CLEANERS_CARBINE] = F_ISAUTO|F_ISBULLET | (20 << 8) | (0 << 0);
+  ZF_WEAPON_DATA[ZFWEAP_SNIPERRIFLE]   = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_HUNTSMAN]      = 0;
+  ZF_WEAPON_DATA[ZFWEAP_SYDNEYSLEEPER] = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_BAZAAR_BARGAIN]= F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_MACHINA]       = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_HITMANS_HEATMAKER] = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_CLASSIC]       = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_SMG]           = F_ISAUTO|F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_CLEANERS_CARBINE] = F_ISAUTO|F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_RAZORBACK]     = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_JARATE]        = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_DANGERSHIELD]  = F_NOSTRIP;
@@ -1115,12 +1112,12 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_BLITZKRIEG_SMG] = ZF_WEAPON_DATA[ZFWEAP_SMG];
   
   // Spy
-  ZF_WEAPON_DATA[ZFWEAP_REVOLVER]       = F_ISBULLET | (6 << 8) | (24 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_AMBASSADOR]     = F_ISBULLET | (6 << 8) | (24 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_BIGKILL]        = F_ISBULLET | (6 << 8) | (24 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_LETRANGER]      = F_ISBULLET | (6 << 8) | (24 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_ENFORCER]       = F_ISBULLET | (6 << 8) | (24 << 0);
-  ZF_WEAPON_DATA[ZFWEAP_DIAMONDBACK]    = F_ISBULLET | (6 << 8) | (24 << 0);
+  ZF_WEAPON_DATA[ZFWEAP_REVOLVER]       = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_AMBASSADOR]     = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_BIGKILL]        = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_LETRANGER]      = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_ENFORCER]       = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_DIAMONDBACK]    = F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_KNIFE]          = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_ETERNALREWARD]  = 0;
   ZF_WEAPON_DATA[ZFWEAP_CONNIVERSKUNAI] = F_NOSTRIP;
@@ -1240,10 +1237,10 @@ stock bool validZombie(TFClassType class)
 { return (ZF_VALIDZOMBIE[class] == 1); }
 stock bool validSurvivor(TFClassType class) 
 { return (ZF_VALIDSURVIVOR[class] == 1); }
-stock TFClassType randomZombie()   
-{ return ZF_ZOMBIES[GetRandomInt(0,2)]; }
-stock TFClassType randomSurvivor() 
-{ return ZF_SURVIVORS[GetRandomInt(0,5)]; }
+stock TFClassType randomZombie()
+{ return ZF_ZOMBIES[GetRandomInt(0,3)]; }
+stock TFClassType randomSurvivor()
+{ return ZF_SURVIVORS[GetRandomInt(0,4)]; }
 
 stock bool isEngineer(int client)
 { return (TF2_GetPlayerClass(client) == TFClass_Engineer); }
@@ -1628,7 +1625,7 @@ stock int clientMaxHealth(int client)
 //
 ////////////////////////////////////////////////////////////
 stock void setClientSpeed(int client, float speed)
-{ SetEntDataFloat(client, oMaxspeed, speed, true); }
+{ SetEntDataFloat(client, oMaxspeed, fMax(1.0, speed), true); }
 
 stock float clientBaseSpeed(int client)
 {
@@ -1993,28 +1990,17 @@ stock void setResAmmo(int client, int slot, int ammo)
 //////////////////////////////////////////////////////////// 
 stock int maxClipAmmo(int client, int slot)
 {
-  int weaponId = slotWeaponId(client, slot);
-  if(weaponId >= 0)
-  {
-    if(weaponId >= MAX_ZF_WEAPONS)
-      LogError("[ZF] - maxClipAmmo() - Invalid weaponId: %d", weaponId);
-    else
-      return ((ZF_WEAPON_DATA[weaponId] & M_MAXCLIPAMMO) >> S_MAXCLIPAMMO);
-  }
-  return 0;
+    int weapon = GetPlayerWeaponSlot(client, slot);
+    if (weapon != -1)
+    {
+        return GetMaxClip(weapon);
+    }
+    return 0;
 }
 
 stock int maxResAmmo(int client, int slot)
 {
-  int weaponId = slotWeaponId(client, slot);
-  if(weaponId >= 0)
-  {
-    if(weaponId >= MAX_ZF_WEAPONS)
-      LogError("[ZF] - maxResAmmo() - Invalid weaponId: %d", weaponId);
-    else
-      return ((ZF_WEAPON_DATA[weaponId] & M_MAXRESAMMO) >> S_MAXRESAMMO);
-  }
-  return 0;
+    return GetSlotMaxAmmo(client, slot);
 }
 
 ////////////////////////////////////////////////////////////

@@ -16,31 +16,8 @@
 #include <tf2>
 #include <tf2_stocks>
 
-#include "zf_util_base.inc"
-#include "zf_util_fx.inc"
-#include "zf_util_pref.inc"
-#include "zf_zombie_visuals.inc"
-#include "perks/zombie/MarkedPerk.inc"
-#include "perks/zombie/SwarmingPerk.inc"
-ArrayList g_SurPerkTypes;
-StringMap g_SurPerkRegistry;
-ArrayList g_ZomPerkTypes;
-StringMap g_ZomPerkRegistry;
-
-typedef PerkCreator = function BasePerk (int client);
-ArrayList g_SurPerkCreators;
-ArrayList g_ZomPerkCreators;
-
-
-#include "perk_structs.inc"
-
-// 全局变量声明
-int zf_perkAlphaMaster[MAXPLAYERS+1]; // 记录每个僵尸的主控者（零号僵尸）
-//
-// Perk Objects
-//
-#define ZF_PERK_NONE            0
-  
+int zf_menuPerk[MAXPLAYERS+1];
+int zf_menuPerkListPage[MAXPLAYERS+1];
 
 BasePerk g_hPerks[MAXPLAYERS+1];
 
@@ -56,7 +33,6 @@ int zf_perkRandSurPerk;
 int zf_perkRandZomPerk;
 int zf_perkTeamSurPerk;
 int zf_perkTeamZomPerk;
-int zf_menuPerk[MAXPLAYERS+1];
 
 // Logic
 int zf_lastAttack[MAXPLAYERS+1];
@@ -73,6 +49,7 @@ char zf_perkStr[MAXPLAYERS+1][32];  // String shared by many perks
 
 int zf_stat[MAXPLAYERS+1][ZFStat][ZFStatType];
 int zf_cond[MAXPLAYERS+1][ZFCond];
+Handle zf_cvDebug;
 
 // FX.Entities
 int zf_aura[MAXPLAYERS+1];
@@ -80,8 +57,34 @@ int zf_aura[MAXPLAYERS+1];
 #define ICON_SPR 0
 #define ICON_ANC 1
 int zf_icon[MAXPLAYERS+1][2];
+#include "perk_structs.inc"
 
 int zf_item[MAXPLAYERS+1][MAX_ITEMS];
+ArrayList g_SurPerkTypes;
+StringMap g_SurPerkRegistry;
+ArrayList g_ZomPerkTypes;
+StringMap g_ZomPerkRegistry;
+
+typedef PerkCreator = function BasePerk (int client);
+ArrayList g_SurPerkCreators;
+ArrayList g_ZomPerkCreators;
+
+#include "zf_util_ui.inc"
+#include "zf_util_base.inc"
+#include "zf_util_fx.inc"
+#include "zf_util_pref.inc"
+#include "zf_zombie_visuals.inc"
+#include "perks/zombie/MarkedPerk.inc"
+#include "perks/zombie/SwarmingPerk.inc"
+
+// 全局变量声明
+int zf_perkAlphaMaster[MAXPLAYERS+1]; // 记录每个僵尸的主控者（零号僵尸）
+//
+// Perk Objects
+//
+#define ZF_PERK_NONE            0
+  
+
 
 #include "perks/BasePerk.inc"
 #include "perks/Registraion.inc"
@@ -96,14 +99,11 @@ stock int GetTotalZomPerks() {
     return g_ZomPerkTypes.Length;
 }
 
-// FX.HUD
-Handle zf_hudLine0;
-Handle zf_hudLine1;
-Handle zf_hudLine2;
 
 // Menus
-Handle zf_menuSurPerkList;
-Handle zf_menuZomPerkList;
+// 移除旧的静态菜单句柄
+// Handle zf_menuSurPerkList;
+// Handle zf_menuZomPerkList;
 
 // CVARS
 Handle hCvarCripple;
@@ -151,6 +151,12 @@ stock void GetSurPerkDisplayName(int client, int index, char[] buffer, int maxle
     Format(buffer, maxlen, "%T", name, client);
 }
 
+stock void GetSurPerkDisplayShortDesc(int client, int index, char[] buffer, int maxlen) {
+    char shortDesc[128];
+    GetSurPerkShortDesc(index, shortDesc, sizeof(shortDesc));
+    Format(buffer, maxlen, "%T", shortDesc, client);
+}
+
 stock void GetZomPerkName(int index, char[] buffer, int maxLen) { GetPerkInfoString(g_ZomPerkTypes, index, "name", buffer, maxLen); }
 stock void GetZomPerkShortDesc(int index, char[] buffer, int maxLen) { GetPerkInfoString(g_ZomPerkTypes, index, "shortDesc", buffer, maxLen); }
 stock void GetZomPerkLongDesc(int index, char[] buffer, int maxLen) { GetPerkInfoString(g_ZomPerkTypes, index, "longDesc", buffer, maxLen); }
@@ -158,6 +164,12 @@ stock void GetZomPerkDisplayName(int client, int index, char[] buffer, int maxle
     char name[64];
     GetZomPerkName(index, name, sizeof(name));
     Format(buffer, maxlen, "%T", name, client);
+}
+
+stock void GetZomPerkDisplayShortDesc(int client, int index, char[] buffer, int maxlen) {
+    char shortDesc[128];
+    GetZomPerkShortDesc(index, shortDesc, sizeof(shortDesc));
+    Format(buffer, maxlen, "%T", shortDesc, client);
 }
 
 
@@ -202,10 +214,15 @@ public void perkInit()
   zf_hudLine0 = CreateHudSynchronizer();
   zf_hudLine1 = CreateHudSynchronizer();
   zf_hudLine2 = CreateHudSynchronizer();
+  zf_hudTeammateLine0 = CreateHudSynchronizer();
+  zf_hudTeammateLine1 = CreateHudSynchronizer();
+  zf_hudTeammateLine2 = CreateHudSynchronizer();
+  zf_hudTeammateLine3 = CreateHudSynchronizer();
   
   // Initialize menu handles
-  zf_menuSurPerkList = perk_buildSurPerkListMenu();
-  zf_menuZomPerkList = perk_buildZomPerkListMenu();
+  // 移除旧的静态菜单构建调用
+  // zf_menuSurPerkList = perk_buildSurPerkListMenu();
+  // zf_menuZomPerkList = perk_buildZomPerkListMenu();
     
   // Admin Commands
   // [0|normal|1|randplayer|2|randteam|3|cvarteam]
@@ -229,7 +246,7 @@ public void perkInit()
   
   // Register CVARS
   hCvarCripple = CreateConVar("sm_zf_cripple", "0", "0 = Crippling backstab disabled, 1 = Crippling backstab enabled.", FCVAR_REPLICATED|FCVAR_NOTIFY, true, 0.0, true, 1.0);
-
+  zf_cvDebug         = CreateConVar("sm_zf_debug", "0", "<0/1> Enable debug mode for ZF.", FCVAR_NOTIFY);
 }
 
 ////////////////////////////////////////////////////////////
@@ -644,51 +661,47 @@ stock void addStat(int client, ZFStat stat, ZFStatType type, int val)
 
 // Temporary setters
 stock void addStatTempStack(int client, ZFStat stat, int newStr, int newDur)
-{ 
+{
   // Note on result:
   // + Strength is averaged across maximum duration (stacks).
   // Note on use:
   // + newStr can be negative or positive.
   // + newDur must be positive.
-  if((newStr != 0) && (newDur > 0))
+  int iNewDur = newDur;
+  if((newStr != 0) && (iNewDur > 0))
   {
     int oldStr = zf_stat[client][stat][ZFStatTypeTemp];
-    int oldDur = zf_stat[client][stat][ZFStatTypeTempDuration]; 
-    int total = (oldStr * oldDur) + (newStr * newDur);
-    int finalDur = max(oldDur, newDur);
+    int oldDur = zf_stat[client][stat][ZFStatTypeTempDuration];
+    int total = (oldStr * oldDur) + (newStr * iNewDur);
+    int finalDur = max(oldDur, iNewDur);
+    if (finalDur == 0) return; // Avoid division by zero
     int finalStr = RoundToCeil(total / float(finalDur));
-    
+
     // Set new temp stats
     zf_stat[client][stat][ZFStatTypeTemp] = finalStr;
     zf_stat[client][stat][ZFStatTypeTempDuration] = finalDur;
   }
-  else
-  {
-  
-  }
 }
-stock void addStatTempExtend(int client, ZFStat stat, int newStr, int newDur)
+stock void addStatTempExtend(int client, ZFStat stat, int newStr, float newDur)
 {
   // Note on result:
-  // + Strength is averaged across sum of durations (extends).  
+  // + Strength is averaged across sum of durations (extends).
   // Note on use:
   // + newStr must be positive.
   // + newDur must be positive.
-  if((newStr > 0) && (newDur > 0))
+  int iNewDur = RoundToNearest(newDur);
+  if((newStr > 0) && (iNewDur > 0))
   {
     int oldStr = zf_stat[client][stat][ZFStatTypeTemp];
-    int oldDur = zf_stat[client][stat][ZFStatTypeTempDuration]; 
-    int total = (oldStr * oldDur) + (newStr * newDur);    
-    int finalDur = oldDur + newDur;
+    int oldDur = zf_stat[client][stat][ZFStatTypeTempDuration];
+    int total = (oldStr * oldDur) + (newStr * iNewDur);
+    int finalDur = oldDur + iNewDur;
+    if (finalDur == 0) return; // Avoid division by zero
     int finalStr = RoundToCeil(total / float(finalDur));
-    
+
     // Set new temp stats
     zf_stat[client][stat][ZFStatTypeTemp] = finalStr;
-    zf_stat[client][stat][ZFStatTypeTempDuration] = finalDur;    
-  }
-  else
-  {
-  
+    zf_stat[client][stat][ZFStatTypeTempDuration] = finalDur;
   }
 }
 
@@ -740,6 +753,7 @@ stock void resetClient(int client)
       zf_perkPos[client][i][j] = 0.0;
   zf_perkStr[client] = "";
   zf_perkAlphaMaster[client] = 0;
+  zf_menuPerkListPage[client] = 0;
   
   // Bonuses
   resetClientStats(client);
@@ -952,353 +966,6 @@ stock bool zomPerkAtLimit(int client, int perk)
           total++;
   
     return (total >= zf_zomPerksLimit[perk]);
-  }
-}
-
-////////////////////////////////////////////////////////////
-//
-// Perk HUD Logic
-//
-////////////////////////////////////////////////////////////
-void clearHud(int client)
-{
-  if (IsClientInGame(client))
-  {
-    SetHudTextParams(0.0, 0.0, 0.01, 0, 0, 0, 0);
-    ShowSyncHudText(client, zf_hudLine0, "");
-    SetHudTextParams(0.0, 0.0, 0.01, 0, 0, 0, 0);
-    ShowSyncHudText(client, zf_hudLine1, "");
-    SetHudTextParams(0.0, 0.0, 0.01, 0, 0, 0, 0);
-    ShowSyncHudText(client, zf_hudLine2, "");
-  }
-}
-
-void updateHud(int client)
-{
-  char strHudPerk[48];
-  char strHudBonuses[32];
-  
-  if(IsClientInGame(client) && !(zf_lastButtons[client] & IN_SCORE))
-  {
-    if(isSur(client) || isZom(client))
-    {
-      if(IsPlayerAlive(client))
-      {
-        // HUD Element: Perk Selection
-        if(isSur(client))
-        {
-          char perkName[48];
-          GetSurPerkDisplayName(client, prefGet(client, SurPerk), perkName, sizeof(perkName));
-          Format(strHudPerk, sizeof(strHudPerk), "%T", "ZF_HUD_Perk", client, perkName);
-        }
-        else if(isZom(client))
-        {
-          char perkName[48];
-          GetZomPerkDisplayName(client, prefGet(client, ZomPerk), perkName, sizeof(perkName));
-          Format(strHudPerk, sizeof(strHudPerk), "%T", "ZF_HUD_Perk", client, perkName);
-        }
-        else
-        {
-          strHudPerk = "";
-        }
-        SetHudTextParams(0.15, 0.80, 2.1, 200, 200, 200, 150);
-        if (strcmp(zf_perkStr[client], "") != 0)
-          ShowSyncHudText(client, zf_hudLine0, "%s (%s)", strHudPerk, zf_perkStr[client]);
-        else 
-          ShowSyncHudText(client, zf_hudLine0, strHudPerk);
-        
-        // HUD Element: Bonuses 1 (Attack, Defense)
-        Format(strHudBonuses, sizeof(strHudBonuses), "%T", "ZF_HUD_Bonuses1", client, getStat(client, ZFStatAtt), getStat(client, ZFStatDef));
-        SetHudTextParams(0.15, 0.83, 2.1, 150, 150, 150, 150);
-        ShowSyncHudText(client, zf_hudLine1, "%s", strHudBonuses);
-        
-        // HUD Element: Bonuses 2 (Crit, Speed)
-        Format(strHudBonuses, sizeof(strHudBonuses), "%T", "ZF_HUD_Bonuses2", client, getStat(client, ZFStatCrit), getStat(client, ZFStatSpeed));
-        SetHudTextParams(0.15, 0.86, 2.1, 150, 150, 150, 150);
-        ShowSyncHudText(client, zf_hudLine2, "%s", strHudBonuses);
-      }
-      else
-      {
-        // HUD Element: Killer's perk
-        int killer = zf_lastKiller[client];
-        if(validClient(killer) && (killer != client))
-        {
-          if(isSur(killer))
-          {
-            char perkName[48];
-            GetSurPerkDisplayName(client, prefGet(killer, SurPerk), perkName, sizeof(perkName));
-            Format(strHudPerk, sizeof(strHudPerk), "%T", "ZF_HUD_KilledBy", client, perkName);
-          }
-          else if(isZom(killer))
-          {
-            char perkName[48];
-            GetZomPerkDisplayName(client, prefGet(killer, ZomPerk), perkName, sizeof(perkName));
-            Format(strHudPerk, sizeof(strHudPerk), "%T", "ZF_HUD_KilledBy", client, perkName);
-          }
-          else
-          {
-            strHudPerk = "";
-          }
-          SetHudTextParams(0.15, 0.80, 2.1, 250, 200, 200, 150);
-          ShowSyncHudText(client, zf_hudLine0, "%s", strHudPerk);
-        }
-      }
-    }
-    else
-    {
-      // HUD Element: Specator target's perk
-      int spectate = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
-      if(validClient(spectate))
-      {
-        if(isSur(spectate))
-        {
-          char perkName[48];
-          GetSurPerkDisplayName(client, prefGet(spectate, SurPerk), perkName, sizeof(perkName));
-          Format(strHudPerk, sizeof(strHudPerk), "%T", "ZF_HUD_Spectating", client, perkName);
-        }
-        else if(isZom(spectate))
-        {
-          char perkName[48];
-          GetZomPerkDisplayName(client, prefGet(spectate, ZomPerk), perkName, sizeof(perkName));
-          Format(strHudPerk, sizeof(strHudPerk), "%T", "ZF_HUD_Spectating", client, perkName);
-        }
-        else
-        {
-          strHudPerk = "";
-        }
-        SetHudTextParams(0.15, 0.80, 2.1, 250, 200, 200, 150);
-        ShowSyncHudText(client, zf_hudLine0, "%s", strHudPerk);
-      }
-    }
-  }
-}
-
-////////////////////////////////////////////////////////////
-//
-// Perk Menu Functionality
-//
-////////////////////////////////////////////////////////////
-
-//
-// Survivor Perk List Menu
-// (Menu item N is perk N+1)
-//
-Handle perk_buildSurPerkListMenu()
-{
-
-  Handle menu = CreateMenu(perk_menuSurPerkList);
-  if(menu != INVALID_HANDLE)
-  {
-    // Title
-    char title[128];
-    Format(title, sizeof(title), "%T", "ZF_Menu_SelectSurPerk_Title", LANG_SERVER);
-    SetMenuTitle(menu, title);
-
-    // Perks
-    int perkCount = GetTotalSurPerks();
-  
-    for(int i = 0; i < perkCount; i++)
-    {
-      char name[128], shortDescKey[128], shortDescTranslated[128];
-      GetSurPerkShortDesc(i, shortDescKey, sizeof(shortDescKey));
-      Format(shortDescTranslated, sizeof(shortDescTranslated), "%T", shortDescKey, LANG_SERVER);
-      AddMenuItem(menu, name, shortDescTranslated);
-    }
-  }
-  else
-  {
-  
-  }
-
-  return menu;
-}
-
-public void perk_menuSurPerkList(Handle menu, MenuAction action, int param1, int param2)
-{
-
-  if(action == MenuAction_Select)
-  {
-    if (param2 == 0) // "None" option
-    {
-        selectSurPerk(param1, 0);
-    }
-    else
-    {
-        panel_PrintSurPerkSelect(param1, param2);
-    }
-  }
-}
-
-//
-// Zombie Perk List Menu
-// (Menu item N is perk N+1)
-//
-Handle perk_buildZomPerkListMenu()
-{
-
-  Handle menu = CreateMenu(perk_menuZomPerkList);
-  if(menu != INVALID_HANDLE)
-  {
-    // Title
-    char title[128];
-    Format(title, sizeof(title), "%T", "ZF_Menu_SelectZomPerk_Title", LANG_SERVER);
-    SetMenuTitle(menu, title);
-
-    // Perks
-    int perkCount = GetTotalZomPerks();
-  
-    for(int i = 0; i < perkCount; i++)
-    {
-      char name[128], shortDescKey[128], shortDescTranslated[128];
-      GetZomPerkShortDesc(i, shortDescKey, sizeof(shortDescKey));
-      Format(shortDescTranslated, sizeof(shortDescTranslated), "%T", shortDescKey, LANG_SERVER);
-      AddMenuItem(menu, name, shortDescTranslated);
-    }
-
-  }
-  else
-  {
-  
-  }
-
-  return menu;
-}
-
-public void perk_menuZomPerkList(Handle menu, MenuAction action, int param1, int param2)
-{
-
-  if(action == MenuAction_Select)
-  {
-    if (param2 == 0) // "None" option
-    {
-        selectZomPerk(param1, 0);
-    }
-    else
-    {
-        panel_PrintZomPerkSelect(param1, param2);
-    }
-  }
-}
-
-// 
-// Survivor Perk Select Menu
-//
-public void panel_PrintSurPerkSelect(int client, int perk)
-{
-
-  Handle panel = CreatePanel();
-  
-  char title[128];
-  Format(title, sizeof(title), "%T", "ZF_Menu_PerkSelect_Title", client);
-  SetPanelTitle(panel, title);
-  char longDescKey[1024], longDescTranslated[1024], displayName[64];
-  GetSurPerkDisplayName(client, perk, displayName, sizeof(displayName));
-  GetSurPerkLongDesc(perk, longDescKey, sizeof(longDescKey));
-  Format(longDescTranslated, sizeof(longDescTranslated), "%T", longDescKey, client);
-  DrawPanelText(panel, displayName);
-  DrawPanelText(panel, longDescTranslated);
-  if(surPerkEnabled(perk))
-  {
-    char buffer[128];
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_PerkSelect_Select", LANG_SERVER);
-    DrawPanelItem(panel, buffer, ITEMDRAW_DEFAULT);
-  }
-  else
-  {
-    char buffer[128];
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_PerkSelect_Disabled", LANG_SERVER);
-    DrawPanelItem(panel, buffer, ITEMDRAW_DISABLED);
-  }
-  char backBuffer[128];
-  Format(backBuffer, sizeof(backBuffer), "%T", "ZF_Menu_PerkSelect_Back", LANG_SERVER);
-  DrawPanelItem(panel, backBuffer);
-  char closeBuffer[128];
-  Format(closeBuffer, sizeof(closeBuffer), "%T", "ZF_Menu_PerkSelect_Close", LANG_SERVER);
-  DrawPanelItem(panel, closeBuffer);
-  
-  zf_menuPerk[client] = perk;
-  SendPanelToClient(panel, client, panel_HandleSurPerkSelect, MENU_TIME_FOREVER);
-  CloseHandle(panel);
-}
-
-public void panel_HandleSurPerkSelect(Handle menu, MenuAction action, int param1, int param2)
-{
-
-  if(action == MenuAction_Select)
-  {
-    switch(param2)
-    {
-      case 1: 
-        selectSurPerk(param1, zf_menuPerk[param1]);
-      case 2: 
-      {
-        int firstItem = (((zf_menuPerk[param1] - 1) / 7) * 7);
-        DisplayMenuAtItem(zf_menuSurPerkList, param1, firstItem, MENU_TIME_FOREVER); 
-      }
-      default: 
-        return;   
-    } 
-  }
-}
-
-// 
-// Zombie Perk Select Menu
-//
-public void panel_PrintZomPerkSelect(int client, int perk)
-{
-
-  Handle panel = CreatePanel();
-  
-  char title[128];
-  Format(title, sizeof(title), "%T", "ZF_Menu_PerkSelect_Title", client);
-  SetPanelTitle(panel, title);
-  char longDescKey[1024], longDescTranslated[1024], displayName[64];
-  GetZomPerkDisplayName(client, perk, displayName, sizeof(displayName));
-  GetZomPerkLongDesc(perk, longDescKey, sizeof(longDescKey));
-  Format(longDescTranslated, sizeof(longDescTranslated), "%T", longDescKey, client);
-  DrawPanelText(panel, displayName);
-  DrawPanelText(panel, longDescTranslated);
-  if(zomPerkEnabled(perk))
-  {
-    char buffer[128];
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_PerkSelect_Select", LANG_SERVER);
-    DrawPanelItem(panel, buffer, ITEMDRAW_DEFAULT);
-  }
-  else
-  {
-    char buffer[128];
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_PerkSelect_Disabled", LANG_SERVER);
-    DrawPanelItem(panel, buffer, ITEMDRAW_DISABLED);
-  }
-  char backBuffer[128];
-  Format(backBuffer, sizeof(backBuffer), "%T", "ZF_Menu_PerkSelect_Back", LANG_SERVER);
-  DrawPanelItem(panel, backBuffer);
-  char closeBuffer[128];
-  Format(closeBuffer, sizeof(closeBuffer), "%T", "ZF_Menu_PerkSelect_Close", LANG_SERVER);
-  DrawPanelItem(panel, closeBuffer);
-  
-  zf_menuPerk[client] = perk;
-  SendPanelToClient(panel, client, panel_HandleZomPerkSelect, MENU_TIME_FOREVER);
-  CloseHandle(panel);
-}
-
-public void panel_HandleZomPerkSelect(Handle menu, MenuAction action, int param1, int param2)
-{
-
-  if(action == MenuAction_Select)
-  {
-    switch(param2)
-    {
-      case 1: 
-        selectZomPerk(param1, zf_menuPerk[param1]);
-      case 2: 
-      {
-        int firstItem = (((zf_menuPerk[param1] - 1) / 7) * 7);
-        DisplayMenuAtItem(zf_menuZomPerkList, param1, firstItem, MENU_TIME_FOREVER); 
-      }
-      default: 
-        return;   
-    } 
   }
 }
 
@@ -1610,17 +1277,22 @@ stock void updateCondStats()
 }
 
 stock void updateTempStats()
-{  
-  for(int i = 0; i < MAXPLAYERS; i++)
+{
+  for(int i = 1; i <= MaxClients; i++)
   {
+    if (!IsClientInGame(i))
+      continue;
+
     for(int j = 0; j < TOTAL_ZFSTATS; j++)
     {
       // Clear temp bonus if duration reaches zero.
-      zf_stat[i][j][ZFStatTypeTempDuration]--;
-      if(zf_stat[i][j][ZFStatTypeTempDuration] <= 0)
+      if (zf_stat[i][j][ZFStatTypeTempDuration] > 0)
       {
-        zf_stat[i][j][ZFStatTypeTemp] = 0;
-        zf_stat[i][j][ZFStatTypeTempDuration] = 0;
+        zf_stat[i][j][ZFStatTypeTempDuration]--;
+        if(zf_stat[i][j][ZFStatTypeTempDuration] <= 0)
+        {
+          zf_stat[i][j][ZFStatTypeTemp] = 0;
+        }
       }
     }
   }
@@ -1628,8 +1300,11 @@ stock void updateTempStats()
 
 stock void updateConds()
 {
-  for(int i = 0; i < MAXPLAYERS; i++)
+  for(int i = 1; i <= MaxClients; i++)
   {
+    if (!IsClientInGame(i))
+      continue;
+      
     for(int j = 0; j < TOTAL_ZFCONDS; j++)
     {
       if(zf_cond[i][j] > 0)
@@ -1712,7 +1387,7 @@ public void perk_OnPeriodic() // 1Hz
       }
       if(getCond(i, ZFCondPoisoned))
       {
-        // SDKHooks_TakeDamage(i, zf_lastPoison[i], zf_lastPoison[i], float(ZF_POISON_DAMAGE), ZF_DMGTYPE_POISON);
+        SDKHooks_TakeDamage(i, zf_lastPoison[i], zf_lastPoison[i], 4.5, ZF_DMGTYPE_POISON);
         fxHealthLost(i);
       }
       setGlow(i, getCond(i, ZFCondTracked));
@@ -2270,7 +1945,7 @@ public void perk_OnPlayerSpawn(int client)
       {
         if((js & ZF_JOINSTATE_SUR) == 0)
         {
-          DisplayMenu(zf_menuSurPerkList, client, MENU_TIME_FOREVER);
+          panel_PrintSurPerkList(client, true);
           prefSet(client, JoinState, (js | ZF_JOINSTATE_SUR));
         }
       }
@@ -2278,7 +1953,7 @@ public void perk_OnPlayerSpawn(int client)
       {
         if((js & ZF_JOINSTATE_ZOM) == 0)
         {
-          DisplayMenu(zf_menuZomPerkList, client, MENU_TIME_FOREVER);
+          panel_PrintZomPerkList(client, true);
           prefSet(client, JoinState, (js | ZF_JOINSTATE_ZOM));
         }
       }
@@ -2420,7 +2095,10 @@ public void perk_OnPlayerSpawn(int client)
         prefSet(client, ZomPerk, nextPerk);
       }
       prefSet(client, ZomPendPerk, nextPerk);
-      stripWeapons(client);
+      if (TF2_GetPlayerClass(client) != TFClass_Sniper)
+      {
+        stripWeapons(client);
+      }
     }
 
     //
