@@ -136,45 +136,37 @@ stock bool IsBuilding(int entity)
     return (StrContains(classname, "obj_", false) != -1);
 }
 
-stock void doCorruptBuilding(int owner, int building)
+stock void doCorruptBuilding(int client, int building)
 {
     // Get original sentry's properties
     float vOrigin[3];
     getEntityPos(building, vOrigin);
-    int level = GetEntProp(building, Prop_Send, "m_nModelIndex");
 
     // Destroy the original building
     AcceptEntityInput(building, "Kill");
 
-    // Create a new sentry
-    int newSentry = CreateEntityByName("obj_sentrygun");
-
-    if (newSentry == -1) return;
-
     // Prepare data for the setup timer
     DataPack pack = new DataPack();
-    pack.WriteCell(newSentry);
-    pack.WriteCell(owner);
-    pack.WriteCell(level);
+    pack.WriteCell(client);
     pack.WriteFloat(vOrigin[0]);
     pack.WriteFloat(vOrigin[1]);
     pack.WriteFloat(vOrigin[2]);
 
-    // Use a timer to finish setup after the entity has spawned
-    CreateTimer(0.1, timer_FinishSentrySetup, pack, TIMER_FLAG_NO_MAPCHANGE);
+    // Use a timer to create the sentry
+    CreateTimer(0.1, CreateSentry, pack, TIMER_FLAG_NO_MAPCHANGE);
 }
 
-public Action timer_FinishSentrySetup(Handle timer, DataPack pack)
+public Action CreateSentry(Handle timer, DataPack pack)
 {
     pack.Reset();
     int   sentry = pack.ReadCell();
-    int   owner  = pack.ReadCell();
+    int   client  = pack.ReadCell();
     int   level  = pack.ReadCell();
     float vOrigin[3];
     vOrigin[0] = pack.ReadFloat();
     vOrigin[1] = pack.ReadFloat();
     vOrigin[2] = pack.ReadFloat();
-
+    int userid = GetClientOfUserId(client);
     if (!IsValidEntity(sentry))
     {
         delete pack;
@@ -196,7 +188,7 @@ public Action timer_FinishSentrySetup(Handle timer, DataPack pack)
     SetEntProp(sentry, Prop_Send, "m_iTeamNum", 3);
     SetEntProp(sentry, Prop_Send, "m_iUpgradeMetal", 150);
     SetEntProp(sentry, Prop_Send, "m_bHasSapper", 0, 2);
-    SetEntProp(sentry, Prop_Send, "m_hBuilder", owner, 1);
+    SetEntProp(sentry, Prop_Send, "m_hBuilder", userid, 1);
     SetEntProp(sentry, Prop_Send, "m_bServerOverridePlacement", 1, 1);
     SetEntPropFloat(sentry, Prop_Send, "m_flPercentageConstructed", 1.0);
     SetEntProp(sentry, Prop_Send, "m_iUpgradeLevel", 1, 4);    // 1-3
@@ -210,9 +202,8 @@ public Action timer_FinishSentrySetup(Handle timer, DataPack pack)
     packDestroy.WriteCell(sentry);
     CreateTimer(CORRUPTOR_CORRUPTED_LIFETIME, timer_DestroyBuilding, packDestroy, TIMER_FLAG_NO_MAPCHANGE);
 
-    PrintHintText(owner, "%t", "CorruptorPerk_Hint_Corrupted");
-
-    delete pack;
+    PrintHintText(client, "%t", "CorruptorPerk_Hint_Corrupted");
+    
     return Plugin_Stop;
 }
 

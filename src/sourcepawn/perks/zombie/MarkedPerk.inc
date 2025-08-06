@@ -41,7 +41,6 @@ methodmap MarkedPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, MarkedPerkFonTakeDamage);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, MarkedPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, MarkedPerkFonPeriodic);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, MarkedPerkFonRemove);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, MarkedPerkFonPlayerSpawn);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, MarkedPerkFonDeath);
 
@@ -99,13 +98,6 @@ FUNCTION(MarkedPerk, onGraceEnd)) {
     doMarkedSelect(_inst);
 }
 
-FUNCTION(MarkedPerk, onRemove)) {
-    int client = _inst.client;
-    if (validIcon(client)) {
-        removeIcon(client);
-    }
-}
-
 FUNCTION_FLOAT(MarkedPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype) {
     if (attacker == _inst.client && isSur(victim)) {
         if (victim == _inst.target) {
@@ -128,6 +120,13 @@ FUNCTION(MarkedPerk, onPlayerSpawn)) {
 }
 
 FUNCTION(MarkedPerk, onPeriodic)) {
+    int target = _inst.target;
+
+    // If we have a valid target, check if they have died.
+    if (target > 0 && !validSur(target)) {
+        handleTargetDeath(_inst);
+    }
+
     if (_inst.perk_timer > 0) {
         _inst.perk_timer--;
         if (_inst.perk_timer == 0) {
@@ -138,7 +137,10 @@ FUNCTION(MarkedPerk, onPeriodic)) {
 
 FUNCTION(MarkedPerk, updateCondStats), char[] buffer, int maxlen) {
     int target = _inst.target;
+    int client = _inst.client;
     if (target > 0 && validLivingSur(target)) {
+        int color[4] = {255, 0, 0, 100}; // Red for marked target
+        fxBeam(client, target, color);
         char targetName[MAX_NAME_LENGTH];
         GetClientName(target, targetName, sizeof(targetName));
         Format(buffer, maxlen, "%t", "MarkedPerk_Status_Target", targetName);
@@ -179,13 +181,6 @@ void doMarkedSelect(MarkedPerk inst) {
         inst.target = target;
         
         // Clean up old icon before creating a new one
-        if (validIcon(inst.client)) {
-            removeIcon(inst.client);
-        }
-        
-        // Use the more reliable sprite following method
-        createIcon(inst.client, target, ZFSPR_EXCLAMATION);
-        showIcon(target);
 
         PrintHintText(inst.client, "%t", "MarkedPerk_Hint_NewTarget", target);
         PrintHintText(target, "%t", "MarkedPerk_Hint_Marked");
@@ -196,18 +191,19 @@ void doMarkedSelect(MarkedPerk inst) {
 
 FUNCTION(MarkedPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
     if (victim == _inst.target) {
-        // Our target has died.
-        _inst.target = 0;
-        if (validIcon(_inst.client)) {
-            removeIcon(_inst.client);
-        }
+        handleTargetDeath(_inst);
+    }
+}
 
-        // Check if we should find a new target.
-        if (local_getSurCount() > ZF_MARKED_MIN_SURVIVORS) {
-            _inst.perk_timer = ZF_MARKED_TIMER;
-        } else {
-            // No more valid targets, set to -1 to indicate completion.
-            _inst.target = -1;
-        }
+void handleTargetDeath(MarkedPerk inst) {
+    // Our target has died.
+    inst.target = 0;
+
+    // Check if we should find a new target.
+    if (local_getSurCount() > ZF_MARKED_MIN_SURVIVORS) {
+        inst.perk_timer = ZF_MARKED_TIMER;
+    } else {
+        // No more valid targets, set to -1 to indicate completion.
+        inst.target = -1;
     }
 }

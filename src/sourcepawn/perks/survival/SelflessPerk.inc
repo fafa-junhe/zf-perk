@@ -14,6 +14,17 @@
 #define ZF_SELFLESS_RADIUS 5000
 
 methodmap SelflessPerk < SurvivorBasePerk {
+    property bool hasExploded {
+        public get() {
+            this.Position = view_as<DataPackPos>(PERK_DATA_START_INDEX + 0);
+            return this.ReadCell();
+        }
+        public set(bool value) {
+            this.Position = view_as<DataPackPos>(PERK_DATA_START_INDEX + 0);
+            this.WriteCell(value);
+        }
+    }
+
     public SelflessPerk(int client) {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         SelflessPerk sm = view_as<SelflessPerk>(sm_base);
@@ -22,7 +33,9 @@ methodmap SelflessPerk < SurvivorBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, SelflessPerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, SelflessPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, SelflessPerkFonTakeDamage);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, SelflessPerkFonPlayerSpawn);
 
+        sm.hasExploded = false;
         return sm;
     }
 }
@@ -44,6 +57,11 @@ FUNCTION(SelflessPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "SelflessPerk_desc");
 }
 
+FUNCTION(SelflessPerk, onPlayerSpawn))
+{
+    _inst.hasExploded = false;
+}
+
 // 使用 onTakeDamage 来触发爆炸
 FUNCTION_FLOAT(SelflessPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype)
 {
@@ -61,7 +79,8 @@ FUNCTION_FLOAT(SelflessPerk, onTakeDamage), int victim, int attacker, int inflic
     // 2. 检查是否是来自僵尸的致命一击
     if (validZom(attacker)) {
         int currentHealth = GetClientHealth(client);
-        if (damage >= currentHealth) {
+        if (damage >= currentHealth && !_inst.hasExploded) {
+            _inst.hasExploded = true;
             // 这是致命一击！在伤害应用前触发爆炸。
             // 此时，`client` 仍然是活着的，`validClient(client)` 会返回 true。
             
@@ -70,7 +89,9 @@ FUNCTION_FLOAT(SelflessPerk, onTakeDamage), int victim, int attacker, int inflic
 
             // b. 调用范围伤害函数
             // 此时 client 仍然是有效的 attacker
-            applyDamageRadialAtClient(client, ZF_SELFLESS_DAMAGE, ZF_SELFLESS_RADIUS, false);
+            float pos[3];
+            GetClientAbsOrigin(client, pos);
+            applyDamageRadial(client, ZF_SELFLESS_DAMAGE, pos, ZF_SELFLESS_RADIUS, false, GetClientTeam(client));
         }
     }
 

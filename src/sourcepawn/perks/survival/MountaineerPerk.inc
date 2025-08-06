@@ -181,7 +181,7 @@ FUNCTION(MountaineerPerk, onCallForMedic))
 
         TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, direction);
 
-        fxCreateSoundToClient("weapons/grapple_impact.wav", client);
+        fxCreateSoundToClient(ZFSND_GRAP_HOOK, client);
 
         _inst.perk_timer = MOUNTAINEER_GRAPPLE_COOLDOWN;
     }

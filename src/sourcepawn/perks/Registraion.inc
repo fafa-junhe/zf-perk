@@ -36,6 +36,7 @@
 #include "survival/SpecterPerk.inc"
 #include "survival/EchoPerk.inc"
 #include "survival/RicochetSpecialistPerk.inc"
+#include "survival/BountyHunterPerk.inc"
 #include "zombie/ZombieBasePerk.inc"
 #include "zombie/AlphaPerk.inc"
 #include "zombie/CombustiblePerk.inc"
@@ -95,6 +96,7 @@ public void registerSurvivorPerks() {
     RegisterSurvivorPerk(SpecterPerk);
     RegisterSurvivorPerk(EchoPerk);
     RegisterSurvivorPerk(RicochetSpecialistPerk);
+    RegisterSurvivorPerk(BountyHunterPerk);
 }
 
 public void registerZombiePerks() {

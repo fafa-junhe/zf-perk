@@ -119,10 +119,6 @@ void FriendPerk_doFriendSelect(FriendPerk perk, int friend = -1)
     {
         perk.friendId = friend;
         perk.critTime = ZF_FRIEND_CRITTIME_INIT;
-        createIcon(client, friend, ZFSPR_DOMINATED);
-        createIcon(friend, client, ZFSPR_DOMINATED);
-        showIcon(client);
-        showIcon(friend);
         PrintToChat(client, "%t", "FriendPerk_Chat_NewFriend", friend);
         PrintToChat(friend, "%t", "FriendPerk_Chat_NewFriend", client);
     }
@@ -205,6 +201,9 @@ FUNCTION(FriendPerk, updateCondStats), char[] buffer, int maxlen)
                 addHealth(friend, ZF_FRIEND_REGEN);
                 addStat(client, ZFStatAtt, ZFStatTypeCond, ZF_FRIEND_ATTACK);
                 addStat(friend, ZFStatAtt, ZFStatTypeCond, ZF_FRIEND_ATTACK);
+                int color[4] = {10, 50, 200, 100}; // Blue for friend
+                fxBeam(client, friend, color);
+                fxBeam(friend, client, color);
             }
         }
         else {                      // Friend has died
@@ -214,7 +213,6 @@ FUNCTION(FriendPerk, updateCondStats), char[] buffer, int maxlen)
                 addCondKritz(client, float(_inst.critTime));
                 fxKritzStart(client);
                 fxCreateParticle(ZFPART_AURAINRED, client, AttachBase, float(_inst.critTime));
-                removeIcon(client);
             }
         }
     }

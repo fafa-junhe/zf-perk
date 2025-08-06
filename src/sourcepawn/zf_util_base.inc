@@ -651,7 +651,7 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_FORCEANATURE] = F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_SHORTSTOP]    = F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_SCOUTPISTOL]  = F_ISAUTO|F_ISBULLET;
-  ZF_WEAPON_DATA[ZFWEAP_BONK]         = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_BONK]         = 0;
   ZF_WEAPON_DATA[ZFWEAP_LUGERMORPH]   = F_ISAUTO|F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_CRITACOLA]    = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_MADMILK]      = F_NOSTRIP;
@@ -669,7 +669,7 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_POCKET_PISTOL]      = F_ISAUTO|F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_FLYING_GUILLOTINE]  = 0;
   ZF_WEAPON_DATA[ZFWEAP_MUTATED_MILK]       = F_NOSTRIP;
-  ZF_WEAPON_DATA[ZFWEAP_FESTIVE_BONK]       = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_FESTIVE_BONK]       = 0;
   ZF_WEAPON_DATA[ZFWEAP_CAPPER]             = F_ISAUTO|F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_ATOMIZER]           = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_THREE_RUNE_BLADE]   = F_NOSTRIP;
@@ -1119,7 +1119,7 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_ENFORCER]       = F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_DIAMONDBACK]    = F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_KNIFE]          = F_NOSTRIP;
-  ZF_WEAPON_DATA[ZFWEAP_ETERNALREWARD]  = 0;
+  ZF_WEAPON_DATA[ZFWEAP_ETERNALREWARD]  = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_CONNIVERSKUNAI] = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_BIG_EARNER]     = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_WANGAS_PRICK]   = F_NOSTRIP;
@@ -1413,7 +1413,7 @@ stock void stripWeapons(int client, bool keepPri = false)
     {
       if(weaponId >= MAX_ZF_WEAPONS)
       {
-        // LogError("[ZF] - stripToMelee() - Invalid weaponId: %d", weaponId);
+        LogError("[ZF] - stripToMelee() - Invalid weaponId: %d", weaponId);
         TF2_RemoveWeaponSlot(client, i);
       }
       else
@@ -1421,8 +1421,13 @@ stock void stripWeapons(int client, bool keepPri = false)
         doStrip = ((ZF_WEAPON_DATA[weaponId] & F_NOSTRIP) == 0);
         if((i == 0) && keepPri)
           doStrip = false;
-        if(doStrip)
+        if(doStrip){
+          if (!(ZF_WEAPON_DATA[weaponId] & (F_ISBULLET | F_ISAUTO))) 
+            PrintHintText(client, "你的武器在黑名单中，已被禁用！");
+          LogError("[ZF] - stripToMelee() - weaponId: %d, slot %d", weaponId, i);
           TF2_RemoveWeaponSlot(client, i);
+        }
+        
       }
     }
   }
@@ -1435,6 +1440,7 @@ stock void stripWeapons(int client, bool keepPri = false)
 
 stock void stripWeaponSlot(int client, int slot)
 {
+  LogError("[ZF] - stripWeaponSlot() - slot %d", slot);
   if(GetPlayerWeaponSlot(client, slot) > 0) 
     TF2_RemoveWeaponSlot(client, slot);
 }
@@ -2031,7 +2037,7 @@ stock void spawnClient(int client, int nextClientTeam)
     // 1. "[Player] Suicided" messages.
     // 2. Adding a death to player stats.
     SetEntProp(client, Prop_Send, "m_lifeState", 2); 
-    TF2_SetPlayerClass(client, nextClientClass, false, true);   
+    TF2_SetPlayerClass(client, nextClientClass, false, true);
     ChangeClientTeam(client, nextClientTeam);
     SetEntProp(client, Prop_Send, "m_lifeState", 0);      
     TF2_RespawnPlayer(client);      
@@ -2057,67 +2063,98 @@ void setTeamRespawnTime(int team, float time)
 //
 ////////////////////////////////////////////////////////////
 stock void applyDamageRadialAtClient(
-  int client, 
-  int damage, 
-  int radius, 
+  int client,
+  int damage,
+  int radius,
   bool doFx = false)
 {
   float pos[3];
   GetClientEyePosition(client, pos);
-  applyDamageRadial(client, damage, pos, radius, doFx);  
+
+  PrintToServer("[DEBUG] applyDamageRadialAtClient -> client: %N (%d), damage: %d, radius: %d, doFx: %d, pos: [%.1f, %.1f, %.1f]",
+    client, client, damage, radius, doFx, pos[0], pos[1], pos[2]);
+
+  applyDamageRadial(client, damage, pos, radius, doFx, GetClientTeam(client));
 }
 
 stock void applyDamageRadial(
-  int attacker, 
-  int damage, 
+  int attacker,
+  int damage,
   const float pos[3],
-  int radius, 
-  bool doFx = false)
+  int radius,
+  bool doFx = false,
+  int team = 0)
 {
-  if((damage <= 0) || (radius <= 0) || !validClient(attacker))
-    return;
+  PrintToServer("[DEBUG] applyDamageRadial called -> attacker: %N (%d), damage: %d, radius: %d, doFx: %d, team: %d, pos: [%.1f, %.1f, %.1f]",
+    attacker, attacker, damage, radius, doFx, team, pos[0], pos[1], pos[2]);
 
-  // Apply explosion damage.
+  if((damage <= 0) || (radius <= 0))
+  {
+    PrintToServer("[DEBUG] applyDamageRadial -> Invalid damage (%d) or radius (%d), skipping.", damage, radius);
+    return;
+  }
+
   int ent = CreateEntityByName("env_explosion");
   if(IsValidEntity(ent))
   {
+    PrintToServer("[DEBUG] env_explosion created -> ent: %d", ent);
+
     char strTargetName[16];
     char strAddOutput[64];
     Format(strTargetName, sizeof(strTargetName), "%s%d", ZF_DAMAGERADIUS_NAME, ent);
 
-    // Config, create env_explosion
-    DispatchKeyValue(ent, "targetname", strTargetName); 
+    DispatchKeyValue(ent, "targetname", strTargetName);
     SetEntProp(ent, Prop_Data, "m_iMagnitude", damage);
     SetEntProp(ent, Prop_Data, "m_iRadiusOverride", radius);
     SetEntProp(ent, Prop_Data, "m_spawnflags", (doFx ? 0x0 : 0x3FC));
-    SetEntPropEnt(ent, Prop_Data, "m_hInflictor", attacker);
-    SetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity", attacker); 
-    SetEntPropEnt(ent, Prop_Data, "m_hEntityIgnore", attacker); // Prevent self-damage
-    SetEntPropFloat(ent, Prop_Data, "m_flDamageForce", 100.0);  // TODO Why is this here?
-    DispatchSpawn(ent);
 
-    // Teleport env_explosion
+    if (validClient(attacker))
+    {
+        PrintToServer("[DEBUG] Setting attacker props -> attacker: %N (%d)", attacker, attacker);
+        SetEntPropEnt(ent, Prop_Data, "m_hInflictor", attacker);
+        SetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity", attacker);
+        SetEntPropEnt(ent, Prop_Data, "m_hEntityIgnore", attacker);
+    }
+    else
+    {
+        PrintToServer("[DEBUG] Attacker (%d) not valid client, skipping ownership set.", attacker);
+    }
+
+    if (team >= 2)
+    {
+        char sTeam[4];
+        IntToString(team, sTeam, sizeof(sTeam));
+        DispatchKeyValue(ent, "iTeamNum", sTeam);
+        PrintToServer("[DEBUG] Setting explosion team to %s", sTeam);
+    }
+
+    SetEntPropFloat(ent, Prop_Data, "m_flDamageForce", 100.0);  // Optional tweak
+
+    DispatchSpawn(ent);
+    PrintToServer("[DEBUG] env_explosion dispatched and spawned.");
+
     TeleportEntity(ent, pos, NULL_VECTOR, NULL_VECTOR);
-        
-    // Explode in 0.01s.
+    PrintToServer("[DEBUG] env_explosion teleported to [%.1f, %.1f, %.1f]", pos[0], pos[1], pos[2]);
+
     Format(strAddOutput, sizeof(strAddOutput), "OnUser1 !self:explode::%f:1", 0.01);
     SetVariantString(strAddOutput);
     AcceptEntityInput(ent, "AddOutput");
     AcceptEntityInput(ent, "FireUser1");
-    
-    // Kill in 0.02s.
+
     Format(strAddOutput, sizeof(strAddOutput), "OnUser2 !self:kill::%f:1", 0.02);
     SetVariantString(strAddOutput);
     AcceptEntityInput(ent, "AddOutput");
     AcceptEntityInput(ent, "FireUser2");
+
+    PrintToServer("[DEBUG] env_explosion scheduled for explode and kill.");
   }
   else
   {
-    LogError("[ZF] applyDamageRadial (%d, %d, [%2.2f,%2.2f,%2.2f], %d) failed.", attacker, damage, pos[0], pos[1], pos[2], radius); 
+    LogError("[ZF] applyDamageRadial -> Failed to create env_explosion. Pos: [%.2f, %.2f, %.2f], damage: %d, radius: %d",
+      pos[0], pos[1], pos[2], damage, radius);
   }
-  
-  return;  
 }
+
 
 // StringMap Function
 #define DP(%1) view_as<DataPackPos>(%1)

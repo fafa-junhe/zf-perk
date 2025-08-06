@@ -26,10 +26,11 @@
 
 // --- Data Slots ---
 #define CHARGER_DATA_TIMER        (PERK_DATA_START_INDEX + 0)    // Cooldown
-#define CHARGER_DATA_STATE        (PERK_DATA_START_INDEX + 1)    // 0: idle, 1: charging, 2: carrying
+#define CHARGER_DATA_STATE        (PERK_DATA_START_INDEX + 1)    // 0: idle, 1: charging, 2: carrying, 3: preparing
 #define CHARGER_DATA_VICTIM       (PERK_DATA_START_INDEX + 2)    // The grabbed survivor
 #define CHARGER_DATA_CHARGE_TIMER (PERK_DATA_START_INDEX + 3)    // Max duration timer
 #define VTABLE_DO_CHARGE_END      (PERK_DATA_START_INDEX + 4)    // Custom vtable for ending the charge
+#define CHARGER_DATA_PREPARE_TIMER (PERK_DATA_START_INDEX + 5)    // Timer for preparing charge
 
 methodmap ChargerPerk < ZombieBasePerk
 {
@@ -58,6 +59,7 @@ public     ChargerPerk(int client)
         sm.perk_state   = 0;
         sm.victim       = -1;
         sm.charge_timer = 0.0;
+        sm.prepare_timer = 0.0;
 
         return sm;
     }
@@ -123,6 +125,21 @@ public         set(float value)
         }
     }
 
+    property float prepare_timer
+    {
+        public get()
+        {
+            this.Position = view_as<DataPackPos>(CHARGER_DATA_PREPARE_TIMER);
+            return this.ReadFloat();
+        }
+
+        public set(float value)
+        {
+            this.Position = view_as<DataPackPos>(CHARGER_DATA_PREPARE_TIMER);
+            this.WriteFloat(value);
+        }
+    }
+
 public     void doChargeEnd(bool hitWall)
     {
         START_VTABLE_CALL(VTABLE_DO_CHARGE_END);
@@ -178,17 +195,22 @@ FUNCTION(ChargerPerk, updateClientPermStats))
     addStat(_inst.client, ZFStatSpeed, ZFStatTypePerm, CHARGER_SPEED_PENALTY);
 }
 
-FUNCTION(ChargerPerk, onCallForMedic))
+stock void ChargerPerkFdoChargeStart(int client)
 {
-    int client = _inst.client;
-    if (_inst.perk_timer > 0 || _inst.perk_state != 0 || !(GetEntityFlags(client) & FL_ONGROUND))
+    BasePerk perk_base = g_hPerks[client];
+    if (perk_base == null)
+        return;
+    ChargerPerk inst = view_as<ChargerPerk>(perk_base);
+    if (inst == null || inst.perk_state != 3 || !IsPlayerAlive(client) || !(GetEntityFlags(client) & FL_ONGROUND))
     {
+        if (inst != null)
+            inst.perk_state = 0;
         return;
     }
 
-    _inst.perk_state   = 1;
-    _inst.perk_timer   = CHARGER_CHARGE_COOLDOWN;
-    _inst.charge_timer = GetGameTime() + CHARGER_MAX_DURATION;
+    inst.perk_state   = 1;
+    inst.perk_timer   = CHARGER_CHARGE_COOLDOWN;
+    inst.charge_timer = GetGameTime() + CHARGER_MAX_DURATION;
 
     float ang[3];
     GetClientEyeAngles(client, ang);
@@ -206,6 +228,26 @@ FUNCTION(ChargerPerk, onCallForMedic))
     AcceptEntityInput(client, "SetForcedTauntCam");
 
     PrintHintText(client, "%t", "ChargerPerk_Hint_Charging");
+}
+
+FUNCTION(ChargerPerk, onCallForMedic))
+{
+    int client = _inst.client;
+    if (TF2_IsPlayerInCondition(client, TFCond_Cloaked))
+    {
+        PrintHintText(client, "%t", "ChargerPerk_Hint_Cloaked");
+        return;
+    }
+
+    if (_inst.perk_timer > 0 || _inst.perk_state != 0 || !(GetEntityFlags(client) & FL_ONGROUND))
+    {
+        return;
+    }
+
+    _inst.perk_state = 3;    // Preparing
+    _inst.prepare_timer = GetGameTime() + 0.3;
+    fxCreateSoundToAll("weapons/rocket_pack_boosters_charge.wav", client)
+    PrintHintText(client, "%t", "ChargerPerk_Hint_Preparing");
 }
 
 FUNCTION(ChargerPerk, onTouch), int toucher, int touchee)
@@ -244,7 +286,7 @@ FUNCTION(ChargerPerk, onTouch), int toucher, int touchee)
 
 FUNCTION(ChargerPerk, onPlayerRunCmd), int buttons, int impulse, float vel[3], float angles[3], int weapon)
 {
-    if (_inst.perk_state == 0)
+    if (_inst.perk_state == 0 || _inst.perk_state == 3)
     {
         return;
     }
@@ -283,6 +325,11 @@ FUNCTION(ChargerPerk, onPlayerRunCmd), int buttons, int impulse, float vel[3], f
     ScaleVector(charge_vel, charge_force);
 
     charge_vel[2] = 150.0;    // Add a slight upward velocity to climb slopes
+    if (!(GetEntityFlags(client) & FL_ONGROUND))
+    {
+        charge_vel[2] = -50.0;
+    }
+    
     TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, charge_vel);
     // --- Wall detection logic ---
     float start_pos[3], end_pos[3], fwd[3];
@@ -318,7 +365,12 @@ FUNCTION(ChargerPerk, onPeriodic))
         _inst.perk_timer--;
     }
 
-    if (_inst.perk_state != 0 && GetGameTime() > _inst.charge_timer)
+    if (_inst.perk_state == 3 && GetGameTime() > _inst.prepare_timer)
+    {
+        ChargerPerkFdoChargeStart(_inst.client);
+    }
+
+    if ((_inst.perk_state == 1 || _inst.perk_state == 2) && _inst.charge_timer > 0.0 && GetGameTime() > _inst.charge_timer)
     {
         PrintHintText(_inst.client, "%t", "ChargerPerk_Hint_Finished");
         _inst.doChargeEnd(false);
@@ -330,9 +382,8 @@ FUNCTION(ChargerPerk, updateCondStats), char[] buffer, int maxlen)
     switch (_inst.perk_state)
     {
         case 1: Format(buffer, maxlen, "%t", "ChargerPerk_Status_Charging");
-
         case 2: Format(buffer, maxlen, "%t", "ChargerPerk_Status_Carrying");
-
+        case 3: Format(buffer, maxlen, "%t", "ChargerPerk_Status_Preparing");
         default:
         {
             if (_inst.perk_timer > 0)

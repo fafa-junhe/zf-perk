@@ -192,7 +192,6 @@ FUNCTION(TarredPerk, onCallForMedic))
 
     int color[3] = {25, 25, 25}; // Tar color
 
-    LogMessage("TarredPerk: Attempting to throw tar projectile for client %d.", client);
     
     int item_index = getFreeItemIndex(client, 1); // Tarred perk only throws one projectile at a time
     if (item_index == -1)
@@ -205,10 +204,8 @@ FUNCTION(TarredPerk, onCallForMedic))
 
     if (projectile == -1)
     {
-        LogMessage("TarredPerk: Failed to create tar projectile for client %d.", client);
         return;
     }
-    LogMessage("TarredPerk: Successfully created tar projectile with entity index: %d for item index %d", projectile, item_index);
 
     setItemMetadata(projectile, item_index);
     zf_item[client][item_index] = projectile;
@@ -366,19 +363,16 @@ FUNCTION(TarredPerk, onGameFrame))
         {
             continue;    // 投射物已失效
         }
-        LogMessage("TarredPerk.onGameFrame: Tracking projectile %d", projectile);
 
         // 检查模型名称，确保它仍然是我们期望的投射物
         if (!HasEntProp(projectile, Prop_Data, "m_ModelName"))
         {
-            LogMessage("TarredPerk.onGameFrame: HasEntProp can't %d", projectile);
             continue;
         }
         char model_name[PLATFORM_MAX_PATH];
         GetEntPropString(projectile, Prop_Data, "m_ModelName", model_name, sizeof(model_name));
         if (strcmp(model_name, ZF_TARRED_PROJECTILE_MODEL) != 0)
         {
-            LogMessage("strcmp can't %d", projectile);
             continue;
         }
 
@@ -389,14 +383,12 @@ FUNCTION(TarredPerk, onGameFrame))
         GetClientAbsOrigin(_inst.client, owner_pos);
         if (GetVectorDistance(owner_pos, current_pos) > ZF_TARRED_MAX_DIST)
         {
-            LogMessage("TarredPerk.onGameFrame: Projectile %d exceeded max distance. Killing.", projectile);
             AcceptEntityInput(projectile, "Kill");
             continue;
         }
 
         if (doItemCollide(projectile, prev_pos, hit_pos, hit_vec))
         {
-            LogMessage("TarredPerk.onGameFrame: Projectile %d collided. Creating pool.", projectile);
             float hit_ang[3];
             GetVectorAngles(hit_vec, hit_ang);
             createTarPool(_inst.client, projectile, hit_pos, hit_ang);

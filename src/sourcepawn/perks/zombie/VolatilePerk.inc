@@ -27,13 +27,13 @@ methodmap VolatilePerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, VolatilePerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, VolatilePerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, VolatilePerkFonTakeDamage);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, VolatilePerkFonDeath);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, VolatilePerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, VolatilePerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, VolatilePerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, VolatilePerkFonPlayerSpawn);
 
         sm.energy = 0.0;
+        sm.hasExploded = false;
         return sm;
     }
 
@@ -45,6 +45,17 @@ methodmap VolatilePerk < ZombieBasePerk {
         public set(float value) {
             this.Position = view_as<DataPackPos>(VOLATILE_DATA_ENERGY);
             this.WriteFloat(value);
+        }
+    }
+
+    property bool hasExploded {
+        public get() {
+            this.Position = view_as<DataPackPos>(VOLATILE_DATA_ENERGY + 1);
+            return this.ReadCell();
+        }
+        public set(bool value) {
+            this.Position = view_as<DataPackPos>(VOLATILE_DATA_ENERGY + 1);
+            this.WriteCell(value);
         }
     }
 }
@@ -67,32 +78,38 @@ FUNCTION(VolatilePerk, getDesc), char[] buffer, int maxlen) {
 
 FUNCTION(VolatilePerk, onPlayerSpawn)) {
     _inst.energy = 0.0;
+    _inst.hasExploded = false;
 }
 
 FUNCTION_FLOAT(VolatilePerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype) {
-    if (victim == _inst.client) {
-        _inst.energy = fMin(VOLATILE_MAX_ENERGY, _inst.energy + damage * VOLATILE_ENERGY_STORE_RATIO);
+    int client = _inst.client;
+    if (victim != client) {
+        return damage;
     }
+
+    // Store energy from any incoming damage
+    _inst.energy = fMin(VOLATILE_MAX_ENERGY, _inst.energy + damage * VOLATILE_ENERGY_STORE_RATIO);
+
+    // Explosion is now only triggered by pressing 'E'.
+    // This function only stores energy from damage taken.
+
     return damage;
-}
-
-FUNCTION(VolatilePerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
-    // Only explode if the player killed themselves (via 'E' key or suicide command)
-    if (victim == _inst.client && killer == victim && _inst.energy > 0) {
-        float explosion_damage = _inst.energy * VOLATILE_SUICIDE_MULTIPLIER;
-
-        applyDamageRadialAtClient(_inst.client, RoundToNearest(explosion_damage), RoundToNearest(VOLATILE_EXPLOSION_RADIUS), true);
-        fxCreateParticle("rocket_explosion_classic_crit_red", _inst.client, AttachNone, 2.0);
-    }
 }
 
 FUNCTION(VolatilePerk, onCallForMedic)) {
     int client = _inst.client;
-    if (_inst.energy > 0) {
-        // The onDeath function will handle the explosion now.
-        // We just need to kill the player.
+    if (_inst.energy > 0 && !_inst.hasExploded) {
+        _inst.hasExploded = true;
+
+        float explosion_damage = _inst.energy * VOLATILE_SUICIDE_MULTIPLIER;
+
+        float pos[3];
+        GetClientAbsOrigin(client, pos);
+        applyDamageRadial(client, RoundToNearest(explosion_damage), pos, RoundToNearest(VOLATILE_EXPLOSION_RADIUS), true, GetClientTeam(client));
+        fxCreateParticle("rocket_explosion_classic_crit_red", client, AttachNone, 2.0);
+
         ForcePlayerSuicide(client);
-    } else {
+    } else if (_inst.energy <= 0) {
         PrintHintText(client, "%t", "ZF_Volatile_No_Energy");
     }
 }

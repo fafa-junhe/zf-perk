@@ -105,58 +105,69 @@ FUNCTION(AlchemistPerk, onPlayerSpawn))
 FUNCTION(AlchemistPerk, onPeriodic))
 {
     int client = _inst.client;
+
+
     if (zf_perkState[client] < ALCHEMIST_MAX_POTIONS)
     {
         if (zf_perkTimer[client] > 0)
         {
             zf_perkTimer[client]--;
         }
-        else {
+        else
+        {
             zf_perkState[client]++;
             zf_perkTimer[client] = ALCHEMIST_POTION_GEN_TIME;
             PrintHintText(client, "%t", "AlchemistPerk_Hint_PotionReady", zf_perkState[client]);
         }
     }
-    
-    // --- Puddle effect logic (Existing) ---
+
+    // --- Puddle effect logic ---
     for (int i = 0; i < ALCHEMIST_MAX_PUDDLES; i++)
     {
         int puddle = zf_item[client][i];
-        if (IsValidEntity(puddle))
+
+        if (!IsValidEntity(puddle))
         {
-            if (!HasEntProp(puddle, Prop_Data, "m_ModelName"))
+            continue;
+        }
+
+        if (!HasEntProp(puddle, Prop_Data, "m_ModelName"))
+        {
+            zf_item[client][i] = -1;
+            continue;
+        }
+
+        char model_name[PLATFORM_MAX_PATH];
+        GetEntPropString(puddle, Prop_Data, "m_ModelName", model_name, sizeof(model_name));
+
+        if (strcmp(model_name, ALCHEMIST_POTION_MODEL) != 0)
+        {
+            zf_item[client][i] = -1;
+            continue;
+        }
+
+        float puddle_pos[3];
+        GetEntPropVector(puddle, Prop_Send, "m_vecOrigin", puddle_pos);
+
+        for (int p = 1; p <= MaxClients; p++)
+        {
+            if (!IsClientInGame(p) || !IsPlayerAlive(p)) continue;
+
+            float player_pos[3];
+            GetClientAbsOrigin(p, player_pos);
+            float distSqr = GetVectorDistance(player_pos, puddle_pos, true);
+
+            if (distSqr < ALCHEMIST_AOE_RADIUS_SQ)
             {
-                zf_item[client][i] = -1;
-                continue;
-            }
-            char model_name[PLATFORM_MAX_PATH];
-            GetEntPropString(puddle, Prop_Data, "m_ModelName", model_name, sizeof(model_name));
-            if (strcmp(model_name, ALCHEMIST_POTION_MODEL) != 0)
-            {
-                zf_item[client][i] = -1;
-                continue;
-            }
 
-            float puddle_pos[3];
-            GetEntPropVector(puddle, Prop_Send, "m_vecOrigin", puddle_pos);
-
-            for (int p = 1; p <= MaxClients; p++)
-            {
-                if (!IsClientInGame(p) || !IsPlayerAlive(p)) continue;
-
-                float player_pos[3];
-                GetClientAbsOrigin(p, player_pos);
-
-                if (GetVectorDistance(player_pos, puddle_pos, true) < ALCHEMIST_AOE_RADIUS_SQ)
+                if (validSur(p))
                 {
-                    if (validSur(p))
-                    {
-                        addStat(p, ZFStatSpeed, ZFStatTypeCond, ALCHEMIST_ALLY_SPEED_BONUS);
-                    }
-                    else if (validZom(p)) {
-                        SDKHooks_TakeDamage(p, client, client, 1.0);
-                        addStat(p, ZFStatSpeed, ZFStatTypeCond, ALCHEMIST_ZOMBIE_SLOW);
-                    }
+                    addStatTempStack(p, ZFStatSpeed, ALCHEMIST_ALLY_SPEED_BONUS, 5);
+                }
+                else if (validZom(p))
+                {
+                    SDKHooks_TakeDamage(p, client, client, ALCHEMIST_ZOMBIE_DAMAGE);
+                    addStat(p, ZFStatSpeed, ZFStatTypeCond, ALCHEMIST_ZOMBIE_SLOW);
                 }
             }
         }

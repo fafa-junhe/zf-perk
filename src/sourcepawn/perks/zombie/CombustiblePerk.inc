@@ -28,6 +28,17 @@
 #define ZF_COMBUSTIBLE_RESPAWNTIME 4.5
 
 methodmap CombustiblePerk < ZombieBasePerk {
+    property bool hasExploded {
+        public get() {
+            this.Position = view_as<DataPackPos>(PERK_DATA_START_INDEX + 0);
+            return this.ReadCell();
+        }
+        public set(bool value) {
+            this.Position = view_as<DataPackPos>(PERK_DATA_START_INDEX + 0);
+            this.WriteCell(value);
+        }
+    }
+
     public CombustiblePerk(int client) {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         CombustiblePerk sm = view_as<CombustiblePerk>(sm_base);
@@ -40,6 +51,7 @@ methodmap CombustiblePerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, CombustiblePerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, CombustiblePerkFonPlayerSpawn);
 
+        sm.hasExploded = false;
         return sm;
     }
 }
@@ -70,12 +82,14 @@ FUNCTION_FLOAT(CombustiblePerk, onTakeDamage), int victim, int attacker,  int in
 
     // 检查是否是来自幸存者的非近战致命一击
     if (validSur(attacker) && !(damagetype & DMG_CLUB)) {
-        if (damage >= GetClientHealth(client)) {
+        if (damage >= GetClientHealth(client) && !_inst.hasExploded) {
+            _inst.hasExploded = true;
             // 是致命一击，触发爆炸
             int explosionDamage = (TF2_GetPlayerClass(victim) == TFClass_Heavy) ? ZF_COMBUSTIBLE_DAMAGE_HEAVY : ZF_COMBUSTIBLE_DAMAGE;
             
-            // 此刻 victim 仍然有效，可以作为 attacker
-            applyDamageRadialAtClient(victim, explosionDamage, ZF_COMBUSTIBLE_RADIUS, true);
+            float pos[3];
+            GetClientAbsOrigin(victim, pos);
+            applyDamageRadial(victim, explosionDamage, pos, ZF_COMBUSTIBLE_RADIUS, true, GetClientTeam(victim));
             fxExplosionBig(victim);
             
             // 设置重生计时器
@@ -95,26 +109,11 @@ public Action Timer_RespawnClient(Handle timer, any client) {
 // 实现 onPlayerSpawn
 FUNCTION(CombustiblePerk, onPlayerSpawn))
 {
+    _inst.hasExploded = false;
     int client = _inst.client;
     // 禁用间谍的PDA2槽（手表通常在这里）
     if (TF2_GetPlayerClass(client) == TFClass_Spy) {
         stripWeaponSlot(client, 3); // 2是PDA2槽位
-    }
-    // 禁用侦察兵的副武器槽（Bonk是副武器）
-    if (TF2_GetPlayerClass(client) == TFClass_Scout) {
-        // 你需要找到 Bonk 的武器名或定义，然后针对性禁用
-        // 一个更通用的方法是检查玩家的所有武器
-        for (int i = 0; i < 3; i++) { // 遍历主、副、近战槽
-            int weapon = GetPlayerWeaponSlot(client, i);
-            if (IsValidEntity(weapon)) {
-                char weapon_name[64];
-                GetEdictClassname(weapon, weapon_name, sizeof(weapon_name));
-                if (StrEqual(weapon_name, "tf_weapon_lunchbox_drink")) {
-                    stripWeaponSlot(client, i);
-                    break;
-                }
-            }
-        }
     }
 }
 

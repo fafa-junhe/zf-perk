@@ -42,6 +42,7 @@ methodmap HunterPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, HunterPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, HunterPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, HunterPerkFonRemove);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, HunterPerkFonPeriodic);
 
         // Initialize data
         sm.Position = view_as<DataPackPos>(HUNTER_DATA_PLACED_SPAWN);
@@ -151,22 +152,16 @@ FUNCTION(HunterPerk, onCallForMedic)) {
     PrintHintText(client, "%t", "HunterPerk_Hint_Placed");
 }
 
-FUNCTION(HunterPerk, updateCondStats), char[] buffer, int maxlen) {
+FUNCTION(HunterPerk, onPeriodic)) {
     int client = _inst.client;
 
-    if (!_inst.placed_spawn) {
-        Format(buffer, maxlen, "%t", "HunterPerk_Status_CanPlace");
+    if (!_inst.placed_spawn || !validAura(client)) {
         return;
     }
 
-    if (!validAura(client)) {
-        Format(buffer, maxlen, "%t", "HunterPerk_Status_Destroyed");
-        return;
-    }
-    
-    bool destroyed = false;
     float spawn_pos[3];
     _inst.getSpawnPos(spawn_pos);
+
     for (int i = 1; i <= MaxClients; i++) {
         if (validLivingSur(i)) {
             float sur_pos[3];
@@ -174,15 +169,22 @@ FUNCTION(HunterPerk, updateCondStats), char[] buffer, int maxlen) {
             if (GetVectorDistance(spawn_pos, sur_pos, true) < ZF_HUNTER_RADIUSSQ) {
                 removeAura(client);
                 PrintHintText(client, "%t", "HunterPerk_Hint_Destroyed");
-                destroyed = true;
                 break;
             }
         }
     }
-    
-    if(destroyed) {
-        Format(buffer, maxlen, "%t", "HunterPerk_Status_Destroyed");
-    } else {
-        Format(buffer, maxlen, "%t", "HunterPerk_Status_Active");
+}
+
+FUNCTION(HunterPerk, updateCondStats), char[] buffer, int maxlen) {
+    if (!_inst.placed_spawn) {
+        Format(buffer, maxlen, "%t", "HunterPerk_Status_CanPlace");
+        return;
     }
+
+    if (!validAura(_inst.client)) {
+        Format(buffer, maxlen, "%t", "HunterPerk_Status_Destroyed");
+        return;
+    }
+    
+    Format(buffer, maxlen, "%t", "HunterPerk_Status_Active");
 }

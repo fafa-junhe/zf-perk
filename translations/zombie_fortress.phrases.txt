@@ -346,6 +346,46 @@
 		"en"	"Soldier [Survivor]"
 		"chi"	"士兵 [幸存者]"
 	}
+	"ZF_Help_Class_Pyro"
+	{
+		"en"	"Pyro [Survivor]"
+		"chi"	"火焰兵 [幸存者]"
+	}
+	"ZF_Help_Class_Demoman"
+	{
+		"en"	"Demoman [Survivor]"
+		"chi"	"爆破手 [幸存者]"
+	}
+	"ZF_Help_Class_Engineer"
+	{
+		"en"	"Engineer [Survivor]"
+		"chi"	"工程师 [幸存者]"
+	}
+	"ZF_Help_Class_Medic"
+	{
+		"en"	"Medic [Survivor]"
+		"chi"	"医生 [幸存者]"
+	}
+	"ZF_Help_Class_Sniper"
+	{
+		"en"	"Sniper [Survivor]"
+		"chi"	"狙击手 [幸存者]"
+	}
+	"ZF_Help_Class_Scout"
+	{
+		"en"	"Scout [Zombie]"
+		"chi"	"侦察兵 [僵尸]"
+	}
+	"ZF_Help_Class_Heavy"
+	{
+		"en"	"Heavy [Zombie]"
+		"chi"	"机枪手 [僵尸]"
+	}
+	"ZF_Help_Class_Spy"
+	{
+		"en"	"Spy [Zombie]"
+		"chi"	"间谍 [僵尸]"
+	}
 	"ZF_Help_Text_Soldier_Full"
 	{
 		"en"	"Movement speed decreased from 240 to 220."
@@ -671,6 +711,12 @@
 	{
 		"en"	"[ZF] Bonk! Atomic Punch is disabled in this mode."
 		"chi"	"[ZF] 原子能饮料在该模式中被禁用."
+	}
+
+	"Ability_Cannot_Use_Grace"
+	{
+		"en"    "You can't use the ability before grace period end!"
+		"chi"   "你无法在准备时间结束前使用这个能力！"
 	}
 
 	//================================================================================
@@ -1632,6 +1678,63 @@
 		"en"	"Crit: %d%%"
 		"chi"	"暴击: %d%%"
 	}
+	
+	//------------------------------------------------
+	// bounty hunter赏金猎人
+	//------------------------------------------------
+		
+	"BountyHunter"
+	{
+		"en"         "bounty hunter"
+		"chi"        "赏金猎人"
+	}
+	"BountyHunterPerk_shortdesc"
+	{
+		"en"		"Press E to scan for AOE zombies. Killing them grants bonus damage and crit."
+		"chi"		"按E扫描AOE僵尸。击杀它们可获得额外的伤害和暴击率。"
+	}
+
+	"BountyHunterPerk_desc"
+	{
+		"en"		"Press E to scan for nearby AOE zombies (Toxic, Static Field) for 5 seconds (20s cooldown).\nKilling an AOE zombie permanently grants +5% damage and +5% critical chance."
+		"chi"		"按E扫描附近的AOE僵尸（剧毒、静电场），高亮持续5秒（冷却20秒）。\n每击杀一个AOE僵尸，永久获得+5%伤害和+5%暴击率。"
+	}
+
+	"BountyHunterPerk_Hint_Cooldown"
+	{
+		"en"		"Scan is on cooldown for %d seconds."
+		"chi"		"扫描技能冷却中，剩余 %d 秒。"
+	}
+
+	"BountyHunterPerk_Hint_Found"
+	{
+		"en"		"AOE zombies marked!"
+		"chi"		"已标记AOE僵尸！"
+	}
+
+	"BountyHunterPerk_Hint_NotFound"
+	{
+		"en"		"No AOE zombies found in range."
+		"chi"		"范围内未发现AOE僵尸。"
+	}
+
+	"BountyHunterPerk_Hint_Bonus"
+	{
+		"en"		"Bounty collected! You feel stronger."
+		"chi"		"赏金到手！你感觉更强了。"
+	}
+
+	"BountyHunterPerk_Status_Cooldown"
+	{
+		"en"		"Scan CD: %ds"
+		"chi"		"扫描冷却: %d秒"
+	}
+
+	"BountyHunterPerk_Status_Ready"
+	{
+		"en"		"Scan Ready"
+		"chi"		"扫描准备就绪"
+	}
 
 	//================================================================================
 	// 8. 僵尸职业 (Zombie Perks)
@@ -1759,7 +1862,47 @@
 		"en"    "Charge Ready"
 		"chi"   "冲锋准备就绪"
 	}
+	"ChargerPerk_Hint_Invis"
+	{
+		"en"	"You cannot start charging while invisible."
+		"chi"	"隐身时无法开始冲刺。"
+	}
+	"ChargerPerk_Hint_Preparing"
+	{
+		"en"	"Preparing to charge..."
+		"chi"	"准备冲刺..."
+	}
+	"ChargerPerk_Hint_Airborne"
+	{
+		"en"	"Charge cancelled, you are airborne."
+		"chi"	"冲刺已取消，您在空中。"
+	}
+	"ChargerPerk_Status_Preparing"
+	{
+		"en"	"Preparing"
+		"chi"	"准备中"
+	}
 
+    "ChargerPerk_Hint_Preparing"
+    {
+        "en"    "Preparing to charge..."
+        "chi"    "准备冲刺..."
+    }
+    "ChargerPerk_Hint_Airborne"
+    {
+        "en"    "Charge cancelled, you are airborne."
+        "chi"    "冲刺已取消，您在空中。"
+    }
+    "ChargerPerk_Status_Preparing"
+    {
+        "en"    "Preparing"
+        "chi"    "准备中"
+    }
+	"ChargerPerk_Hint_Cloaked"
+	{
+		"en"	"You cannot start charging while cloaked."
+		"chi"	"隐身时无法开始冲刺。"
+	}
 	//------------------------------------------------
 	// Combustible (自爆僵尸)
 	//------------------------------------------------

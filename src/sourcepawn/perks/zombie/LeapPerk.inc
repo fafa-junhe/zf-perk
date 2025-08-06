@@ -21,7 +21,7 @@
 
 // Defines from all_perks.md
 #define ZF_LEAP_COMBAT      -20
-#define ZF_LEAP_COOLDOWN    15
+#define ZF_LEAP_COOLDOWN    4
 #define ZF_LEAP_FORCE       1300.0
 #define ZF_LEAP_FORCE_SCOUT 1900.0
 
@@ -98,7 +98,7 @@ FUNCTION(LeapPerk, updateClientPermStats))
 
 FUNCTION_FLOAT(LeapPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype)
 {
-    if (victim == _inst.client && (damagetype & DMG_FALL))
+    if (victim == _inst.client && damagetype == TF2_DMGTYPE_FALL)
     {
         return 0.0;    // Immune to fall damage
     }

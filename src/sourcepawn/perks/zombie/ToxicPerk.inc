@@ -14,7 +14,7 @@
 #define ZF_TOXIC_POISON_DURATION 12.0
 #define ZF_TOXIC_POISON_DAMAGE   10
 #define ZF_TOXIC_AURA_RADIUS     500.0
-#define ZF_TOXIC_AURA_DAMAGE     5.0
+#define ZF_TOXIC_AURA_DAMAGE     10.0
 #define ZF_TOXIC_MAX_DISTANCE    8.0
 #define TOXIC_COLOR_R            50
 #define TOXIC_COLOR_G            255
@@ -152,8 +152,8 @@ FUNCTION(ToxicPerk, onTakeDamagePost), int victim, int attacker, int inflictor, 
 {
     if (victim == _inst.client && validLivingSur(attacker) && attackWasMelee(attacker, inflictor, damagetype))
     {
-        addCond(victim, ZFCondPoisoned, 10);
-        zf_lastPoison[victim] = attacker;
+        addCond(attacker, ZFCondPoisoned, 10);
+        zf_lastPoison[attacker] = victim;
     }
 }
 
@@ -201,7 +201,7 @@ FUNCTION(ToxicPerk, onPeriodic))
                 float distance = GetVectorDistance(my_pos, sur_pos);
                 if (distance <= ZF_TOXIC_AURA_RADIUS)
                 {
-                    float damage = ZF_TOXIC_AURA_DAMAGE * (1.0 - distance/ZF_TOXIC_MAX_DISTANCE);
+                    float damage = ZF_TOXIC_AURA_DAMAGE * (1.0 - ((distance * distance) / (ZF_TOXIC_AURA_RADIUS * ZF_TOXIC_AURA_RADIUS)));
                     if (damage > 0.0)
                     {
                         SDKHooks_TakeDamage(i, client, client, damage, ZF_DMGTYPE_POISON);
@@ -246,7 +246,7 @@ FUNCTION(ToxicPerk, onPlayerSpawn))
 FUNCTION(ToxicPerk, onRemove))
 {
     ToxicPerkF_RemoveAura(_inst);
-    if (IsValidEntity(_inst.client)) {
+    if (IsClientInGame(_inst.client)) {
         SetEntityRenderColor(_inst.client, 255, 255, 255, 255);
     }
 }
@@ -256,7 +256,7 @@ FUNCTION(ToxicPerk, onDeath), int victim, int killer, int assist, int inflictor,
     if (victim == _inst.client)
     {
         ToxicPerkF_RemoveAura(_inst);
-        if (IsValidEntity(_inst.client)) {
+        if (IsClientInGame(_inst.client)) {
             SetEntityRenderColor(_inst.client, 255, 255, 255, 255);
         }
     }

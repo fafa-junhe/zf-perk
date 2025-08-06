@@ -90,7 +90,7 @@ FUNCTION_FLOAT(CowardlyPerk, onTakeDamage), int victim, int attacker, int inflic
         if ((damagetype & (1 << 3)))
         {
             _inst.perk_timer = (ZF_COWARDLY_DURATION_SCARED + ZF_COWARDLY_DURATION_COOLDOWN);
-            fxCreateSoundToClient("player/vo/yikes.wav", _inst.client);
+            fxYikes(_inst.client);
             PrintHintText(_inst.client, "%t", "CowardlyPerk_Hint_Panicked");
             return 0.0;
         }

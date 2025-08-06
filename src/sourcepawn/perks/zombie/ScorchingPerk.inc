@@ -38,6 +38,7 @@ methodmap ScorchingPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, ScorchingPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TOUCH, ScorchingPerkFonTouch);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_RUN_CMD, ScorchingPerkFonPlayerRunCmd);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALC_IS_ATTACK_CRITICAL, ScorchingPerkFonCalcIsAttackCritical);
 
         return sm;
     }
@@ -121,6 +122,19 @@ FUNCTION(ScorchingPerk, onPlayerRunCmd), int &buttons, int &impulse, float vel[3
             if (buttons & IN_ATTACK2) {
                 buttons &= ~IN_ATTACK2;
             }
+        }
+    }
+}
+
+FUNCTION(ScorchingPerk, onCalcIsAttackCritical)) {
+    int client = _inst.client;
+
+    int weapon = GetEntPropEnt(client, Prop_Data, "m_hActiveWeapon");
+    if (weapon != -1) {
+        char classname[64];
+        GetEdictClassname(weapon, classname, sizeof(classname));
+        if (strcmp(classname, "tf_weapon_compound_bow") == 0) {
+            SetEntProp(weapon, Prop_Send, "m_bArrowAlight", 1);
         }
     }
 }

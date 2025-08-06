@@ -79,7 +79,7 @@ int         g_iLastSurvivorDied;
 //
 // Plugin Information
 //
-#define PLUGIN_VERSION "4.5.1"
+#define PLUGIN_VERSION "4.5.2"
 
 public Plugin myinfo =
 {
@@ -296,8 +296,6 @@ public void OnClientPostAdminCheck(int client)
     SDKHook(client, SDKHook_PreThinkPost, OnPreThinkPost);
     SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
     SDKHook(client, SDKHook_OnTakeDamagePost, OnTakeDamagePost);
-    SDKHook(client, SDKHook_WeaponDropPost, Hook_OnWeaponDropPost);
-    SDKHook(client, SDKHook_WeaponCanUse, Hook_OnWeaponCanUse);
 
     pref_OnClientConnect(client);
     perk_OnClientConnect(client);
@@ -320,8 +318,6 @@ public void OnClientDisconnect(int client)
     g_bIsCosmeticZombie[client] = false;
     g_iLastAimTarget[client]    = 0;
 
-    SDKUnhook(client, SDKHook_WeaponDropPost, Hook_OnWeaponDropPost);
-    SDKUnhook(client, SDKHook_WeaponCanUse, Hook_OnWeaponCanUse);
 
     if (g_hPlayerAimTimer[client] != INVALID_HANDLE)
     {
@@ -330,45 +326,6 @@ public void OnClientDisconnect(int client)
     }
 }
 
-// Weapon drop and pickup handlers
-public void Hook_OnWeaponDropPost(int client, int weapon)
-{
-    // Ensure weapon index isn't -1 (this usually happens on team switch)
-    if (weapon == -1)
-        return;
-
-    // Get client userID
-    int userid = GetClientUserId(client);
-
-    // Temporarily assign the weapon's owner if it was not dropped by server
-    if (userid != 0)
-        g_iWeaponOwners[weapon] = userid;
-
-    // If zombie dropped weapon, kill it immediately
-    if (isZom(client))
-        AcceptEntityInput(weapon, "Kill");
-}
-
-public Action Hook_OnWeaponCanUse(int client, int weapon)
-{
-    // Allow bots to pick up whatever they want
-    if (IsFakeClient(client))
-        return Plugin_Continue;
-
-    // Check if weapon was given by Server or if it belongs to the client
-    int userid = GetClientUserId(client);
-    if (g_iWeaponOwners[weapon] == 0 || g_iWeaponOwners[weapon] == userid)
-    {
-        g_iWeaponOwners[weapon] = userid;
-        return Plugin_Continue;
-    }
-
-    // Deny pickup if zombie trying to pick up human weapon
-    if (isZom(client))
-        return Plugin_Handled;
-
-    return Plugin_Continue;
-}
 
 public void OnGameFrame()
 {
@@ -384,16 +341,11 @@ public void OnEntityCreated(int entity,
 {
     if (!zf_bEnabled) return;
 
-    if (StrContains(classname, "sniperrifle", false) != -1)
-    {
-        TF2Attrib_SetByDefIndex(entity, 306, 1.0);
-    }
-
     if (StrEqual(classname, "obj_sentrygun") || StrEqual(classname, "obj_dispenser") || StrEqual(classname, "obj_teleporter"))
     {
-        PrintToServer("hooked %s %d ", classname, entity);
         SDKHook(entity, SDKHook_OnTakeDamage, Hook_BuildingOnTakeDamage);
     }
+    perk_OnEntityCreated(entity, classname);
 }
 
 ////////////////////////////////////////////////////////////
@@ -891,6 +843,14 @@ public Action event_SetupEnd(Handle event,
         setRoundState(RoundActive);
         PrintToChatAll("%t", "ZF_GracePeriodEnd");
 
+        for (int i = 1; i <= MaxClients; i++)
+        {
+            if (IsClientInGame(i) && !IsPlayerAlive(i) && isSur(i))
+            {
+                TF2_RespawnPlayer(i);
+            }
+        }
+
         perk_OnGraceEnd();
     }
 
@@ -930,6 +890,8 @@ public Action event_PlayerSpawn(Handle event,
 
     int         client      = GetClientOfUserId(GetEventInt(event, "userid"));
 
+    // Unhook weapon drop to prevent issues during spawn
+
     TFClassType clientClass = TF2_GetPlayerClass(client);
 
     // 1. Prevent players spawning on survivors if round has started.
@@ -965,24 +927,7 @@ public Action event_PlayerSpawn(Handle event,
     if (isZom(client))
     {
         ApplyZombieVisuals(client);
-        if (TF2_GetPlayerClass(client) == TFClass_Sniper)
-        {
-            stripWeapons(client);
-            Handle item = TF2Items_CreateItem(OVERRIDE_ALL);
-            TF2Items_SetItemIndex(item, 56);
-            TF2Items_SetClassname(item, "tf_weapon_compound_bow");
-            TF2Items_SetLevel(item, 69);
-            TF2Items_SetQuality(item, 2);
-            TF2Items_SetNumAttributes(item, 3);
-            TF2Items_SetAttribute(item, 0, 1, 0.35);
-            TF2Items_SetAttribute(item, 1, 869, 1.0);
-            TF2Items_SetAttribute(item, 2, 5, 2.0);
-            int weapon = TF2Items_GiveNamedItem(client, item);
-            if (weapon != -1)
-            {
-                EquipPlayerWeapon(client, weapon);
-            }
-        }
+        
     }
     else
     {
@@ -1055,6 +1000,16 @@ public Action event_PlayerDeath(Handle event,
 
     perk_OnPlayerDeath(victim, killer, assist, inflictor, damagetype);
 
+    // If a survivor dies during the grace period, respawn them immediately.
+    if (roundState() == RoundGrace)
+    {
+        if (validSur(victim))
+        {
+            CreateTimer(0.1, timer_instantRespawn, victim, TIMER_FLAG_NO_MAPCHANGE);
+        }
+        return Plugin_Continue;
+    }
+
     if (roundState() != RoundActive) return Plugin_Continue;
 
     // Handle survivor death logic, active round only.
@@ -1075,11 +1030,6 @@ public Action event_PlayerDeath(Handle event,
         }
 
         if (GetConVarBool(zf_cvDebug))
-        {
-            CreateTimer(0.1, timer_instantRespawn, victim, TIMER_FLAG_NO_MAPCHANGE);
-        }
-        // Grace period suicide/class change respawn
-        else if (roundState() == RoundGrace && (killer == 0 || killer == victim))
         {
             CreateTimer(0.1, timer_instantRespawn, victim, TIMER_FLAG_NO_MAPCHANGE);
         }
@@ -1137,26 +1087,6 @@ public void event_post_inventory_application(Handle event, const char[] name, bo
 
 public void TF2_OnConditionAdded(int client, TFCond cond)
 {
-    if (cond == TFCond_Bonked)
-    {
-        TF2_RemoveCondition(client, TFCond_Bonked);
-
-        for (int i = 0; i <= 5; i++)    // Iterate through weapon slots
-        {
-            int weapon = GetPlayerWeaponSlot(client, i);
-            if (IsValidEntity(weapon))
-            {
-                // Bonk! Atomic Punch
-                if (GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex") == 46)
-                {
-                    RemovePlayerItem(client, weapon);
-                    AcceptEntityInput(weapon, "Kill");
-                    PrintToChat(client, "%t", "ZF_BonkDisabled");
-                    break;
-                }
-            }
-        }
-    }
     ZombieVisuals_OnConditionAdded(client, cond);
 }
 
@@ -1253,6 +1183,14 @@ public Action timer_graceEnd(Handle timer)
         setRoundState(RoundActive);
         PrintToChatAll("%t", "ZF_GracePeriodEnd");
 
+        for (int i = 1; i <= MaxClients; i++)
+        {
+            if (IsClientInGame(i) && !IsPlayerAlive(i) && isSur(i))
+            {
+                TF2_RespawnPlayer(i);
+            }
+        }
+
         perk_OnGraceEnd();
     }
 
@@ -1275,6 +1213,7 @@ public Action timer_initialHelp(Handle timer, any client)
 
 public Action timer_postSpawn(Handle timer, any client)
 {
+    ZF_LogDebug("timer_postSpawn: client=%d", client);
     if (IsClientInGame(client) && IsPlayerAlive(client))
     {
         perk_OnPlayerSpawn(client);
@@ -1282,6 +1221,7 @@ public Action timer_postSpawn(Handle timer, any client)
 
     return Plugin_Continue;
 }
+
 
 public Action timer_zombify(Handle timer, any client)
 {
