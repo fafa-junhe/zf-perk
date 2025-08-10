@@ -125,7 +125,7 @@ stock char ZFPART_SPARKS[]            = "sapper_flyingembers";
 stock char ZFPART_SMOKE[]             = "sapper_smoke";
 stock char ZFPART_YIKES[]             = "yikes_text";
 stock char ZFPART_PUMPKINBITS[]       = "pumpkin_bits";
-
+stock char ZFPART_HUGE_EXPLOSION[]    = "explosion_huge_burning_chunks";
 //
 // ZF Sound Objects
 //
@@ -148,7 +148,9 @@ stock char ZFSND_KRITZSTOP[]          = "weapons/weapon_crit_charged_off.wav";
 stock char ZFSND_THUD[]               = "player/taunt_chest_thump.wav";
 stock char ZFSND_SPARK[]              = "ambient/energy/spark4.wav";    // HL2
 stock char ZFSND_BOING[]              = "weapons/sentry_damage2.wav";
-stock char ZFSND_GRAP_HOOK[]          = "weapons/grappling_hook_reel_start.wav";
+stock char ZFSND_GRAP_HOOK[]          = "weapons/grappling_hook_impact_default.wav";
+stock char ZFSND_SICK[]               = "physics/flesh/flesh_squishy_impact_hard4.wav";
+stock char ZFSND_TOXIC[]              = "player/sleigh_bells/tf_xmas_sleigh_bells_11.wav";
 stock char ZFSND_WOOD_HIT[8][]        = {
     "physics/wood/wood_crate_break1.wav",        // HL2
     "physics/wood/wood_crate_break2.wav",        // HL2
@@ -273,8 +275,10 @@ stock void utilFxPrecache()
     PrecacheSound(ZFSND_SPARK, true);
     PrecacheSound(ZFSND_BOING, true);
     PrecacheSound(ZFSND_GRAP_HOOK, true);
-    PrecacheSound(    "weapons/rocket_pack_boosters_charge.wav", true);
-
+    PrecacheSound("weapons/rocket_pack_boosters_charge.wav", true);
+    PrecacheSound("player/spy_disguise.wav", true);
+    PrecacheSound(ZFSND_TOXIC, true);
+    PrecacheSound(ZFSND_SICK, true);
     for (int i = 0; i < 8; i++)
         PrecacheSound(ZFSND_WOOD_HIT[i], true);
     for (int i = 0; i < 3; i++)
@@ -493,6 +497,11 @@ stock void fxBits(int entity)
 {
     fxCreateParticle(ZFPART_PUMPKINBITS, entity, AttachNone, 2.0);
     fxCreateSoundToAll(ZFSND_SPLASH, entity);
+}
+
+stock void fxExplosionHuge(int entity){
+    fxCreateParticle(ZFPART_HUGE_EXPLOSION, entity, AttachNone, 2.0);
+    fxCreateSoundToAll(ZFSND_EXPLOSION, entity);
 }
 
 stock void fxExplosionBig(int entity)
@@ -898,8 +907,8 @@ stock void fxBeam(int client, int target, int color[4])
         0,                // start frame
         0,                // framerate
         0.1,              // life
-        0.25,             // width
-        0.25,             // end width
+        0.9,             // width
+        0.9,             // end width
         1,                // fade length
         0.0,              // amplitude
         color,            // RGBA color

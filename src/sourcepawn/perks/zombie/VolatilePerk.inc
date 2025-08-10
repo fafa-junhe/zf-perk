@@ -14,7 +14,7 @@
 #define VOLATILE_ENERGY_DECAY 8.0      // 每秒衰减5点能量
 #define VOLATILE_MAX_ENERGY 150.0      // 最大能量
 #define VOLATILE_EXPLOSION_RADIUS 200.0
-#define VOLATILE_SUICIDE_MULTIPLIER 0.5 // 主动引爆的伤害倍率
+#define VOLATILE_SUICIDE_MULTIPLIER 1.0 // 主动引爆的伤害倍率
 
 #define VOLATILE_DATA_ENERGY (PERK_DATA_START_INDEX + 0)
 
@@ -117,6 +117,7 @@ FUNCTION(VolatilePerk, onCallForMedic)) {
 FUNCTION(VolatilePerk, onPeriodic)) {
     if (_inst.energy > 0) {
         _inst.energy = fMax(0.0, _inst.energy - VOLATILE_ENERGY_DECAY);
+        fxExplosionBig(_inst.client);
     }
 }
 

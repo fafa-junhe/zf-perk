@@ -20,9 +20,9 @@
 		"chi"	"[ZF] 队伍角色已交换.正在重启回合..."
 	}
 	"ZF_ZombieClasses"
-	{
-		"en"	"[ZF] Available zombie classes: Scout, Heavy, Spy."
-		"chi"	"[ZF] 僵尸可用的兵种: Scout, Heavy, Spy."
+{
+		"en"	"[ZF] Available zombie classes: Scout, Heavy, Sniper, Spy."
+		"chi"	"[ZF] 僵尸可用的兵种: Scout, Heavy, Sniper, Spy."
 	}
 	"ZF_SurvivorClassChangeDisabled"
 	{
@@ -30,9 +30,9 @@
 		"chi"	"[ZF] 幸存者无法在回合开始后切换兵种!"
 	}
 	"ZF_SurvivorClasses"
-	{
-		"en"	"[ZF] Available survivor classes: Soldier, Pyro, Demo, Engineer, Medic, Sniper."
-		"chi"	"[ZF] 幸存者可用的兵种: Soldier, Pyro, Demo, Engineer, Medic, Sniper."
+{
+		"en"	"[ZF] Available survivor classes: Soldier, Pyro, Demo, Engineer, Medic."
+		"chi"	"[ZF] 幸存者可用的兵种: Soldier, Pyro, Demo, Engineer, Medic."
 	}
 	"ZF_TeamPrefUsage"
 	{
@@ -242,7 +242,7 @@
 	"ZF_Help_Text_Overview_Full"
 	{
 		"en"	"Players are chosen as Survivors or Zombies at the start of the round.\nSurvivors must stay alive until time runs out, or complete the map objective (e.g. capturing points).\nZombies must eliminate all humans, or complete the map objective.\nSurvivors turn into zombies upon death, while zombies can respawn infinitely."
-		"chi"	"玩家在开局会被选为幸存者或僵尸.\n幸存者必须活着撑到时间结束,或者完成地图目标(占点等等).\n僵尸则必须消灭所有人类,或者完成地图目标.\n幸存者死后会变为僵尸,而僵尸可以无限重生."
+		"chi"	"玩家在开局会被选为幸存者或僵尸.\n幸存者必须活着撑到时间结束,或者完成地图目标(占点等等).\n僵尸则必须消灭所有幸存者,或者完成地图目标.\n幸存者死后会变为僵尸,而僵尸可以无限重生."
 	}
 	"ZF_Help_Title_SurvivorTeam"
 	{
@@ -252,7 +252,7 @@
 	"ZF_Help_Text_SurvivorClasses_Full"
 	{
 		"en"	"Available survivor classes: Soldier, Pyro, Demoman, Engineer, Medic, and Sniper."
-		"chi"	"幸存者可使用的兵种: 士兵、火焰兵、爆破手、工程师、医生和狙击手."
+		"chi"	"幸存者可使用的兵种: 士兵、火焰兵、爆破手、工程师和医生."
 	}
 	"ZF_Help_Text_SurvivorWeapons"
 	{
@@ -267,7 +267,7 @@
 	"ZF_Help_Text_ZombieTeam_Full"
 	{
 		"en"	"Available zombie classes: Scout, Heavy, and Spy.\nZombies' health slowly regenerates over time.\nZombies cannot use most firearms by default.\n(Zombie weapon whitelist is under development...)"
-		"chi"	"僵尸可使用的兵种: 侦察兵、机枪手和间谍.\n僵尸的生命值会随时间缓慢恢复.\n僵尸默认无法使用大部分枪械类武器.\n(僵尸武器白名单制定中......)"
+		"chi"	"僵尸可使用的兵种: 侦察兵、机枪手、狙击手和间谍.\n僵尸的生命值会随时间缓慢恢复.\n僵尸默认无法使用大部分枪械类武器和一部分副武器."
 	}
 	"ZF_Help_Title_SurvivorClasses"
 	{
@@ -369,7 +369,7 @@
 	"ZF_Help_Class_Sniper"
 	{
 		"en"	"Sniper [Survivor]"
-		"chi"	"狙击手 [幸存者]"
+		"chi"	"狙击手 [僵尸]"
 	}
 	"ZF_Help_Class_Scout"
 	{
@@ -414,7 +414,7 @@
 	"ZF_Help_Text_Sniper_Full"
 	{
 		"en"	"Movement speed decreased from 300 to 250."
-		"chi"	"移动速度由300下降到250."
+		"chi"	"能够使用造成较低伤害的弓箭,瓶手道尿瓶对目标造成减速效果而非迷你爆击效果.\n移动速度由300下降到250."
 	}
 	"ZF_Help_Text_Scout_Full"
 	{
@@ -429,7 +429,7 @@
 	"ZF_Help_Text_Spy_Full"
 	{
 		"en"	"Cannot use the Dead Ringer.\nMovement speed decreased from 300 to 280."
-		"chi"	"背刺无法秒杀幸存者，转而使其进入5秒的惊慌状态并造成60点伤害.\n无法使用死亡之铃.\n移动速度由300降低到280."
+		"chi"	"背刺无法秒杀幸存者,转而使其进入5秒的惊慌状态并造成60点伤害.\n无法使用死亡之铃.\n移动速度由300降低到280."
 	}
 	"ZF_Help_Text_Spectator_Full"
 	{
@@ -689,12 +689,12 @@
 	"ZF_WithoutPerks"
 	{
 		"en"	"Without perks"
-		"chi"	"无技能"
+		"chi"	"无职业"
 	}
 	"ZF_NoPerk_desc"
 	{
 		"en"	"Please select a perk to see its info."
-		"chi"	"请选择一个技能以查看信息"
+		"chi"	"你没有任何额外属性.\n \n“但是相信我,这个模式的其他职业都很有意思!”"
 	}
 	"ZF_Cripple_Backstab_Success"
 	{
@@ -716,7 +716,7 @@
 	"Ability_Cannot_Use_Grace"
 	{
 		"en"    "You can't use the ability before grace period end!"
-		"chi"   "你无法在准备时间结束前使用这个能力！"
+		"chi"   "你无法在准备时间结束前使用这个能力!"
 	}
 
 	//================================================================================
@@ -733,13 +733,13 @@
 	}
 	"AlchemistPerk_shortdesc"
 	{
-		"en"	"/NEW/ Alchemist - Throws potions to turn the tide"
-		"chi"	"[新]炼金术士(Alchemist)——治疗与伤害并存"
+		"en"	" Alchemist - Throws potions to turn the tide"
+		"chi"	"炼金术士(Alchemist)——治疗与伤害并存"
 	}
 	"AlchemistPerk_desc"
 	{
 		"en"	"You automatically brew a potion every 40 seconds,\nholding up to 3. Call for a medic to throw a\npotion, creating an effect area for 10 seconds\nupon impact. Allies in the area slowly heal and\ngain a speed boost; zombies are slowed and take\nminor damage over time. “Taste my new invention!”\nRecommended classes: Medic, Soldier."
-		"chi"	"你每40秒会获得一瓶药剂,最多持有3瓶.\n发医生语音来投掷药剂,击中地面会产生持续10秒的药剂区域.\n幸存者进入会缓慢回血并获得速度加成；\n僵尸进入则会减速并持续受到少量伤害.\n \n“This is not meth.”\n推荐职业: 士兵、医生."
+		"chi"	"你每25秒会获得一瓶药剂,最多持有3瓶.\n发医生语音来投掷药剂,击中地面会产生持续7秒的药剂区域.\n幸存者进入会缓慢回血并获得速度加成；\n僵尸进入则会减速并持续受到少量伤害.\n \n“This is not meth.”\n推荐职业: 士兵、医生."
 	}
 	"AlchemistPerk_Hint_PotionReady"
 	{
@@ -783,7 +783,7 @@
 	"AthleticPerk_desc"
 	{
 		"en"	"Your movement speed and rate of fire are\ngreatly increased. However, your attack power\nis reduced, and you cannot deal random crits.\n“Hey! You can't even catch me!”\nRecommended classes: Pyro, Demoknight, Medic."
-		"chi"	"你的移动力和攻击速度大幅增加.\n但是你的攻击力降低,而且无法造成随机暴击.\n \n“嘿!你们根本追不上我!”\n推荐职业: 火焰兵、爆破骑士、医生."
+		"chi"	"你的移动力和攻击速度大幅增加.\n但是你的攻击力和防御力降低,而且无法造成随机暴击.\n \n“嘿!你们根本追不上我!”\n推荐职业: 火焰兵、爆破骑士、医生."
 	}
 
 	//------------------------------------------------
@@ -796,13 +796,13 @@
 	}
 	"BerserkerPerk_shortdesc"
 	{
-		"en"	"/NEW/ Berserker - The lower your health, the stronger you become"
-		"chi"	"[新]狂战士(Berserker)——生命越低越强大"
+		"en"	" Berserker - The lower your health, the stronger you become"
+		"chi"	"狂战士(Berserker)——生命越低越强大"
 	}
 	"BerserkerPerk_desc"
 	{
 		"en"	"Your defense is permanently reduced. But your\nhealth, the stronger your attack speed and\nmelee lifesteal effect. The effect is maxed\nout when health is below 25%. “Death also\ncannot stop me!”\nRecommended classes: Demoknight, Pyro."
-		"chi"	"你的防御力永久降低.\n但你的生命值越低,你的攻击速度和近战吸血效果就越强.\n生命值低于25%时,效果达到最大值.\n \n“我快要死了...但我还没死呢!”\n推荐职业: 火焰兵、爆破骑士."
+		"chi"	"你的防御力永久降低.\n但你的生命值越低,你的攻击速度和近战吸血效果就越强.\n生命值低于25%时,效果达到最大值.\n \n“我快要死了...但我还没死呢!”\n推荐职业: 士兵、爆破骑士."
 	}
 	"BerserkerPerk_Status_Active"
 	{
@@ -826,7 +826,7 @@
 	"CarpenterPerk_desc"
 	{
 		"en"	"You have a defense bonus, but your attack power\nis weakened. Call for a medic to build a 500\nHP barricade, which can be destroyed by both\nsides. 25s cooldown. Max 4 barricades at a\ntime. “This road is closed.”\nRecommended classes: Pyro, Engineer, Medic."
-		"chi"	"你有防御力加成,但是你的攻击力减弱.\n发医生语音来建造一个500点生命值的路障,\n敌我均可破坏.冷却时间25秒.\n同时最多拥有4个路障.\n \n“此路不通.”\n推荐职业: 火焰兵、工程师、医生."
+		"chi"	"你有防御力加成,但是你的攻击力减弱.\n发医生语音来建造一个500点生命值的路障,敌我均可破坏,冷却时间25秒.\n你同时最多拥有4个路障.\n \n“此路不通.”\n推荐职业: 火焰兵、工程师、医生."
 	}
 	"CarpenterPerk_Hint_NotGrounded"
 	{
@@ -880,7 +880,7 @@
 	"CharitablePerk_desc"
 	{
 		"en"	"Each of your kills and assists will increase\ngift points. Call for a medic to consume gift\npoints and release a gift, which can be picked\nup by other survivors. Gifts grant health\nregeneration and a temporary attack bonus.\n“Everyone gets a gift!”\nRecommended classes: Soldier, Demoman, Sniper."
-		"chi"	"你的每个击杀和助攻都会增加礼物点数.\n发医生语音来消耗礼物点数,放出礼物,\n可被其他的幸存者捡起.礼物能给予生命值\n回复和短暂的攻击力加成.\n \n“人人都有礼物拿!”\n推荐职业: 士兵、爆破手、狙击手."
+		"chi"	"你在造成一定击杀或助攻后会获得礼物点数.\n发医生语音来消耗礼物点数,放出礼物,\n可被其他的幸存者捡起.礼物能给予生命值\n回复和短暂的攻击力加成.\n \n“人人都有礼物拿!”\n推荐职业: 士兵、爆破手、工程师."
 	}
 	"CharitablePerk_Status_Gifts"
 	{
@@ -904,7 +904,7 @@
 	"CowardlyPerk_desc"
 	{
 		"en"	"When you are attacked, your passive ability\n“Panic” is automatically activated. Panic\ngrants you defense and speed bonuses. The panic\nability lasts for 5 seconds and has a 30-second\ncooldown. “Stop defending, run for your life!”\nRecommended classes: Engineer, Medic, Sniper."
-		"chi"	"当你被攻击时,自动激活你的被动能力“恐慌”.\n恐慌会给你防御力和速度加成.\n恐慌能力持续时间5秒,冷却时间30秒.\n \n“别守着了,快逃命吧!”\n推荐职业: 工程师、医生、狙击手."
+		"chi"	"当你被攻击时,自动激活你的被动能力“恐慌”.\n恐慌会给你防御力和速度加成.\n恐慌能力持续时间5秒,冷却时间20秒.\n \n“别守着了,快逃命吧!”\n推荐职业: 工程师、医生."
 	}
 	"CowardlyPerk_Hint_Panicked"
 	{
@@ -937,13 +937,13 @@
 	}
 	"EchoPerk_shortdesc"
 	{
-		"en"	"/NEW/ Echo - Return to sender"
-		"chi"	"[新]回响者(Echo)——受伤以击退僵尸"
+		"en"	" Echo - Return to sender"
+		"chi"	"回响者(Echo)——受伤以击退僵尸"
 	}
 	"EchoPerk_desc"
 	{
 		"en"	"You are immune to knockback effects. Every\nzombie melee attack you receive stores a small\namount of “Echo Energy”. Call for a medic to\nrelease all energy, causing a powerful knockback\nto nearby zombies. The more energy, the stronger\nthe knockback. “You can't push me, but I can\npush you off a cliff.”\nRecommended for: Any class that needs to hold a position."
-		"chi"	"你免疫击退效果.你受到的每一次僵尸近战攻击,都会储存一小部分“回响能量”.\n发医生语音可以释放所有能量,对周围的僵尸造成一次强力的击退,能量越多,击退力度越强.\n \n“僵尸们,已经结束了.我占领了高地！”\n推荐职业: 任何."
+		"chi"	"你免疫击退效果.你受到的每一次僵尸近战攻击,都会储存一小部分“回响能量”.\n发医生语音可以释放所有能量,对周围的僵尸造成一次强力的击退,能量越多,击退力度越强.\n \n“僵尸们,已经结束了.我占领了高地!”\n推荐职业: 任何."
 	}
 	"EchoPerk_Hint_EnergyStored"
 	{
@@ -1010,8 +1010,8 @@
 	}
 	"GamblerPerk_shortdesc"
 	{
-		"en"	"/NEW/ Gambler - Good luck or bad?"
-		"chi"	"[新]赌徒(Gambler)——概率说了算"
+		"en"	" Gambler - Good luck or bad?"
+		"chi"	"赌徒(Gambler)——概率说了算"
 	}
 	"GamblerPerk_desc"
 	{
@@ -1054,8 +1054,8 @@
 	}
 	"GuardianPerk_shortdesc"
 	{
-		"en"	"/NEW/ Guardian - Hold your ground, inch by inch"
-		"chi"	"[新]守护者(Guardian)——擅长群体控制"
+		"en"	" Guardian - Hold your ground, inch by inch"
+		"chi"	"守护者(Guardian)——擅长群体控制"
 	}
 	"GuardianPerk_desc"
 	{
@@ -1118,7 +1118,7 @@
 	"HolyPerk_desc"
 	{
 		"en"	"Your attack power is reduced. When crouching and\nnot moving, you can heal yourself and nearby\nsurvivors. “May the Holy Light grant me victory!”\nRecommended for: Teams without a Medic."
-		"chi"	"你的攻击力降低.\n当蹲下不动时,你可以治疗自己和周围的幸存者.\n \n“圣光赐予我胜利!”\n推荐职业: 缺少医生时."
+		"chi"	"你的防御力提高.\n当蹲下不动时,你可以治疗自己和周围的幸存者.\n \n“圣光赐予我胜利!”\n推荐职业: 缺少医生时."
 	}
 	"HolyPerk_Status_Healing"
 	{
@@ -1142,7 +1142,7 @@
 	"JuggernautPerk_desc"
 	{
 		"en"	"Your attack power is greatly increased, but your\ndefense and movement speed are reduced. You are\nimmune to fall damage. If you land near zombies,\nthey will take slight damage and be knocked\nback and stunned. “(Translator can't play MOBA games)”\nRecommended classes: Soldier, Demoman, Sniper."
-		"chi"	"你的攻击力大幅提高,但你的防御力和移动速度降低.\n你免疫掉落伤害.\n如果你落在僵尸附近,僵尸会受到轻微的伤害和击退和击晕效果.\n \n“(译者不会玩MOAB游戏)”\n推荐职业: 士兵、爆破手、狙击手."
+		"chi"	"你的攻击力大幅提高,但你的防御力和移动速度降低.\n你免疫掉落伤害.\n如果你落在僵尸附近,僵尸会受到轻微的伤害和击退和击晕效果.\n \n“(译者不会玩MOAB游戏)”\n推荐职业: 士兵、爆破手."
 	}
 
 	//------------------------------------------------
@@ -1161,7 +1161,7 @@
 	"LeaderPerk_desc"
 	{
 		"en"	"You have a crit bonus and also provide an attack\nand defense bonus to nearby survivors. Call for a\nmedic to place a banner, and survivors near your\nbanner will receive an attack and defense bonus.\nThe banner lasts for 90 seconds, and the cooldown\nis 150 seconds. “I need to regroup the team.”\nRecommended classes: Soldier, Demoman, Engineer."
-		"chi"	"你有暴击加成,也会给附近的幸存者提供攻击力和防御力加成.\n发医生语音来放置一个旗帜,靠近你的旗帜的幸存者都会获得攻击力和防御力加成.\n旗帜持续90秒,冷却时间150秒.\n \n“我需要重新集结队伍.”\n推荐职业: 士兵、爆破手、工程师."
+		"chi"	"你有暴击加成,也会给附近的幸存者提供攻击力和防御力加成.\n发医生语音来放置一个旗帜,靠近你的旗帜的幸存者都会获得攻击力和防御力加成.\n旗帜持续90秒,冷却时间150秒.\n \n“我需要重新集结队伍.”\n推荐职业: 士兵、工程师、医生."
 	}
 	"LeaderPerk_Status_Cooldown"
 	{
@@ -1184,13 +1184,13 @@
 	}
 	"MountaineerPerk_shortdesc"
 	{
-		"en"	"/NEW/ Mountaineer - Wall-climbing mobility master"
-		"chi"	"[新]登山家(Mountaineer)——在高度上自由移动"
+		"en"	" Mountaineer - Wall-climbing mobility master"
+		"chi"	"登山家(Mountaineer)——在高度上自由移动"
 	}
 	"MountaineerPerk_desc"
 	{
 		"en"	"You are immune to fall damage and can cling to\nwalls. Hold the jump key against a wall to climb\nup, and release to fall. Call for a medic to\nfire a grappling hook forward, which will quickly\npull you to the target point. 12s cooldown.\n“The terrain here is to my advantage.”\nRecommended classes: Sniper, Scout."
-		"chi"	"你免疫掉落伤害,并能攀附在墙壁上.\n对着墙壁按住跳跃键可以向上攀爬,松开则落下.\n发医生语音可以向前发射一枚抓钩,将你快速拉向目标点,冷却时间12秒.\n \n“这儿的地形对我很有利.”\n推荐职业: 爆破手,狙击手."
+		"chi"	"你免疫掉落伤害,并能攀附在墙壁上.\n对着墙壁按住跳跃键可以向上攀爬,松开则落下.\n发医生语音可以向前发射一枚抓钩,将你快速拉向目标点,冷却时间12秒.\n \n“这儿的地形对我很有利.”\n推荐职业: 士兵、工程师、医生."
 	}
 	"MountaineerPerk_Hint_Cooldown"
 	{
@@ -1234,12 +1234,12 @@
 	"NinjaPerk_shortdesc"
 	{
 		"en"	"Ninja - Place a decoy for retreat"
-		"chi"	"忍者(Ninja)——放置撤退用诱饵"
+		"chi"	"忍者(Ninja)——放置撤退点"
 	}
 	"NinjaPerk_desc"
 	{
 		"en"	"Your mobility is greatly increased, but your\nattack power is reduced. Call for a medic to\nplace a retreat point. When you are attacked,\nyou will be teleported to the retreat point.\nThe retreat point lasts for 15 seconds, and the\ncooldown for the retreat point is 30 seconds.\n“Although I don't have shurikens, I can do this!”\nRecommended classes: Demoknight, Engineer, Medic."
-		"chi"	"你的移动力大幅增加,但是你的攻击力降低.\n发医生语言来放置一个撤退点.\n当你受到攻击时, 你会被传送到撤退点.\n撤退点持续15秒,撤退点冷却时间30秒.\n \n“虽然没有飞镖,但是我会这个!”\n推荐职业: 爆破骑士、工程师、医生."
+		"chi"	"你的移动力大幅增加,但是你的攻击力降低.\n发医生语音来放置一个撤退点.\n当你受到攻击时, 你会被传送到撤退点.\n撤退点持续25秒,撤退点冷却时间30秒.\n \n“虽然没有飞镖,但是我会这个!”\n推荐职业: 爆破骑士、工程师、医生."
 	}
 	"NinjaPerk_Hint_DecoyPlaced"
 	{
@@ -1269,7 +1269,7 @@
 	"NinjaPerk_Status_DecoyActive"
 	{
 		"en"	"Decoy Active: %ds"
-		"chi"	"诱饵激活: %d秒"
+		"chi"	"撤退点激活: %d秒"
 	}
 	"NinjaPerk_Status_Cooldown"
 	{
@@ -1279,7 +1279,7 @@
 	"NinjaPerk_Status_Ready"
 	{
 		"en"	"Decoy Ready"
-		"chi"	"诱饵已就绪"
+		"chi"	"撤退点已就绪"
 	}
 
 	//------------------------------------------------
@@ -1298,7 +1298,7 @@
 	"NonlethalPerk_desc"
 	{
 		"en"	"When using bullet-type weapons, your attack\npower is reduced, but you can knock back zombies.\n“Stay away from me!”\nRecommended classes: Engineer, Sniper."
-		"chi"	"使用子弹类武器时,你的攻击力降低,但能造成击退效果.\n \n“离我远点!”\n推荐职业: 工程师、狙击手."
+		"chi"	"使用子弹类武器时,你的攻击力降低,但能造成击退效果.\n \n“离我远点!”\n推荐职业: 工程师."
 	}
 
 	//------------------------------------------------
@@ -1311,13 +1311,13 @@
 	}
 	"ResourcefulPerk_shortdesc"
 	{
-		"en"	"[禁] Resourceful - Friends with supplies"
-		"chi"	"[禁]计划通(Resourceful)——和补给品做朋友"
+		"en"	"Resourceful - Friends with supplies"
+		"chi"	"计划通(Resourceful)——和补给品做朋友"
 	}
 	"ResourcefulPerk_desc"
 	{
-		"en"	"/This perk has a bug, please do not play it/\nEach of your kills will replenish your bullets,\nhealth, and metal. Ammo packs will give you a\ntemporary attack bonus, and medkits will give\nyou a defense bonus.\n"
-		"chi"	"/该职业有漏洞,请勿游玩/\n你的每个击杀都会为你补充子弹、生命值和金属.\n弹药包会给你临时的攻击力加成,\n医疗包则是防御力加成."
+		"en"	"Each of your kills will replenish your bullets,\nhealth, and metal. Ammo packs will give you a\ntemporary attack bonus, and medkits will give\nyou a defense bonus.\n"
+		"chi"	"你的每个击杀都会为你补充子弹、生命值和金属.\n弹药包会给你临时的攻击力加成,\n医疗包则是防御力加成.\n \n“从战斗中学习?不如直接获取资源!”\n推荐职业: 爆破手、工程师."
 	}
 
 	//------------------------------------------------
@@ -1330,13 +1330,13 @@
 	}
 	"RicochetSpecialistPerk_shortdesc"
 	{
-		"en"	"/NEW/ Ricochett - One bullet, multiple surprises"
-		"chi"	"[新]弹射专家(Ricochet)——多重子弹打击"
+		"en"	" Ricochett - One bullet, multiple surprises"
+		"chi"	"弹射专家(Ricochet)——多重子弹打击"
 	}
 	"RicochetSpecialistPerk_desc"
 	{
 		"en"	"Your bullet weapon damage is reduced by 30%, but\nyour bullets have a 50% chance to ricochet to a\nnearby zombie after hitting a zombie, ricochet\ndamage is half of the original damage. Can\nricochet up to twice. And a lightning effect is\ndisplayed to represent the ricochet. “One stone\nfor two birds? I can do one stone for three.”\nRecommended classes: Engineer, Sniper."
-		"chi"	"你的子弹类武器伤害降低30%.\n但你的子弹在击中僵尸后有50%的几率弹射到附近另一个僵尸身上;\n弹射伤害为原伤害的一半且最多弹射两次.\n弹射发生时会显示一个电击特效.\n \n“一石二鸟?我能做到一石三鸟.”\n推荐职业: 工程师、狙击手."
+		"chi"	"你的子弹类武器伤害降低30%.\n但你的子弹在击中僵尸后有50%的几率弹射到附近另一个僵尸身上;\n弹射伤害为原伤害的50%且最多弹射两次.\n弹射发生时会显示一个电击特效.\n \n“一石二鸟?我能做到一石三鸟.”\n推荐职业: 工程师."
 	}
 	"RicochetSpecialist_Hint_Bounced"
 	{
@@ -1402,13 +1402,13 @@
 	}
 	"SpecterPerk_shortdesc"
 	{
-		"en"	"/NEW/ Specter - Extreme damage, fragile on touch"
-		"chi"	"[新]幽灵(Specter)——玻璃大炮"
+		"en"	" Specter - Extreme damage, fragile on touch"
+		"chi"	"幽灵(Specter)——玻璃大炮"
 	}
 	"SpecterPerk_desc"
 	{
 		"en"	"Your attack, crit rate, and movement speed are\ngreatly increased. But your health is permanently\nlocked at 1 and cannot be healed in any way.\nCall for a medic to enter a short “Phase” state,\nimmune to all damage but unable to attack, as a\nlast resort. “Either they die, or I die. No\nmiddle ground.”\nRecommended class: Sniper."
-		"chi"	"你的攻击力、暴击率和移动速度都得到极大提升.\n但你的生命值上限被永久锁定在60点,且无法被任何方式治疗.\n发医生语音可以让你进入短暂的无敌状态,免疫所有伤害作为最后的保命手段.\n \n“轻甲薄如纸,重甲纸对折.”\n推荐职业: 狙击手."
+		"chi"	"你的攻击力、暴击率和移动速度都得到极大提升.\n但你的生命值上限被永久锁定在60点,且无法被任何方式治疗.\n发医生语音可以让你进入短暂的无敌状态,免疫所有伤害作为最后的保命手段,但此时无法攻击.\n \n“轻甲薄如纸,重甲纸对折.”\n推荐职业: 爆破手."
 	}
 	"SpecterPerk_Hint_Ready"
 	{
@@ -1437,22 +1437,22 @@
 	}
 
 	//------------------------------------------------
-	// Stash (仓鼠)
+	// Stash (贮藏者)
 	//------------------------------------------------
 	"Stash"
 	{
 		"en"	"Stash"
-		"chi"	"仓鼠"
+		"chi"	"贮藏者"
 	}
 	"StashPerk_shortdesc"
 	{
-		"en"	"[禁] Stash - Place a stash"
-		"chi"	"[禁]仓鼠(Stash)——放置藏身处"
+		"en"	"Stash - Place a stash"
+		"chi"	"贮藏者(Stash)——放置藏身处"
 	}
 	"StashPerk_desc"
 	{
-		"en"	"/This perk has a bug, please do not play it/\nYou can place a stash by crouching and calling\nfor a medic. The stash needs to be far from other\nsurvivors or stashes. The stash will replenish\nyour ammo, health, and provide temporary buffs.\nThe stash lasts for 30 seconds and has a 30-second\ncooldown."
-		"chi"	"/该职业有漏洞,请勿游玩/\n你可以通过蹲下来发医生语音来放置一个藏身处.\n藏身处需要远离其他幸存者或藏身处.\n藏身处会为你补充弹药、生命,并提供临时加成.\n藏身处持续时间30秒,冷却时间30秒."
+		"en"	"\nYou can place a stash by crouching and calling\nfor a medic. The stash needs to be far from other\nsurvivors or stashes. The stash will replenish\nyour ammo, health, and provide temporary buffs.\nThe stash lasts for 30 seconds and has a 30-second\ncooldown."
+		"chi"	"\n你可以通过蹲下来发医生语音来放置一个藏身处.\n藏身处需要远离其他幸存者或藏身处.\n藏身处会为你补充弹药、生命,并提供临时加成.\n藏身处持续时间30秒,冷却时间30秒.\n \n“在外游走,总是需要做好最坏的打算.”\n推荐职业: 士兵、工程师."
 	}
 	"StashPerk_Hint_Ready"
 	{
@@ -1501,22 +1501,22 @@
 	}
 
 	//------------------------------------------------
-	// Stir Crazy (狂热者)
+	// Stir Crazy (狂人)
 	//------------------------------------------------
 	"StirCrazy"
 	{
 		"en"	"Stir-Crazy"
-		"chi"	"狂热者"
+		"chi"	"狂人"
 	}
 	"StirCrazyPerk_shortdesc"
 	{
 		"en"	"Stir-Crazy - Speed determines attack power"
-		"chi"	"狂热者(Stir-Crazy)——速度决定攻击力"
+		"chi"	"狂人(Stir-Crazy)——速度决定攻击力"
 	}
 	"StirCrazyPerk_desc"
 	{
 		"en"	"Your movement speed will provide you with an\nattack power bonus. The faster you move, the\nhigher your attack power. “This class used to\nget a 200% attack power bonus.”\nRecommended classes: Pyro, Demoknight."
-		"chi"	"你的每次击杀会提升你的移动速度.\n你的移动速度会给你提供攻击力加成,速度越快,攻击力就越高.\n \n“这个职业曾经能获得200%的攻击力加成.”\n推荐职业: 火焰兵、爆破骑士."
+		"chi"	"你的防御力降低,但你的每次击杀会提升你的移动速度.\n你的移动速度会给你提供攻击力加成,速度越快,攻击力就越高.\n \n“这个职业曾经能获得200%的攻击力加成.”\n推荐职业: 火焰兵、爆破骑士."
 	}
 
 	//------------------------------------------------
@@ -1628,7 +1628,7 @@
 	"TurtlePerk_desc"
 	{
 		"en"	"Your defense is greatly increased, but your\nattack power is reduced, and you cannot get\nrandom crits. Spies cannot backstab you.\n“Is that all you zombies can do?”\nRecommended classes: Soldier, Pyro, Demoknight."
-		"chi"	"你的防御力大幅增加,但你的攻击力降低,而且无法造成随机暴击.\n间谍无法背刺你.\n \n“你们僵尸就这点能耐?”\n推荐职业: 士兵、火焰兵、爆破骑士."
+		"chi"	"你的防御力大幅增加,但你的攻击力降低,而且无法造成随机暴击.\n间谍无法背刺你.\n \n“纳米机器,小子!”\n推荐职业: 士兵、火焰兵、爆破骑士."
 	}
 	"TurtlePerk_Hint_BackstabBlocked"
 	{
@@ -1652,7 +1652,7 @@
 	"WisePerk_desc"
 	{
 		"en"	"Each of your kills and assists can permanently\nincrease your attack power. Every time you are\nattacked by a melee weapon, your defense will be\npermanently increased. “Learn from battle.”\nRecommended classes: Any."
-		"chi"	"你的每个击杀和助攻都能使你的攻击力永久增加.\n每当你被近战武器攻击后,你的防御力就会永久增加.\n \n“从战斗中学习.”\n推荐职业: 任何."
+		"chi"	"你的攻击力降低但防御力提高.\n你的每个击杀和助攻都能使你的攻击力永久增加.\n每当你被近战武器攻击后,你的防御力会永久降低.\n \n“从战斗中学习...那么,代价是什么?”\n推荐职业: 任何."
 	}
 
 	//------------------------------------------------
@@ -1685,43 +1685,43 @@
 		
 	"BountyHunter"
 	{
-		"en"         "bounty hunter"
+		"en"         "Bounty"
 		"chi"        "赏金猎人"
 	}
 	"BountyHunterPerk_shortdesc"
 	{
-		"en"		"Press E to scan for AOE zombies. Killing them grants bonus damage and crit."
-		"chi"		"按E扫描AOE僵尸。击杀它们可获得额外的伤害和暴击率。"
+		"en"		"Bounty - Kill specific targets for bonus"
+		"chi"		"[新]赏金猎人(Bounty)——从特定目标上获益"
 	}
 
 	"BountyHunterPerk_desc"
 	{
 		"en"		"Press E to scan for nearby AOE zombies (Toxic, Static Field) for 5 seconds (20s cooldown).\nKilling an AOE zombie permanently grants +5% damage and +5% critical chance."
-		"chi"		"按E扫描附近的AOE僵尸（剧毒、静电场），高亮持续5秒（冷却20秒）。\n每击杀一个AOE僵尸，永久获得+5%伤害和+5%暴击率。"
+		"chi"		"发医生语音来扫描附近的范围效果僵尸(剧毒、电场...),高亮显示它们5秒钟.\n击杀这些僵尸会获得永久的攻击力与暴击率提高.\n \n“我可不像那些见到谁都从中学习的家伙;我只挑关键目标!”\n推荐职业: 士兵、爆破手."
 	}
 
 	"BountyHunterPerk_Hint_Cooldown"
 	{
 		"en"		"Scan is on cooldown for %d seconds."
-		"chi"		"扫描技能冷却中，剩余 %d 秒。"
+		"chi"		"扫描技能冷却中,剩余 %d 秒."
 	}
 
 	"BountyHunterPerk_Hint_Found"
 	{
 		"en"		"AOE zombies marked!"
-		"chi"		"已标记AOE僵尸！"
+		"chi"		"已标记目标僵尸!"
 	}
 
 	"BountyHunterPerk_Hint_NotFound"
 	{
 		"en"		"No AOE zombies found in range."
-		"chi"		"范围内未发现AOE僵尸。"
+		"chi"		"范围内未发现目标僵尸."
 	}
 
 	"BountyHunterPerk_Hint_Bonus"
 	{
 		"en"		"Bounty collected! You feel stronger."
-		"chi"		"赏金到手！你感觉更强了。"
+		"chi"		"赏金到手!你感觉更强了."
 	}
 
 	"BountyHunterPerk_Status_Cooldown"
@@ -1756,7 +1756,7 @@
 	"AlphaPerk_desc"
 	{
 		"en"	"Killing survivors or assisting minions turns the dead humans into your minions.\nEach nearby zombie and minion grants you health regeneration and an attack bonus.\nCall for a medic to summon up to 5 minions to your side. 15s cooldown.\n\"Servants, soldiers of the cold dark! Obey the call!\"\nRecommended classes: Scout, Heavy."
-		"chi"	"你能通过击杀幸存者或为随从助攻,使得死去的人类成为自己的随从.\n附近的每个僵尸和随从都能让你获得生命恢复和攻击加成.\n发医生语音可以召唤最多5个随从到身边,冷却时间15秒.\n \n“来自黑暗寒冬的仆人们、士兵们!听从我的召唤!”\n推荐职业: 侦察兵、机枪手."
+		"chi"	"你的攻击力提高.\n你能通过击杀幸存者或为随从助攻,使得死去的幸存者成为自己的随从.\n附近的每个僵尸和随从都能让你获得生命恢复和攻击加成.\n发医生语音可以召唤最多5个随从到身边,冷却时间15秒.\n \n“来自黑暗寒冬的仆人们、士兵们!听从我的召唤!”\n推荐职业: 侦察兵、机枪手、狙击手."
 	}
 	"AlphaPerk_Hint_NewMinion"
 	{
@@ -1799,13 +1799,13 @@
 	}
 	"ChargerPerk_shortdesc"
 	{
-		"en"	"/NEW/ Charger - Brute force charge, unstoppable"
-		"chi"	"[新]冲锋僵尸(Charger)——欢迎来到求生之路2"
+		"en"	" Charger - Brute force charge, unstoppable"
+		"chi"	"冲锋僵尸(Charger)——欢迎来到求生之路2"
 	}
 	"ChargerPerk_desc"
 	{
 		"en"	"Defense is high, damage is slightly low, and\nspeed is slow, but calling for a medic will\nperform a long-distance charge forward. Immune\nto knockback during the charge. The first\nsurvivor you hit will be taken away by you\nuntil you hit a wall, at which point both you\nand the survivor will take a lot of damage and\nbe stunned. “Get out of the way, the train is coming!”\nRecommended class: Heavy."
-		"chi"	"你的防御力偏高,但是你的攻击力降低且移动速度速度降低.\n发医生语音会向前方进行一次长距离冲锋,冲锋期间免疫击退.\n第一个被你撞到的幸存者会被你带走,直到撞上墙壁,\n届时你和幸存者都会受到大量伤害并被击晕.\n \n“你们在悬崖边最好悠着点...”\n推荐职业: 机枪手."
+		"chi"	"你的防御力提高,但是你的攻击力降低且移动速度速度降低.\n发医生语音会向前方进行一次长距离冲锋,冲锋期间免疫击退.\n第一个被你撞到的幸存者会被你带走,直到撞上墙壁,\n届时你和幸存者都会受到大量伤害并被击晕.\n \n“你们在悬崖边最好悠着点...”\n推荐职业: 机枪手、间谍."
 	}
 	"ChargerPerk_Hint_Charging"
 	{
@@ -1865,43 +1865,27 @@
 	"ChargerPerk_Hint_Invis"
 	{
 		"en"	"You cannot start charging while invisible."
-		"chi"	"隐身时无法开始冲刺。"
+		"chi"	"隐身时无法开始冲锋."
 	}
 	"ChargerPerk_Hint_Preparing"
 	{
 		"en"	"Preparing to charge..."
-		"chi"	"准备冲刺..."
+		"chi"	"准备冲锋..."
 	}
 	"ChargerPerk_Hint_Airborne"
 	{
 		"en"	"Charge cancelled, you are airborne."
-		"chi"	"冲刺已取消，您在空中。"
+		"chi"	"冲锋已取消,您在空中."
 	}
 	"ChargerPerk_Status_Preparing"
 	{
 		"en"	"Preparing"
 		"chi"	"准备中"
 	}
-
-    "ChargerPerk_Hint_Preparing"
-    {
-        "en"    "Preparing to charge..."
-        "chi"    "准备冲刺..."
-    }
-    "ChargerPerk_Hint_Airborne"
-    {
-        "en"    "Charge cancelled, you are airborne."
-        "chi"    "冲刺已取消，您在空中。"
-    }
-    "ChargerPerk_Status_Preparing"
-    {
-        "en"    "Preparing"
-        "chi"    "准备中"
-    }
 	"ChargerPerk_Hint_Cloaked"
 	{
 		"en"	"You cannot start charging while cloaked."
-		"chi"	"隐身时无法开始冲刺。"
+		"chi"	"隐身时无法开始冲锋."
 	}
 	//------------------------------------------------
 	// Combustible (自爆僵尸)
@@ -1919,7 +1903,7 @@
 	"CombustiblePerk_desc"
 	{
 		"en"	"Your defense is greatly reduced.\nWhen killed by a ranged weapon, you explode, dealing damage.\nYou cannot use invisibility watches or Bonk! Atomic Punch.\n(Ranged weapons include all non-melee weapons).\n\"*Shove the Boomer before attacking it*\"\nRecommended classes: Scout, Heavy."
-		"chi"	"你的防御力大幅降低.\n被远程武器击杀后,你会爆炸并造成伤害.\n你不可以使用隐身手表或者原子能饮料.\n(远程武器包括一切非近战武器)\n \n“*将Boomer先推开再攻击*”\n推荐职业: 侦察兵、机枪手."
+		"chi"	"你的防御力大幅降低.\n被远程武器击杀后,你会爆炸并造成伤害.\n你不可以使用隐身手表.\n(远程武器包括一切非近战武器)\n \n“*将Boomer先推开再攻击*”\n推荐职业: 侦察兵、机枪手."
 	}
 	"CombustiblePerk_Status_Ready"
 	{
@@ -1928,7 +1912,7 @@
 	}
 
 	//------------------------------------------------
-	// Corruptor (腐蚀者)
+	// Corruptor (骇客僵尸)
 	//------------------------------------------------
 	"Corruptor"
 	{
@@ -1937,13 +1921,13 @@
 	}
 	"CorruptorPerk_shortdesc"
 	{
-		"en"	"/NEW/ Corruptor - Infect buildings, turn them to your side"
-		"chi"	"[新]骇客僵尸(Corruptor)——入侵敌方建筑"
+		"en"	" Corruptor - Infect buildings, turn them to your side"
+		"chi"	"骇客僵尸(Corruptor)——入侵敌方建筑"
 	}
 	"CorruptorPerk_desc"
 	{
 		"en"	"Your movement speed is reduced, but you deal\nextra damage to Engineer's buildings. When you\ncontinuously attack a sentry for 5 seconds, you\ncan “corrupt” it. The corrupted building will\nturn into a blue team building (zombie side,\nowner is the attacker), and attack survivors for\n15 seconds, then be damaged. “Your creation now\nobeys me.”\nRecommended class: Heavy."
-		"chi"	"你的移动速度降低,但对工程师的建筑造成额外伤害.\n当你持续多次攻击一个步哨后,可以将其“骇入”.\n被骇入的建筑会变为僵尸方的建筑,转而对幸存者造成伤害,持续15秒后自毁.\n \n“这可比潜行僵尸管用多了!”\n推荐职业: 机枪手."
+		"chi"	"你的移动速度降低,但对工程师的建筑造成额外伤害.\n当你持续多次攻击一个步哨后,可以将其“骇入”.\n被骇入的建筑会变为僵尸方的建筑,转而对幸存者造成伤害,持续15秒后自毁.\n \n“这可比潜行僵尸管用多了!”\n推荐职业: 狙击手."
 	}
 	"CorruptorPerk_Hint_Corrupted"
 	{
@@ -1971,13 +1955,13 @@
 	}
 	"GeomancerPerk_shortdesc"
 	{
-		"en"	"/NEW/ Geomancer - Raise rock, rocket up survirvors"
-		"chi"	"[新]唤石僵尸(Geomancer)——唤石击飞幸存者"
+		"en"	" Geomancer - Raise rock, rocket up survirvors"
+		"chi"	"唤石僵尸(Geomancer)——唤石击飞幸存者"
 	}
 	"GeomancerPerk_desc"
 	{
 		"en"	"Your movement speed is slow. Call for a medic to\ninstantly raise a row of stone walls in a\nstraight line in front of you. The stone walls\ncan block the movement and ballistics of\nsurvivors, but they have health and can be\ndestroyed. The cooldown is long. This skill can\nbe used to block the retreat of survivors,\nprotect zombie teammates from fire, or isolate a\nsurvivor. “The earth answers my call!”\nRecommended class: Heavy."
-		"chi"	"你的移动速度降低.\n发医生语音可以在你面前召唤一座巨石.巨石可以把幸存者向上击飞.\n \n“来自rock005.mdl爱好者俱乐部。”\n推荐职业: 任何."
+		"chi"	"你的移动速度降低.\n发医生语音可以在你面前召唤一座巨石.巨石可以把幸存者向上击飞.\n \n“来自rock005.mdl爱好者俱乐部.”\n推荐职业: 任何."
 	}
 	"GeomancerPerk_Hint_Cooldown"
 	{
@@ -2002,32 +1986,32 @@
 	"GeomancerPerk_Hint_Crouch"
     {
         "en"    "You must crouch to place a stone wall."
-        "chi"    "你必须蹲下才能放置巨石。"
+        "chi"    "你必须蹲下才能放置巨石."
     }
     "GeomancerPerk_Hint_Full"
     {
         "en"    "You have reached the maximum number of walls!"
-        "chi"    "你建造的巨石已达上限！"
+        "chi"    "你建造的巨石已达上限!"
     }
     "GeomancerPerk_Hint_NoGround"
     {
         "en"    "Cannot place a stone wall: No valid ground found."
-        "chi"    "无法放置巨石：找不到合适的地面。"
+        "chi"    "无法放置巨石：找不到合适的地面."
     }
     "GeomancerPerk_Hint_TooClose"
     {
         "en"    "Cannot place a stone wall: Too close to your position."
-        "chi"    "无法放置巨石：离你太近了。"
+        "chi"    "无法放置巨石：离你太近了."
     }
 	"GeomancerPerk_Hint_Hit_Attacker"
 	{
 	"en"	"Your rock wall launched %N into the air!"
-	"chi"	"你的巨石将 %N 击飞了！"
+	"chi"	"你的巨石将 %N 击飞了!"
 	}
 	"GeomancerPerk_Hint_Hit_Victim"
 	{
 	"en"	"You were launched into the air by a Geomancer's rock wall!"
-	"chi"	"你被唤石僵尸的巨石击飞了！"
+	"chi"	"你被唤石僵尸的巨石击飞了!"
 	}
 
 	//------------------------------------------------
@@ -2040,13 +2024,13 @@
 	}
 	"GravityWarperPerk_shortdesc"
 	{
-		"en"	"/NEW/ Gravity Warper - Change gravity, disrupt jumps"
-		"chi"	"[新]重力僵尸(Gravity)——干扰幸存者移动"
+		"en"	"Gravity Warper - Change gravity, disrupt jumps"
+		"chi"	"重力僵尸(Gravity)——干扰幸存者移动"
 	}
 	"GravityWarperPerk_desc"
 	{
 		"en"	"For survivors near you, their jump height will\nbe greatly reduced, and the fall damage they\nreceive will increase. “In this area, gravity is\nmine to command.”\nRecommended for: Any."
-		"chi"	"你附近的幸存者的跳跃高度会大幅降低,并且受到的掉落伤害会增加.\n \n“Act 3 - Freeze!”\n推荐职业: 任何."
+		"chi"	"你的防御力提高.\n你附近的幸存者的跳跃高度会大幅降低,并且受到的掉落伤害会增加.\n \n“Act 3 - Freeze!”\n推荐职业: 任何."
 	}
 	"GravityWarperPerk_Status_Active"
 	{
@@ -2065,12 +2049,12 @@
 	"HorrifyingPerk_shortdesc"
 	{
 		"en"	"Horrifying - Attacks weaken humans"
-		"chi"	"惊吓僵尸(Horrifying)——攻击削弱人类"
+		"chi"	"惊吓僵尸(Horrifying)——攻击削弱幸存者"
 	}
 	"HorrifyingPerk_desc"
 	{
 		"en"	"Your attack power is reduced, but your attacks lower survivors' attack power,\ndefense, and rate of fire. The debuff lasts for 15 seconds.\nThis effect is removed upon your death.\n\"Chilling to the bone.\"\nRecommended classes: Heavy, Spy."
-		"chi"	"你的攻击力降低,但你的攻击能降低幸存者的攻击力、防御力和攻击速度.\n减益效果持续15秒.你死亡后,这个效果也随即消失.\n \n“敲骨吸髓.”\n推荐职业: 机枪手、间谍."
+		"chi"	"你的攻击力与开火速度降低.\n但你的近战攻击能短暂眩晕幸存者并降低其攻击力、防御力和速度.\n减益效果持续15秒.你死亡后,这个效果也随即消失.\n \n“敲骨吸髓.”\n推荐职业: 侦察兵、机枪手、间谍."
 	}
 
 	//------------------------------------------------
@@ -2120,6 +2104,11 @@
 	{
 		"en"	"Your respawn point has been destroyed by a survivor!"
 		"chi"	"你的重生点已被幸存者摧毁!"
+	}
+	"HunterPerk_Hint_Destroyed_Survivor"
+	{
+		"en"	"You has been destroyed a respawn point!"
+		"chi"	"你摧毁了一个重生点!"
 	}
 	"HunterPerk_Status_CanPlace"
 	{
@@ -2254,8 +2243,8 @@
 	}
 	"OverlordPerk_shortdesc"
 	{
-		"en"	"/NEW/ Overlord - Spread creep, empower the swarm"
-		"chi"	"[新]霸主僵尸(Overlord)——坚实的团队支援"
+		"en"	" Overlord - Spread creep, empower the swarm"
+		"chi"	"霸主僵尸(Overlord)——坚实的团队支援"
 	}
 	"OverlordPerk_desc"
 	{
@@ -2307,13 +2296,13 @@
 	}
 	"PhantasmPerk_shortdesc"
 	{
-		"en"	"/NEW/ Phantasm - Walk through the void, ignoring obstacles"
-		"chi"	"[新]幻影僵尸(Phantasm)——穿越障碍"
+		"en"	" Phantasm - Walk through the void, ignoring obstacles"
+		"chi"	"幻影僵尸(Phantasm)——穿越障碍"
 	}
 	"PhantasmPerk_desc"
 	{
 		"en"	"Your health and attack power are both low. Call\nfor a medic to enter the “Void Walk” state for\n4 seconds. In this state, you can pass through\nsurvivors and the obstacles they build (such as\nCarpenter's barricades), but you cannot attack.\n12s cooldown. “Walls can't stop me either.”\nRecommended class: Spy."
-		"chi"	"你的攻击力和防御力降低.\n发医生语音可以进入“虚空行走”状态,持续1秒,能够穿过一切障碍.\n该状态结束后会陷入2秒的眩晕状态,冷却时间12秒.\n \n“*无实体*”\n推荐职业: 间谍."
+		"chi"	"你的攻击力和防御力降低.\n发医生语音可以进入“虚空行走”状态,持续1秒,能够穿过一切障碍.\n该状态结束后会陷入0.5秒的眩晕状态,冷却时间12秒.\n \n“*无实体*”\n推荐职业: 间谍."
 	}
 	"PhantasmPerk_Enter_Void_Walk"
 	{
@@ -2372,7 +2361,7 @@
 	"RagePerk_desc"
 	{
 		"en"	"Activate the \"Rage\" ability to become a temporary \"tank\",\ngaining increased health and movement speed.\nThe effect deactivates when your health falls below 80%. 20s cooldown."
-		"chi"	"发医生语言来激活狂怒效果,拥有150%的生命值和移动速度.\n当生命值低于50%%时失效,冷却20秒.\n \n“冲锋陷阵!”\n推荐职业: 机枪手."
+		"chi"	"发医生语言来激活狂怒效果,获得额外的生命值和移动速度.\n当生命值低于50%%时失效,冷却20秒.\n \n“冲锋陷阵!”\n推荐职业: 机枪手."
 	}
 	"RagePerk_Health_Too_Low"
 	{
@@ -2450,7 +2439,7 @@
 	"ScorchingPerk_desc"
 	{
 		"en"	"You are immune to fire, constantly burning and igniting survivors on contact.\nYour melee attacks also ignite enemies.\n-50% attack power, +50% movement speed."
-		"chi"	"你的攻击力降低,但获得速度加成,并免疫火焰伤害. \n幸存者撞到你或被你近战击中时会着火.\n \n“孙哥我火了!” \n推荐职业: 侦察兵."
+		"chi"	"你的攻击力降低,但获得速度加成,并免疫火焰伤害. \n幸存者撞到你或被你击中时会着火.\n \n“孙哥我火了!” \n推荐职业: 侦察兵、狙击手."
 	}
 
 	//------------------------------------------------
@@ -2469,7 +2458,7 @@
 	"SickPerk_desc"
 	{
 		"en"	"Spit a large pool of corrosive acid, dealing continuous area-of-effect damage\nto survivors in key positions. 15s cooldown. -75% defense."
-		"chi"	"你的防御力降低,但可以发医生语音来吐出酸液.\n酸液会持续15秒.\n \n“*古怪的嚎叫声*” \n推荐职业: 侦察兵."
+		"chi"	"你的防御力降低,但可以发医生语音来吐出酸液.\n酸液会持续15秒.\n \n“*古怪的嚎叫声*” \n推荐职业: 侦察兵、狙击手."
 	}
 	"SickPerk_Status_Cooldown"
 	{
@@ -2483,17 +2472,17 @@
 	}
 
 	//------------------------------------------------
-	// Static Field (静电场)
+	// Static Field (电场僵尸)
 	//------------------------------------------------
 	"StaticField"
 	{
 		"en"	"Static Field"
-		"chi"	"静电场"
+		"chi"	"电场僵尸"
 	}
 	"StaticFieldPerk_shortdesc"
 	{
-		"en"	"/NEW/ Static Field - The faster you run, the harder you get zapped"
-		"chi"	"[新]电场僵尸(Static Field)——限制高速移动"
+		"en"	" Static Field - The faster you run, the harder you get zapped"
+		"chi"	"电场僵尸(Static Field)——限制高速移动"
 	}
 	"StaticFieldPerk_desc"
 	{
@@ -2546,12 +2535,12 @@
 	"TarredPerk_Status_Cooldown"
 	{
 		"en"	"Spit Cooldown: %.0fs"
-		"chi"	"吐痰冷却: %.0f秒"
+		"chi"	"吐油冷却: %.0f秒"
 	}
 	"TarredPerk_Status_Ready"
 	{
 		"en"	"Spit Ready"
-		"chi"	"吐痰已就绪"
+		"chi"	"吐油已就绪"
 	}
 
 	//------------------------------------------------
@@ -2565,12 +2554,12 @@
 	"ToxicPerk_shortdesc"
 	{
 		"en"	"Toxic - Continuous poison damage"
-		"chi"	"剧毒僵尸(Toxic)——攻击附带剧毒"
+		"chi"	"剧毒僵尸(Toxic)——施加范围伤害"
 	}
 	"ToxicPerk_desc"
 	{
 		"en"	"Hitting with or being hit by a melee attack poisons the enemy for 10 seconds.\nYou emit a poison gas aura when standing still. -90% attack power."
-		"chi"	"你的攻击力大幅降低. \n但当你近战击中幸存者时,目标将会中毒,受到剧毒伤害,持续10秒. \n当你保持不动时, 能对附近的幸存者持续造成伤害. \n \n“记住这个职业:Toxic.” \n推荐职业: 侦察兵、间谍."
+		"chi"	"你的攻击力降低. \n当你保持不动时,能对附近的幸存者持续造成伤害. \n \n“记住这个职业:Toxic.” \n推荐职业: 侦察兵、间谍."
 	}
 
 	 "ToxicPerk_Status_Active"
@@ -2585,8 +2574,8 @@
     }
     "ToxicPerk_Status_Gone"
     {
-        "en"        "Stop to charge aura"
-        "chi"        "静止以充能光环"
+        "en"        "Move to charge aura"
+        "chi"        "静止不动以充能光环"
     }
 
 	//------------------------------------------------
@@ -2605,7 +2594,7 @@
 	"VampiricPerk_desc"
 	{
 		"en"	"100% of damage dealt by your melee attacks is converted to your health.\nYou also passively regenerate 15 HP per second."
-		"chi"	"你有生命值回复加成. \n你的攻击附带吸血效果. \n \n“不靠近你,怎么把你给揍扁呢.” \n推荐职业: 侦察兵、机枪手."
+		"chi"	"你有防御力和生命值回复加成. \n你的攻击附带吸血效果. \n \n“不靠近你,怎么把你给揍扁呢.” \n推荐职业: 侦察兵、机枪手."
 	}
 
 	//------------------------------------------------
@@ -2624,7 +2613,7 @@
 	"VindictivePerk_desc"
 	{
 		"en"	"Upon death, you deal damage once to your killer."
-		"chi"	"你的击杀与助攻能使你获得永久性的攻击力和防御力加成. \n \n“我想这是死去的智者.” \n推荐职业: 任何."
+		"chi"	"你的击杀与助攻能使你获得永久性的全方面加成. \n \n“我想这是死去的智者.” \n推荐职业: 任何."
 	}
 
 	//------------------------------------------------
@@ -2637,13 +2626,13 @@
 	}
 	"VolatilePerk_shortdesc"
 	{
-		"en"	"/NEW/ Volatile - Detonate on command"
-		"chi"	"[新]充能僵尸(Volatile)——主动引爆造成伤害"
+		"en"	" Volatile - Detonate on command"
+		"chi"	"充能僵尸(Volatile)——主动引爆造成伤害"
 	}
 	"VolatilePerk_desc"
 	{
 		"en"	"All damage you take is stored as “unstable\nenergy”. Call for a medic or suicide to detonate,\ntriggering a violent explosion based on the\nstored energy. The explosion damage is halved.\nBeing killed by enemies will not trigger the\nexplosion. Energy slowly decays over time.\n“I am the bomb!”\nRecommended for: Any."
-		"chi"	"你受到的所有伤害都会被储存为“不稳定的能量”.\n呼叫医生或使用自杀指令来主动引爆,根据储存的能量引发一场剧烈爆炸,但伤害减半.\n[新]被敌人击杀不会触发爆炸.能量会随时间缓慢流失.\n \n“我就是炸弹!”\n推荐职业: 任何."
+		"chi"	"你受到的所有伤害都会被储存为“不稳定的能量”.\n呼叫医生或使用自杀指令来主动引爆,根据储存的能量引发一场剧烈爆炸.\n被敌人击杀不会触发爆炸.能量会随时间缓慢流失.\n \n“我就是炸弹!”\n推荐职业: 任何."
 	}
 	"ZF_Volatile_No_Energy"
 	{

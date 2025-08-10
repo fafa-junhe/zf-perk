@@ -1264,7 +1264,7 @@ stock bool mapIsZF()
 {
   char mapname[4];
   GetCurrentMap(mapname, sizeof(mapname));
-  return strncmp(mapname, "zf_", 3, false) == 0;
+  return strncmp(mapname, "zf_", 3, false) == 0 || strncmp(mapname, "zfp_", 4, false) == 0;
 }
 
 stock bool mapIsPL()
@@ -1471,7 +1471,7 @@ stock bool attackWasBackstab(int attacker, int inflictor, float damage)
   // + attacker is a spy, AND
   // + attacker is wielding a melee weapon, AND
   // + damagetype (masked) equals 0x100000 (which indicates crit, thus backstab, through testing)
-  return (attacker == inflictor) && isSpy(attacker) && isWieldingMelee(attacker) && (damage >= 240.0);
+  return (attacker == inflictor) && isSpy(attacker) && isWieldingMelee(attacker) && (damage >= 200.0);
 }
 
 stock bool attackWasMelee(int attacker, int inflictor, int damagetype)
@@ -1581,7 +1581,7 @@ stock bool isNotMoving(int client)
 {
   float vel[3];
   GetEntPropVector(client, Prop_Data, "m_vecVelocity", vel);
-  return (GetVectorLength(vel, true) == 0);  
+  return (GetVectorLength(vel, true) <= 100.0);  
 }
 
 stock void getEntityPos(int entity, float pos[3])

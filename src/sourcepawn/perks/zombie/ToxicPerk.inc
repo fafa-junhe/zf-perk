@@ -141,8 +141,17 @@ public Action Timer_RemovePoison(Handle timer, any poison_entity)
 
 FUNCTION(ToxicPerk, onDealDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype)
 {
-    if (attacker == _inst.client && validLivingSur(victim) && attackWasMelee(attacker, inflictor, damagetype))
+    ZF_LogDebug("ToxicPerk::onDealDamagePost: _inst.client=%d, victim=%d, attacker=%d", _inst.client, victim, attacker);
+
+    bool isOwner = attacker == _inst.client;
+    bool isVictimSurvivor = validLivingSur(victim);
+    bool isMelee = attackWasMelee(attacker, inflictor, damagetype);
+
+    ZF_LogDebug("ToxicPerk::onDealDamagePost Checks: isOwner=%d, isVictimSurvivor=%d, isMelee=%d", isOwner, isVictimSurvivor, isMelee);
+
+    if (isOwner && isVictimSurvivor && isMelee)
     {
+        ZF_LogDebug("ToxicPerk::onDealDamagePost: All checks passed. Applying poison to victim %d.", victim);
         addCond(victim, ZFCondPoisoned, 10);
         zf_lastPoison[victim] = attacker;
     }
@@ -204,6 +213,7 @@ FUNCTION(ToxicPerk, onPeriodic))
                     float damage = ZF_TOXIC_AURA_DAMAGE * (1.0 - ((distance * distance) / (ZF_TOXIC_AURA_RADIUS * ZF_TOXIC_AURA_RADIUS)));
                     if (damage > 0.0)
                     {
+                        fxCreateSoundToClient(ZFSND_TOXIC, i);
                         SDKHooks_TakeDamage(i, client, client, damage, ZF_DMGTYPE_POISON);
                     }
                 }

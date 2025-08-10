@@ -130,6 +130,7 @@ FUNCTION(FriendPerk, onGraceEnd))
     {
         FriendPerk_doFriendSelect(_inst);
     }
+    _inst.critTime = ZF_FRIEND_CRITTIME_INIT;
 }
 
 FUNCTION(FriendPerk, onCallForMedic))
@@ -201,7 +202,7 @@ FUNCTION(FriendPerk, updateCondStats), char[] buffer, int maxlen)
                 addHealth(friend, ZF_FRIEND_REGEN);
                 addStat(client, ZFStatAtt, ZFStatTypeCond, ZF_FRIEND_ATTACK);
                 addStat(friend, ZFStatAtt, ZFStatTypeCond, ZF_FRIEND_ATTACK);
-                int color[4] = {10, 50, 200, 100}; // Blue for friend
+                int color[4] = {10, 50, 200, 200}; // Blue for friend
                 fxBeam(client, friend, color);
                 fxBeam(friend, client, color);
             }

@@ -20,7 +20,7 @@
 #include <tf2>
 
 // Defines from all_perks.md
-#define ZF_SCORCHING_ATTACK -50
+#define ZF_SCORCHING_ATTACK -30
 #define ZF_SCORCHING_SPEED 50
 #define ZF_SCORCH_DURATION 10.0
 

@@ -15,14 +15,14 @@
 
 // Defines from all_perks.md
 #define ZF_SICK_DEFEND               -75
-#define ZF_SICK_DAMAGE               5.0
+#define ZF_SICK_DAMAGE               3.0
 #define ZF_SICK_DAMAGE_RADIUS        150.0
-#define ZF_SICK_MAX_DIST             1000.0
+#define ZF_SICK_MAX_DIST             2000.0
 #define ZF_SICK_COOLDOWN             15.0
 #define ZF_SICK_LIFETIME             15.0
 #define ZF_SICK_SPIT_COUNT           5
 #define ZF_SICK_SPIT_INTERVAL        0.2
-#define ZF_SICK_PROJECTILE_SPEED     900.0
+#define ZF_SICK_PROJECTILE_SPEED     1600.0
 #define ZF_SICK_PROJECTILE_MODEL     "models/props_halloween/hwn_flask_vial.mdl"
 // Data slots
 #define SICK_DATA_COOLDOWN           (PERK_DATA_START_INDEX + 0)
@@ -421,6 +421,7 @@ FUNCTION(SickPerk, onPeriodic))
                 GetClientAbsOrigin(j, sur_pos);
                 if (GetVectorDistance(pool_pos, sur_pos) <= ZF_SICK_DAMAGE_RADIUS)
                 {
+                    fxCreateSoundToClient(ZFSND_SICK, j);
                     float zom_pos[3];
                     GetClientAbsOrigin(_inst.client, zom_pos);
                     // 确保伤害不会超过基础值

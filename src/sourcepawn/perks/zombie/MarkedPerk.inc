@@ -20,9 +20,9 @@
 #include "../../perk_macros.inc"
 
 // Defines from all_perks.md
-#define ZF_MARKED_ATTACK_ON_MARK 200
+#define ZF_MARKED_ATTACK_ON_MARK 300
 #define ZF_MARKED_ATTACK_OFF_MARK -10
-#define ZF_MARKED_MIN_SURVIVORS 1
+#define ZF_MARKED_MIN_SURVIVORS 0
 #define ZF_MARKED_TIMER 10
 
 // Data slots
@@ -139,7 +139,7 @@ FUNCTION(MarkedPerk, updateCondStats), char[] buffer, int maxlen) {
     int target = _inst.target;
     int client = _inst.client;
     if (target > 0 && validLivingSur(target)) {
-        int color[4] = {255, 0, 0, 100}; // Red for marked target
+        int color[4] = {255, 0, 0, 200}; // Red for marked target
         fxBeam(client, target, color);
         char targetName[MAX_NAME_LENGTH];
         GetClientName(target, targetName, sizeof(targetName));

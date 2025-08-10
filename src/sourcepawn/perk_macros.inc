@@ -138,6 +138,15 @@
     Call_PushCell(%4); \
     Call_Finish()
 
+#define PERK_IMPL_onDealDamagePost(%0,%1,%2,%3,%4) \
+    START_VTABLE_CALL(VTABLE_ON_DEAL_DAMAGE_POST); \
+    Call_PushCell(%0); \
+    Call_PushCell(%1); \
+    Call_PushCell(%2); \
+    Call_PushFloat(%3); \
+    Call_PushCell(%4); \
+    Call_Finish()
+
 #define PERK_IMPL_onDeath(%0,%1,%2,%3,%4) \
     START_VTABLE_CALL(VTABLE_ON_DEATH); \
     Call_PushCell(%0); \

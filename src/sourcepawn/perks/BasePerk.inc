@@ -154,7 +154,7 @@ methodmap BasePerk < DataPack {
     }
 
     public void onDealDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype) {
-        PERK_IMPL_onTakeDamagePost(victim, attacker, inflictor, damage, damagetype);
+        PERK_IMPL_onDealDamagePost(victim, attacker, inflictor, damage, damagetype);
     }
 
     public void onBuildingTakeDamage(int iBuilding, int &iAttacker, int &iInflictor, float &flDamage, int &iDamagetype, int &iWeapon, float flDamageForce[3], float vecDamagePosition[3]) {

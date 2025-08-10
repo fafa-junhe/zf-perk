@@ -18,7 +18,7 @@
 #include "../../perk_macros.inc"
 
 #define ZF_NONLETHAL_ATTACK_BULLET -(90)
-#define ZF_NONLETHAL_FORCE 75.0
+#define ZF_NONLETHAL_FORCE 50.0
 
 methodmap NonlethalPerk < SurvivorBasePerk {
     public NonlethalPerk(int client) {

@@ -141,13 +141,21 @@ stock void doCorruptBuilding(int client, int building)
     // Get original sentry's properties
     float vOrigin[3];
     getEntityPos(building, vOrigin);
+    int level = GetEntProp(building, Prop_Send, "m_nModelIndex");
 
     // Destroy the original building
     AcceptEntityInput(building, "Kill");
 
+    // Create a new sentry
+    int newSentry = CreateEntityByName("obj_sentrygun");
+
+    if (newSentry == -1) return;
+
     // Prepare data for the setup timer
     DataPack pack = new DataPack();
+    pack.WriteCell(newSentry);
     pack.WriteCell(client);
+    pack.WriteCell(level);
     pack.WriteFloat(vOrigin[0]);
     pack.WriteFloat(vOrigin[1]);
     pack.WriteFloat(vOrigin[2]);
@@ -166,7 +174,6 @@ public Action CreateSentry(Handle timer, DataPack pack)
     vOrigin[0] = pack.ReadFloat();
     vOrigin[1] = pack.ReadFloat();
     vOrigin[2] = pack.ReadFloat();
-    int userid = GetClientOfUserId(client);
     if (!IsValidEntity(sentry))
     {
         delete pack;
@@ -179,7 +186,6 @@ public Action CreateSentry(Handle timer, DataPack pack)
     DispatchSpawn(sentry);
     TeleportEntity(sentry, vOrigin, NULL_VECTOR, NULL_VECTOR);
     SetEntityModel(sentry, "models/buildables/sentry1.mdl");
-
     SetEntProp(sentry, Prop_Send, "m_bPlacing", 0, 2);
     SetEntProp(sentry, Prop_Send, "m_bBuilding", 0, 2);
     SetEntProp(sentry, Prop_Send, "m_bDisabled", 0, 2);
@@ -188,7 +194,7 @@ public Action CreateSentry(Handle timer, DataPack pack)
     SetEntProp(sentry, Prop_Send, "m_iTeamNum", 3);
     SetEntProp(sentry, Prop_Send, "m_iUpgradeMetal", 150);
     SetEntProp(sentry, Prop_Send, "m_bHasSapper", 0, 2);
-    SetEntProp(sentry, Prop_Send, "m_hBuilder", userid, 1);
+    SetEntPropEnt(sentry, Prop_Send, "m_hBuilder", client);
     SetEntProp(sentry, Prop_Send, "m_bServerOverridePlacement", 1, 1);
     SetEntPropFloat(sentry, Prop_Send, "m_flPercentageConstructed", 1.0);
     SetEntProp(sentry, Prop_Send, "m_iUpgradeLevel", 1, 4);    // 1-3

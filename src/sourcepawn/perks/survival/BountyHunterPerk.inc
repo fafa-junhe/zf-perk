@@ -21,6 +21,7 @@
 #define BOUNTY_SCAN_COOLDOWN 20
 #define BOUNTY_KILL_DAMAGE_BONUS 5
 #define BOUNTY_KILL_CRIT_BONUS 5
+#define BOUNTY_KILL_HEALTH_BONUS 25
 
 // Data slots
 #define BOUNTY_DATA_COOLDOWN (PERK_DATA_START_INDEX + 0)
@@ -95,7 +96,7 @@ stock bool isAoeZombie(int client) {
     char perkName[32];
     g_hPerks[client].getName(perkName, sizeof(perkName));
     // AOE zombies are Toxic and Static Field
-    return StrEqual(perkName, "Toxic") || StrEqual(perkName, "StaticField");
+    return StrEqual(perkName, "Toxic") || StrEqual(perkName, "StaticField") || StrEqual(perkName, "GravityWarper") || StrEqual(perkName, "Swarming");
 }
 
 FUNCTION(BountyHunterPerk, onCallForMedic)) {
@@ -145,6 +146,7 @@ FUNCTION(BountyHunterPerk, onKill), int victim, int killer, int assist, int infl
     if (isAoeZombie(victim)) {
         addStat(client, ZFStatAtt, ZFStatTypePerm, BOUNTY_KILL_DAMAGE_BONUS);
         addStat(client, ZFStatCrit, ZFStatTypePerm, BOUNTY_KILL_CRIT_BONUS);
+        addHealth(client, BOUNTY_KILL_HEALTH_BONUS, true);
         PrintHintText(client, "%t", "BountyHunterPerk_Hint_Bonus");
     }
 }
@@ -166,9 +168,13 @@ FUNCTION(BountyHunterPerk, updateCondStats), char[] buffer, int maxlen) {
                     g_hPerks[i].getName(perkName, sizeof(perkName));
 
                     if (StrEqual(perkName, "StaticField")) {
-                        color[0] = 255; color[1] = 255; color[2] = 255; color[3] = 100; // White
+                        color[0] = 255; color[1] = 255; color[2] = 255; color[3] = 200; // White
+                    } else if (StrEqual(perkName, "GravityWarper")) {
+                        color[0] = 138; color[1] = 43; color[2] = 226; color[3] = 200; // Purple
+                    } else if (StrEqual(perkName, "Swarming")) {
+                        color[0] = 139; color[1] = 69; color[2] = 19; color[3] = 200; // Brown
                     } else { // Toxic
-                        color[0] = 0; color[1] = 255; color[2] = 0; color[3] = 100; // Green
+                        color[0] = 0; color[1] = 255; color[2] = 0; color[3] = 200; // Green
                     }
                     fxBeam(client, i, color);
                     found_in_frame = true;

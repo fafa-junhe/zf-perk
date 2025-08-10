@@ -16,7 +16,7 @@
 #define ZF_PHANTASM_HEALTH_PENALTY -25
 #define ZF_PHANTASM_ATTACK_PENALTY -25
 #define ZF_PHANTASM_WALK_DURATION 1.0
-#define ZF_PHANTASM_STUN_DURATION 2.0
+#define ZF_PHANTASM_STUN_DURATION 0.5
 #define ZF_PHANTASM_COOLDOWN 17.0
 #define ZF_PHANTASM_STUCK_DAMAGE 10
 
@@ -157,6 +157,7 @@ FUNCTION(PhantasmPerk, onPeriodic)) {
                 PrintHintText(client, "%t", "PhantasmPerk_Stuck_Kill");
             } else {
                 PrintHintText(client, "%t", "PhantasmPerk_Exit_Void_Walk");
+                fxCreateSoundToAll("player/spy_disguise.wav", client)
                 TF2_StunPlayer(client, ZF_PHANTASM_STUN_DURATION, 0.0, TF_STUNFLAGS_BIGBONK);
             }
 

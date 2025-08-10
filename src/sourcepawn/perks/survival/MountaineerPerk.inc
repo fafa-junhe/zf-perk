@@ -29,7 +29,7 @@ public     MountaineerPerk(int client)
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, MountaineerPerkFgetName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, MountaineerPerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, MountaineerPerkFgetDesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, MountaineerPerkFonTakeDamage);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE_POST, MountaineerPerkFonTakeDamagePost);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_RUN_CMD, MountaineerPerkFonPlayerRunCmd);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, MountaineerPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, MountaineerPerkFonPeriodic);
@@ -96,13 +96,13 @@ FUNCTION(MountaineerPerk, getDesc), char[] buffer, int maxlen)
     strcopy(buffer, maxlen, "MountaineerPerk_desc");
 }
 
-FUNCTION_FLOAT(MountaineerPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype)
+
+FUNCTION(MountaineerPerk, onTakeDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype)
 {
-    if (victim == _inst.client && damagetype == TF2_DMGTYPE_FALL)
+    if (victim == _inst.client && damagetype & DMG_FALL)
     {
-        return 0.0;
+        addHealth(_inst.client, RoundToNearest(damage), false);    // Immune to fall damage
     }
-    return damage;
 }
 
 FUNCTION(MountaineerPerk, onPlayerRunCmd), int buttons, int impulse, float vel[3], float angles[3], int weapon)

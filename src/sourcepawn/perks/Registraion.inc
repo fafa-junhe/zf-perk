@@ -23,7 +23,7 @@
 #include "survival/HolyPerk.inc"
 #include "survival/LeaderPerk.inc"
 #include "survival/ResourcefulPerk.inc"
-#include "survival/StashPerk.inc"
+// #include "survival/StashPerk.inc"
 #include "survival/TrapperPerk.inc"
 #include "survival/TurtlePerk.inc"
 #include "survival/WisePerk.inc"
@@ -50,7 +50,7 @@
 #include "zombie/ScorchingPerk.inc"
 #include "zombie/SickPerk.inc"
 #include "zombie/SwarmingPerk.inc"
-#include "zombie/TarredPerk.inc"
+// #include "zombie/TarredPerk.inc"
 #include "zombie/ToxicPerk.inc"
 #include "zombie/VampiricPerk.inc"
 #include "zombie/VindictivePerk.inc"
@@ -83,7 +83,7 @@ public void registerSurvivorPerks() {
     RegisterSurvivorPerk(HolyPerk);
     RegisterSurvivorPerk(LeaderPerk);
     RegisterSurvivorPerk(ResourcefulPerk);
-    RegisterSurvivorPerk(StashPerk);
+    // RegisterSurvivorPerk(StashPerk);
     RegisterSurvivorPerk(TrapperPerk);
     RegisterSurvivorPerk(TurtlePerk);
     RegisterSurvivorPerk(WisePerk);
@@ -113,7 +113,7 @@ public void registerZombiePerks() {
     RegisterZombiePerk(ScorchingPerk);
     RegisterZombiePerk(SickPerk);
     RegisterZombiePerk(SwarmingPerk);
-    RegisterZombiePerk(TarredPerk);
+    // RegisterZombiePerk(TarredPerk);
     RegisterZombiePerk(ToxicPerk);
     RegisterZombiePerk(VampiricPerk);
     RegisterZombiePerk(VindictivePerk);

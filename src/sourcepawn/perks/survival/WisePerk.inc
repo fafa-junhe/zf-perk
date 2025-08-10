@@ -16,10 +16,10 @@
 
 #define ZF_WISE_ATTACK_KILL 3
 #define ZF_WISE_ATTACK_ASSIST 2
-#define ZF_WISE_DEFEND 1
+#define ZF_WISE_DEFEND -1
 #define ZF_WISE_DEFEND_LIMIT 20
 #define ZF_WISE_ATTACK_DEBUFF -10
-#define ZF_WISE_DEFEND_DEBUFF -10
+#define ZF_WISE_DEFEND_DEBUFF 10
 
 methodmap WisePerk < SurvivorBasePerk {
     public WisePerk(int client) {

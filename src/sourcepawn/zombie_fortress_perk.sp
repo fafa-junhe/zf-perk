@@ -68,18 +68,25 @@ int         g_iSurvivorKills[MAXPLAYERS + 1];
 int         g_iZombieKills[MAXPLAYERS + 1];
 TFClassType g_eLastSurvivorClass[MAXPLAYERS + 1];
 int         g_iLastSurvivorPerk[MAXPLAYERS + 1];
+TFClassType g_eLastZombieClass[MAXPLAYERS + 1];
+int         g_iLastZombiePerk[MAXPLAYERS + 1];
 int         g_iLastAimTarget[MAXPLAYERS + 1];
 int         g_iDebugTarget[MAXPLAYERS + 1];
 int         g_iDebugStat[MAXPLAYERS + 1];
 int         g_iWeaponOwners[4096] = { 0, ... }; // Global array to track weapon ownership
 int         g_iLastSurvivorDied;
 
+// 用于CSV日志记录的会话统计
+int g_iSessionKills[MAXPLAYERS + 1];
+int g_iSessionAssists[MAXPLAYERS + 1];
+int g_iSessionDeaths[MAXPLAYERS + 1];
+
 #include "zf_perk.inc"
 
 //
 // Plugin Information
 //
-#define PLUGIN_VERSION "4.5.2"
+#define PLUGIN_VERSION "4.5.2fix4"
 
 public Plugin myinfo =
 {
@@ -160,6 +167,14 @@ public void OnPluginStart()
     perkInit();
     InitZombieVisuals();
 
+    // Initialize session stats
+    for (int i = 0; i <= MAXPLAYERS; i++)
+    {
+        g_iSessionKills[i] = 0;
+        g_iSessionAssists[i] = 0;
+        g_iSessionDeaths[i] = 0;
+    }
+
     // Register cvars
     CreateConVar("sm_zf_version", PLUGIN_VERSION, "Current Zombie Fortress Version", FCVAR_SPONLY | FCVAR_REPLICATED | FCVAR_NOTIFY);
     zf_cvForceOn       = CreateConVar("sm_zf_force_on", "1", "<0/1> Activate ZF for non-ZF maps.", FCVAR_REPLICATED | FCVAR_NOTIFY, true, 0.0, true, 1.0);
@@ -206,6 +221,8 @@ public void OnPluginStart()
     RegConsoleCmd("zf_menu", cmd_zfMenu);
     RegConsoleCmd("zf_perk", cmd_zfMenu);
     RegConsoleCmd("zfdebug", cmd_zfDebugMenu);
+
+    WriteCsvHeader();
 }
 
 public void OnConfigsExecuted()
@@ -313,6 +330,7 @@ public void OnClientDisconnect(int client)
 {
     if (!zf_bEnabled) return;
 
+    LogPlayerSessionData(client); // 记录断开连接玩家的最终数据
     pref_OnClientDisconnect(client);
     perk_OnClientDisconnect(client);
     g_bIsCosmeticZombie[client] = false;
@@ -394,8 +412,10 @@ public void OnTakeDamagePost(int victim, int attacker, int inflictor, float dama
 {
     if (!zf_bEnabled) return;
 
+    ZF_LogDebug("OnTakeDamagePost: victim=%d, attacker=%d, inflictor=%d, damage=%.2f, damagetype=%d", victim, attacker, inflictor, damage, damagetype);
+
     perk_OnTakeDamagePost(victim, attacker, inflictor, damage, damagetype);
-    perk_OnDealDamagePost(victim, attacker, inflictor, damage, damagetype);
+    perk_OnDealDamagePost(attacker, victim, inflictor, damage, damagetype);
 }
 
 public Action Hook_BuildingOnTakeDamage(int iBuilding, int &iAttacker, int &iInflictor, float &flDamage, int &iDamagetype, int &iWeapon, float flDamageForce[3], float vecDamagePosition[3])
@@ -469,6 +489,18 @@ public Action hook_JoinTeam(int client,
 
     GetCmdArg(1, cmd1, sizeof(cmd1));
 
+    // Log session data if team is changing
+    int currentTeam = GetClientTeam(client);
+    int requestedTeam = -1;
+    if (StrEqual(cmd1, "red", false)) requestedTeam = view_as<int>(TFTeam_Red);
+    else if (StrEqual(cmd1, "blue", false)) requestedTeam = view_as<int>(TFTeam_Blue);
+    else if (StrEqual(cmd1, "spectate", false)) requestedTeam = view_as<int>(TFTeam_Spectator);
+
+    if (requestedTeam != -1 && requestedTeam != currentTeam)
+    {
+        LogAndResetSession(client);
+    }
+
     if (roundState() >= RoundGrace)
     {
         // Assign team-specific strings
@@ -516,6 +548,14 @@ public Action hook_JoinClass(int client,
     if (argc < 1) return Plugin_Handled;
 
     GetCmdArg(1, cmd1, sizeof(cmd1));
+
+    // Log session data if class is changing
+    TFClassType currentClass = TF2_GetPlayerClass(client);
+    TFClassType requestedClass = TF2_GetClass(cmd1);
+    if (requestedClass != TFClass_Unknown && requestedClass != currentClass)
+    {
+        LogAndResetSession(client);
+    }
 
     if (IsFakeClient(client) && (StrEqual(cmd1, "spy", false) || StrEqual(cmd1, "engineer", false)))
     {
@@ -658,26 +698,26 @@ public Action TF2_CalcIsAttackCritical(int client, int weapon, char[] weaponname
 
     return Plugin_Continue;
 }
-void remove_entity_all(char[] item, bool ammopack)
-{
-    int ent = -1;
-    while ((ent = FindEntityByClassname(ent, item)) != -1)
-    {
-        PrintToServer("delete entity (%s) %i", item, ent);
-        float position[3];
-        float angles[3];
-        GetEntPropVector(ent, Prop_Send, "m_vecOrigin", position);
-        GetEntPropVector(ent, Prop_Send, "m_angRotation", angles);
-        if (ammopack)
-        {
-            SpawnEntity("item_ammopack_small", position, angles);
-        }
-        else {
-            SpawnEntity("item_healthkit_small", position, angles);
-        }
-        AcceptEntityInput(ent, "Kill");
-    }
-}
+// void remove_entity_all(char[] item, bool ammopack)
+// {
+//     int ent = -1;
+//     while ((ent = FindEntityByClassname(ent, item)) != -1)
+//     {
+//         PrintToServer("delete entity (%s) %i", item, ent);
+//         float position[3];
+//         float angles[3];
+//         GetEntPropVector(ent, Prop_Send, "m_vecOrigin", position);
+//         GetEntPropVector(ent, Prop_Send, "m_angRotation", angles);
+//         if (ammopack)
+//         {
+//             SpawnEntity("item_ammopack_small", position, angles);
+//         }
+//         else {
+//             SpawnEntity("item_healthkit_small", position, angles);
+//         }
+//         AcceptEntityInput(ent, "Kill");
+//     }
+// }
 void removeEntitiesByClassname(const char[] classname)
 {
     int ent = -1;
@@ -687,21 +727,21 @@ void removeEntitiesByClassname(const char[] classname)
     }
 }
 
-void SpawnEntity(char[] entity, float origin[3], float rotation[3] = { 0.0, 0.0, 0.0 })
-{
-    int ent = CreateEntityByName(entity);
-    if (!IsValidEntity(ent))
-    {
-        ThrowError("Invalid Entity.");
-    }
+// void SpawnEntity(char[] entity, float origin[3], float rotation[3] = { 0.0, 0.0, 0.0 })
+// {
+//     int ent = CreateEntityByName(entity);
+//     if (!IsValidEntity(ent))
+//     {
+//         ThrowError("Invalid Entity.");
+//     }
 
-    if (!DispatchSpawn(ent))
-    {
-        ThrowError("Invalid entity index, or no mod support.");
-    }
+//     if (!DispatchSpawn(ent))
+//     {
+//         ThrowError("Invalid entity index, or no mod support.");
+//     }
 
-    TeleportEntity(ent, origin, rotation, NULL_VECTOR);
-}
+//     TeleportEntity(ent, origin, rotation, NULL_VECTOR);
+// }
 
 //
 // Waiting for Players Begins Event
@@ -730,8 +770,18 @@ public Action event_RoundStart(Handle event,
         g_iZombieKills[i]       = 0;
         g_eLastSurvivorClass[i] = TFClass_Unknown;
         g_iLastSurvivorPerk[i]  = 0;
+        g_eLastZombieClass[i]   = TFClass_Unknown;
+        g_iLastZombiePerk[i]    = 0;
     }
     g_iLastSurvivorDied = 0;
+
+    // Reset session stats for all players
+    for (int i = 0; i <= MaxClients; i++)
+    {
+        g_iSessionKills[i] = 0;
+        g_iSessionAssists[i] = 0;
+        g_iSessionDeaths[i] = 0;
+    }
 
     int players[MAXPLAYERS];
     int playerCount;
@@ -741,11 +791,11 @@ public Action event_RoundStart(Handle event,
     //
     // Handle round state.
     // + "teamplay_round_start" event is fired twice on new map loads.
-    //
-    remove_entity_all("item_ammopack_full", true);
-    remove_entity_all("item_ammopack_medium", true);
-    remove_entity_all("item_healthkit_full", false);
-    remove_entity_all("item_healthkit_medium", false);
+    // //
+    // remove_entity_all("item_ammopack_full", true);
+    // remove_entity_all("item_ammopack_medium", true);
+    // remove_entity_all("item_healthkit_full", false);
+    // remove_entity_all("item_healthkit_medium", false);
     if (roundState() == RoundInit1)
     {
         setRoundState(RoundInit2);
@@ -804,9 +854,18 @@ public Action event_RoundStart(Handle event,
 
         // Calculate team counts. At least one survivor must exist.
         surCount = RoundToFloor(playerCount * GetConVarFloat(zf_cvRatio));
-        if ((surCount == 0) && (playerCount > 0))
+        if (playerCount > 0)
         {
-            surCount = 1;
+            // Ensure at least one survivor
+            if (surCount < 1)
+            {
+                surCount = 1;
+            }
+            // Ensure at least one zombie if there are multiple players
+            if (surCount >= playerCount && playerCount > 1)
+            {
+                surCount = playerCount - 1;
+            }
         }
 
         // Assign active players to survivor and zombie teams.
@@ -873,7 +932,14 @@ public Action event_RoundEnd(Handle event,
     zf_bNewRound = GetEventBool(event, "full_round") || (GetEventInt(event, "team") == zomTeam());
     setRoundState(RoundPost);
 
-    PrintMVPRankings();
+    // Log final session data for all connected players
+    for (int i = 1; i <= MaxClients; i++)
+    {
+        if (IsClientInGame(i))
+        {
+            LogPlayerSessionData(i);
+        }
+    }
 
     perk_OnRoundEnd();
 
@@ -924,15 +990,7 @@ public Action event_PlayerSpawn(Handle event,
     // 2. Handle valid, post spawn logic
     CreateTimer(0.1, timer_postSpawn, client, TIMER_FLAG_NO_MAPCHANGE);
 
-    if (isZom(client))
-    {
-        ApplyZombieVisuals(client);
-        
-    }
-    else
-    {
-        RemoveZombieVisuals(client);
-    }
+    
 
     return Plugin_Continue;
 }
@@ -973,6 +1031,7 @@ public Action event_PlayerDeath(Handle event,
     if (killer > 0 && killer != victim)
     {
         g_iRoundKills[killer]++;
+        g_iSessionKills[killer]++; // 累加会话击杀
         if (isSur(killer) && isZom(victim))
         {
             g_iSurvivorKills[killer]++;
@@ -981,14 +1040,23 @@ public Action event_PlayerDeath(Handle event,
             g_iZombieKills[killer]++;
         }
     }
+    g_iSessionDeaths[victim]++; // 累加会话死亡
 
     int assist     = GetClientOfUserId(GetEventInt(event, "assister"));
+    if (assist > 0 && assist != victim)
+    {
+        g_iSessionAssists[assist]++; // 累加会话助攻
+    }
     int inflictor  = GetEventInt(event, "inflictor_entindex");
     int damagetype = GetEventInt(event, "damagebits");
 
     // Handle zombie death logic, all round states.
     if (validZom(victim))
     {
+        // Store last class and perk for zombies
+        g_eLastZombieClass[victim] = TF2_GetPlayerClass(victim);
+        g_iLastZombiePerk[victim]  = prefGet(victim, ZomPerk);
+
         // Remove dropped ammopacks from zombies.
         int index = -1;
         while ((index = FindEntityByClassname(index, "tf_ammo_pack")) != -1)
@@ -997,8 +1065,29 @@ public Action event_PlayerDeath(Handle event,
                 AcceptEntityInput(index, "Kill");
         }
     }
-
+ 
     perk_OnPlayerDeath(victim, killer, assist, inflictor, damagetype);
+ 
+    // 当幸存者死亡时，检查他是否在任何重力光环的影响下
+    if (isSur(victim))
+    {
+        for (int i = 1; i <= MaxClients; i++)
+        {
+            if (validLivingZom(i) && isClientPerkNameEquals(i, "GravityWarper"))
+            {
+                GravityWarperPerk perk = view_as<GravityWarperPerk>(g_hPerks[i]);
+                if (perk != null)
+                {
+                    int index = perk.affected_survivors.FindValue(victim);
+                    if (index != -1)
+                    {
+                        SetEntityGravity(victim, 1.0);
+                        perk.affected_survivors.Erase(index);
+                    }
+                }
+            }
+        }
+    }
 
     // If a survivor dies during the grace period, respawn them immediately.
     if (roundState() == RoundGrace)
@@ -1087,7 +1176,20 @@ public void event_post_inventory_application(Handle event, const char[] name, bo
 
 public void TF2_OnConditionAdded(int client, TFCond cond)
 {
+    
+	if(cond == TFCond_Jarated)
+	{
+        TF2_RemoveCondition(client, cond);
+		addStatTempStack(client, ZFStatSpeed, -150, 10);
+        SetEntityRenderColor(client, 255, 242, 89, 255);
+        CreateTimer(10.0, timer_reset_color, client, TIMER_FLAG_NO_MAPCHANGE);
+	}
     ZombieVisuals_OnConditionAdded(client, cond);
+}
+
+public Action timer_reset_color(Handle timer, int victim){
+    SetEntityRenderColor(victim, 255, 255, 255, 255);
+    return Plugin_Continue;
 }
 
 public void TF2_OnConditionRemoved(int client, TFCond cond)
@@ -1218,7 +1320,15 @@ public Action timer_postSpawn(Handle timer, any client)
     {
         perk_OnPlayerSpawn(client);
     }
-
+    if (isZom(client))
+    {
+        ApplyZombieVisuals(client);
+        
+    }
+    else
+    {
+        RemoveZombieVisuals(client);
+    }
     return Plugin_Continue;
 }
 
@@ -1228,6 +1338,7 @@ public Action timer_zombify(Handle timer, any client)
     if (validClient(client))
     {
         PrintToChat(client, "%t", "ZF_Infected");
+        LogAndResetSession(client); // Log before zombifying
         spawnClient(client, zomTeam());
     }
 
@@ -2483,101 +2594,6 @@ public int Sort_Kills(int index1, int index2, Handle array, Handle hndl)
     return kills2 - kills1;
 }
 
-stock void PrintMVPRankings()
-{
-    char path[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, path, sizeof(path), "logs/zf_stats.log");
-
-    ArrayList surPlayers = new ArrayList();
-    ArrayList zomPlayers = new ArrayList();
-
-    for (int i = 1; i <= MaxClients; i++)
-    {
-        if (IsClientInGame(i))
-        {
-            if (g_iSurvivorKills[i] > 0)
-            {
-                DataPack pack = new DataPack();
-                pack.WriteCell(i);
-                pack.WriteCell(g_iSurvivorKills[i]);
-                surPlayers.Push(pack);
-            }
-            if (g_iZombieKills[i] > 0)
-            {
-                DataPack pack = new DataPack();
-                pack.WriteCell(i);
-                pack.WriteCell(g_iZombieKills[i]);
-                zomPlayers.Push(pack);
-            }
-        }
-    }
-
-    surPlayers.SortCustom(Sort_Kills);
-    zomPlayers.SortCustom(Sort_Kills);
-
-    LogToFile(path, " ");
-    LogToFile(path, "--- Zombie MVP ---");
-    LogToFile(path, "Player               Perk                 Class      Kills");
-    LogToFile(path, "----------------------------------------------------------");
-    for (int i = 0; i < zomPlayers.Length; i++)
-    {
-        DataPack pack = zomPlayers.Get(i);
-        pack.Reset();
-        int  client = pack.ReadCell();
-        int  kills  = pack.ReadCell();
-
-        char name[32];
-        GetClientName(client, name, sizeof(name));
-
-        char perkName[32];
-        GetSurPerkName(g_iLastSurvivorPerk[client], perkName, sizeof(perkName));
-
-        char className[32];
-        GetClassNameFromEnum(g_eLastSurvivorClass[client], className, sizeof(className));
-
-        LogToFile(path, "%-20.20s %-20.20s %-10.10s %d", name, perkName, className, kills);
-    }
-    LogToFile(path, "----------------------------------------------------------");
-
-    LogToFile(path, " ");
-    LogToFile(path, "--- Survivor MVP ---");
-    LogToFile(path, "Player               Perk                 Class      Kills");
-    LogToFile(path, "----------------------------------------------------------");
-    for (int i = 0; i < surPlayers.Length; i++)
-    {
-        DataPack pack = surPlayers.Get(i);
-        pack.Reset();
-        int  client = pack.ReadCell();
-        int  kills  = pack.ReadCell();
-
-        char name[32];
-        GetClientName(client, name, sizeof(name));
-
-        char perkName[32];
-        GetSurPerkName(g_iLastSurvivorPerk[client], perkName, sizeof(perkName));
-
-        char className[32];
-        GetClassNameFromEnum(g_eLastSurvivorClass[client], className, sizeof(className));
-
-        LogToFile(path, "%-20.20s %-20.20s %-10.10s %d", name, perkName, className, kills);
-    }
-    LogToFile(path, "----------------------------------------------------------");
-    LogToFile(path, " ");
-
-    for (int i = 0; i < surPlayers.Length; i++)
-    {
-        DataPack pack = surPlayers.Get(i);
-        delete pack;
-    }
-    delete surPlayers;
-
-    for (int i = 0; i < zomPlayers.Length; i++)
-    {
-        DataPack pack = zomPlayers.Get(i);
-        delete pack;
-    }
-    delete zomPlayers;
-}
 
 //
 // Main.Credits
@@ -2974,6 +2990,95 @@ public int panel_HandleDebugModifyStatValue(Menu menu, MenuAction action, int cl
         CloseHandle(menu);
     }
     return 0;
+}
+
+// ====================================================================================================
+//
+// CSV Logging
+//
+// ====================================================================================================
+
+stock void WriteCsvHeader()
+{
+    char path[PLATFORM_MAX_PATH];
+    BuildPath(Path_SM, path, sizeof(path), "logs/zf_stats.csv");
+
+    if (!FileExists(path))
+    {
+        LogToFile(path, "user,steamid,team,class,perk,kill,assist,death,lastattack,lastspeed,lastcritchance,lastrof,lastdefense");
+    }
+}
+
+void LogPlayerSessionData(int client)
+{
+    if (!IsClientInGame(client))
+        return;
+
+    char path[PLATFORM_MAX_PATH];
+    BuildPath(Path_SM, path, sizeof(path), "logs/zf_stats.csv");
+
+    // User
+    char name[MAX_NAME_LENGTH];
+    GetClientName(client, name, sizeof(name));
+    ReplaceString(name, sizeof(name), ",", ";"); // Escape commas in name
+
+    // SteamID
+    char steamid[64];
+    GetClientAuthId(client, AuthId_Steam2, steamid, sizeof(steamid));
+
+    // Team, Class, Perk
+    char teamStr[16];
+    char classStr[32];
+    char perkName[32];
+    int perkId;
+
+    if (isSur(client))
+    {
+        strcopy(teamStr, sizeof(teamStr), "survivor");
+        GetClassNameFromEnum(TF2_GetPlayerClass(client), classStr, sizeof(classStr));
+        perkId = prefGet(client, SurPerk);
+        GetSurPerkName(perkId, perkName, sizeof(perkName));
+    }
+    else if (isZom(client))
+    {
+        strcopy(teamStr, sizeof(teamStr), "zombie");
+        GetClassNameFromEnum(TF2_GetPlayerClass(client), classStr, sizeof(classStr));
+        perkId = prefGet(client, ZomPerk);
+        GetZomPerkName(perkId, perkName, sizeof(perkName));
+    }
+    else
+    {
+        strcopy(teamStr, sizeof(teamStr), "spectator");
+        strcopy(classStr, sizeof(classStr), "none");
+        strcopy(perkName, sizeof(perkName), "none");
+    }
+
+    // Session Stats
+    int kills = g_iSessionKills[client];
+    int assists = g_iSessionAssists[client];
+    int deaths = g_iSessionDeaths[client];
+
+    // Last Stats
+    int lastAttack = getStat(client, ZFStatAtt);
+    int lastSpeed = getStat(client, ZFStatSpeed);
+    int lastCritChance = getStat(client, ZFStatCrit);
+    int lastRof = getStat(client, ZFStatRof);
+    int lastDefense = getStat(client, ZFStatDef);
+
+    LogToFile(path, "%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d",
+        name, steamid, teamStr, classStr, perkName,
+        kills, assists, deaths,
+        lastAttack, lastSpeed, lastCritChance, lastRof, lastDefense);
+}
+
+public void LogAndResetSession(int client)
+{
+    LogPlayerSessionData(client);
+
+    // Reset session stats
+    g_iSessionKills[client] = 0;
+    g_iSessionAssists[client] = 0;
+    g_iSessionDeaths[client] = 0;
 }
 
 // --- End of Debug Stat Modification Menus ---

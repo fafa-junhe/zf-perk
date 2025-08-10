@@ -14,6 +14,7 @@
 #define ECHO_KNOCKBACK_ENERGY_SCALE 50.0
 #define ECHO_AURA_RADIUS            300.0
 #define ECHO_AURA_RADIUS_SQ         (ECHO_AURA_RADIUS * ECHO_AURA_RADIUS)
+#define ECHO_DEFEND 10
 
 methodmap EchoPerk < SurvivorBasePerk
 {
@@ -30,6 +31,7 @@ public     EchoPerk(int client)
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, EchoPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, EchoPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, EchoPerkFonPlayerSpawn);
+        PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, EchoPerkFupdateClientPermStats);
 
         return sm;
     }
@@ -58,6 +60,10 @@ FUNCTION(EchoPerk, getDesc), char[] buffer, int maxlen)
 FUNCTION(EchoPerk, onPlayerSpawn))
 {
     zf_perkState[_inst.client] = 0;    // Echo energy
+}
+
+FUNCTION(EchoPerk, updateClientPermStats)) {
+    addStat(_inst.client, ZFStatDef, ZFStatTypePerm, ECHO_DEFEND);
 }
 
 FUNCTION_FLOAT(EchoPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype)

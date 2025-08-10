@@ -162,6 +162,7 @@ FUNCTION(AlchemistPerk, onPeriodic))
 
                 if (validSur(p))
                 {
+                    addHealth(p, 5, false);
                     addStatTempStack(p, ZFStatSpeed, ALCHEMIST_ALLY_SPEED_BONUS, 5);
                 }
                 else if (validZom(p))

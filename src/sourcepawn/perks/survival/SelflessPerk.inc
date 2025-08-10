@@ -85,7 +85,7 @@ FUNCTION_FLOAT(SelflessPerk, onTakeDamage), int victim, int attacker, int inflic
             // 此时，`client` 仍然是活着的，`validClient(client)` 会返回 true。
             
             // a. 创建特效
-            fxExplosionBig(client);
+            fxExplosionHuge(client);
 
             // b. 调用范围伤害函数
             // 此时 client 仍然是有效的 attacker

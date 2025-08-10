@@ -22,6 +22,7 @@
 // Defines from all_perks.md
 #define ZF_ALPHA_RADIUSSQ (500.0 * 500.0)
 #define ZF_ALPHA_ATTACK 10
+#define ZF_ALPHA_PERM_ATTACK 15
 #define ZF_ALPHA_ATTACK_MINION 10
 #define ZF_ALPHA_REGEN 4
 #define ZF_ALPHA_REGEN_MINION 12
@@ -44,6 +45,7 @@ methodmap AlphaPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, AlphaPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, AlphaPerkFonKill);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_ASSIST_KILL, AlphaPerkFonAssistKill);
+        PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, AlphaPerkFupdateClientPermStats);
         // Initialize data
         sm.Position = view_as<DataPackPos>(ALPHA_DATA_TIMER);
         sm.WriteCell(0);
@@ -84,7 +86,7 @@ FUNCTION(AlphaPerk, getDesc), char[] buffer, int maxlen) {
 FUNCTION(AlphaPerk, onKill), int victim, int killer, int assist, int inflictor, int damagetype)
 {
     // 如果受害者是幸存者
-    if (validClient(victim))
+    if (validClient(victim) && victim != killer)
     {
         // 将 AlphaPerk 的拥有者设置为这个受害者的主人
         zf_perkAlphaMaster[victim] = _inst.client;
@@ -96,7 +98,7 @@ FUNCTION(AlphaPerk, onKill), int victim, int killer, int assist, int inflictor, 
 FUNCTION(AlphaPerk, onAssistKill), int victim, int killer, int assist, int inflictor, int damagetype)
 {
     // 逻辑和 onKill 完全一样
-    if (validClient(victim))
+    if (validClient(victim) && victim != assist)
     {
         zf_perkAlphaMaster[victim] = _inst.client;
         PrintHintText(_inst.client, "%t", "AlphaPerk_Hint_NewMinion", victim);
@@ -138,7 +140,9 @@ FUNCTION(AlphaPerk, onCallForMedic)) {
 
   
 }
-
+FUNCTION(AlphaPerk, updateClientPermStats)) {
+    addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, ZF_ALPHA_PERM_ATTACK);
+}
 stock void doAlphaSummon(int client)
 {
     int validMinions[MAXPLAYERS+1];

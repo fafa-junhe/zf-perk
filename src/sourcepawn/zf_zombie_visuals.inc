@@ -115,7 +115,6 @@ stock void ZombieVisuals_OnConditionAdded(int client, TFCond cond)
 		TF2Attrib_SetByName(client, "zombiezombiezombiezombie", 0.0);
 		TF2Attrib_SetByName(client, "SPELL: Halloween voice modulation", 0.0);			
 		SetEntProp(client, Prop_Send, "m_bForcedSkin", 0);
-		SetEntProp(client, Prop_Send, "m_nForcedSkin", 0);		
 	}
 }
 

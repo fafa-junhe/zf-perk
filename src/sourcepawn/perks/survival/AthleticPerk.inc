@@ -11,6 +11,7 @@
 #include "../../perk_macros.inc"
 
 #define ZF_ATHLETIC_ATTACK -(40)
+#define ZF_ATHLETIC_DEFEND -(20)
 #define ZF_ATHLETIC_CRIT -(100)
 #define ZF_ATHLETIC_ROF 100
 #define ZF_ATHLETIC_SPEED 100
@@ -49,6 +50,7 @@ FUNCTION(AthleticPerk, getDesc), char[] buffer, int maxlen) {
 FUNCTION(AthleticPerk, updateClientPermStats)) {
     addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, ZF_ATHLETIC_ATTACK);
     addStat(_inst.client, ZFStatCrit, ZFStatTypePerm, ZF_ATHLETIC_CRIT);
+    addStat(_inst.client, ZFStatDef, ZFStatTypePerm, ZF_ATHLETIC_DEFEND);
     addStat(_inst.client, ZFStatRof, ZFStatTypePerm, ZF_ATHLETIC_ROF);
     addStat(_inst.client, ZFStatSpeed, ZFStatTypePerm, ZF_ATHLETIC_SPEED);
 }

@@ -817,6 +817,32 @@ stock bool usingZomPerk(int client, int perk)
     return (prefGet(client, ZomPerk) == perk);
 }
 
+stock int getSurPerkCount(int perk)
+{
+    int count = 0;
+    for (int i = 1; i <= MaxClients; i++)
+    {
+        if (IsClientInGame(i) && isSur(i) && usingSurPerk(i, perk))
+        {
+            count++;
+        }
+    }
+    return count;
+}
+
+stock int getZomPerkCount(int perk)
+{
+    int count = 0;
+    for (int i = 1; i <= MaxClients; i++)
+    {
+        if (IsClientInGame(i) && isZom(i) && usingZomPerk(i, perk))
+        {
+            count++;
+        }
+    }
+    return count;
+}
+
 //
 // Called by client when he selects a survivor perk (either from menu or by command).
 //
@@ -1099,6 +1125,19 @@ stock void addHealth(int client, int health, bool doOverheal = false)
             fxHealthGained(client);
     }
 }
+stock bool isClientPerkNameEquals(int client, const char[] name)
+{
+    if (g_hPerks[client] == null)
+    {
+        return false;
+    }
+
+    char perkName[64];
+    g_hPerks[client].getName(perkName, sizeof(perkName));
+
+    return StrEqual(perkName, name, false);
+}
+
 
 ////////////////////////////////////////////////////////////
 //
@@ -1801,7 +1840,7 @@ public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float
     float originalDamage = damage;    // 保存原始伤害
 
     // Cripple logic for backstabs
-    if (GetConVarBool(hCvarCripple) && validZom(attacker) && attackWasBackstab(attacker, inflictor, damage))
+    if (GetConVarBool(hCvarCripple) && validZom(attacker) && !isUbered(victim) && attackWasBackstab(attacker, inflictor, damage) && !isClientPerkNameEquals(victim, "Turtle"))
     {
         PrintHintText(attacker, "%t", "ZF_Cripple_Backstab_Success", victim);
         PrintHintText(victim, "%t", "ZF_Cripple_Backstab_Victim", attacker);
@@ -1920,11 +1959,16 @@ public void perk_OnTakeDamagePost(int victim, int attacker, int inflictor, float
     }
 }
 
-public void perk_OnDealDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype)
+public void perk_OnDealDamagePost(int attacker, int victim, int inflictor, float damage, int damagetype)
 {
+    ZF_LogDebug("perk_OnDealDamagePost: Dispatching to attacker %d (victim: %d)", attacker, victim);
     if (validClient(attacker) && g_hPerks[attacker] != null)
     {
         g_hPerks[attacker].onDealDamagePost(victim, attacker, inflictor, damage, damagetype);
+    }
+    else
+    {
+        ZF_LogDebug("perk_OnDealDamagePost: Attacker %d is not valid or has no perk.", attacker);
     }
 }
 
@@ -2079,6 +2123,7 @@ public void perk_OnPlayerSpawn(int client)
             if (teamChange || (nextPerk != prefGet(client, SurPerk)))
             {
                 perkChange = true;
+                LogAndResetSession(client); // 在更换Perk前记录数据
                 prefSet(client, SurPerk, nextPerk);
             }
             prefSet(client, SurPendPerk, nextPerk);
@@ -2101,6 +2146,7 @@ public void perk_OnPlayerSpawn(int client)
             if (teamChange || (nextPerk != prefGet(client, ZomPerk)))
             {
                 perkChange = true;
+                LogAndResetSession(client); // 在更换Perk前记录数据
                 prefSet(client, ZomPerk, nextPerk);
             }
             prefSet(client, ZomPendPerk, nextPerk);
@@ -2108,18 +2154,33 @@ public void perk_OnPlayerSpawn(int client)
             if (TF2_GetPlayerClass(client) == TFClass_Sniper)
             {
                 Handle item = TF2Items_CreateItem(OVERRIDE_ALL);
-                TF2Items_SetItemIndex(item, 56);
+                TF2Items_SetItemIndex(item, ZFWEAP_HUNTSMAN);
                 TF2Items_SetClassname(item, "tf_weapon_compound_bow");
                 TF2Items_SetLevel(item, 69);
                 TF2Items_SetQuality(item, 2);
                 TF2Items_SetNumAttributes(item, 3);
-                TF2Items_SetAttribute(item, 0, 1, 0.35);
+                TF2Items_SetAttribute(item, 0, 1, 0.5);
                 TF2Items_SetAttribute(item, 1, 869, 1.0);
                 TF2Items_SetAttribute(item, 2, 5, 2.0);
                 int weapon = TF2Items_GiveNamedItem(client, item);
                 if (weapon != -1)
                 {
                     EquipPlayerWeapon(client, weapon);
+                }
+                int weaponId = slotWeaponId(client, 2);
+                if (weaponId == ZFWEAP_JARATE || weaponId == ZFWEAP_FESTIVE_JARATE){
+                    Handle item2 = TF2Items_CreateItem(OVERRIDE_ALL);
+                    TF2Items_SetItemIndex(item2, ZFWEAP_FESTIVE_JARATE);
+                    TF2Items_SetClassname(item2, "tf_weapon_jar");
+                    TF2Items_SetLevel(item2, 69);
+                    TF2Items_SetQuality(item2, 2);
+                    TF2Items_SetNumAttributes(item2, 1);
+                    TF2Items_SetAttribute(item2, 0, 1, 0.65);
+                    int weapon2 = TF2Items_GiveNamedItem(client, item2);
+                    if (weapon2 != -1)
+                    {
+                        EquipPlayerWeapon(client, weapon2);
+                    }
                 }
             }
         }

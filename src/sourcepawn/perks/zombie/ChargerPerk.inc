@@ -450,29 +450,17 @@ FUNCTION(ChargerPerk, doChargeEnd), bool hitWall)
 
         if (hitWall)
         {
-            // --- NEW LOGIC TO PREVENT STICKING ---
-            float charger_pos[3], charger_ang[3], fwd[3], safe_pos[3];
+            // --- POSITION SWAP LOGIC ---
+            float charger_pos[3];
             GetClientAbsOrigin(client, charger_pos);
-            GetClientEyeAngles(client, charger_ang);
-            GetAngleVectors(charger_ang, fwd, NULL_VECTOR, NULL_VECTOR);
 
-            // Calculate a position behind the charger
-            fwd[2] = 0.0;    // Horizontal pushback
-            NormalizeVector(fwd, fwd);
-            ScaleVector(fwd, -64.0);    // Push back 64 units from charger's front
-            AddVectors(charger_pos, fwd, safe_pos);
+            float victim_pos[3];
+            GetClientAbsOrigin(victim, victim_pos);
 
-            // Find the nearest clear spot for the victim's hull
-            float hull_min[3] = { -16.0, -16.0, 0.0 };
-            float hull_max[3] = { 16.0, 16.0, 72.0 };
-            TR_TraceHull(safe_pos, safe_pos, hull_min, hull_max, MASK_PLAYERSOLID);
-            if (TR_DidHit())
-            {
-                TR_GetEndPosition(safe_pos);
-            }
-
-            TeleportEntity(victim, safe_pos, NULL_VECTOR, zero_vel);
-            // --- END NEW LOGIC ---
+            // Swap positions
+            TeleportEntity(client, victim_pos, NULL_VECTOR, zero_vel);
+            TeleportEntity(victim, charger_pos, NULL_VECTOR, zero_vel);
+            // --- END POSITION SWAP LOGIC ---
 
             PrintHintText(victim, "%t", "ChargerPerk_Hint_WallHitVictim");
             SDKHooks_TakeDamage(victim, client, client, CHARGER_WALL_DAMAGE, DMG_CRUSH);

@@ -266,7 +266,22 @@ public void panel_PrintSurPerkList(int client, bool resetPage)
         IntToString(i, sPerkIndex, sizeof(sPerkIndex));
         char displayName[128];
         GetSurPerkDisplayShortDesc(client, i, displayName, sizeof(displayName));
-        menu.AddItem(sPerkIndex, displayName);
+
+        int limit = zf_surPerksLimit[i];
+        int current = getSurPerkCount(i);
+        char countStr[32];
+        if (limit != -1)
+        {
+            Format(countStr, sizeof(countStr), " [%d/%d]", current, limit);
+            StrCat(displayName, sizeof(displayName), countStr);
+            menu.AddItem(sPerkIndex, displayName);
+        }
+        else
+        {
+            Format(countStr, sizeof(countStr), " [%d]", current);
+            StrCat(displayName, sizeof(displayName), countStr);
+            menu.AddItem(sPerkIndex, displayName);
+        }
     }
 
     menu.Display(client, MENU_TIME_FOREVER);
@@ -313,7 +328,22 @@ public void panel_PrintZomPerkList(int client, bool resetPage)
         IntToString(i, sPerkIndex, sizeof(sPerkIndex));
         char displayName[128];
         GetZomPerkDisplayShortDesc(client, i, displayName, sizeof(displayName));
-        menu.AddItem(sPerkIndex, displayName);
+
+        int limit = zf_zomPerksLimit[i];
+        int current = getZomPerkCount(i);
+        char countStr[32];
+        if (limit != -1)
+        {
+            Format(countStr, sizeof(countStr), " [%d/%d]", current, limit);
+            StrCat(displayName, sizeof(displayName), countStr);
+            menu.AddItem(sPerkIndex, displayName);
+        }
+        else
+        {
+            Format(countStr, sizeof(countStr), " [%d]", current);
+            StrCat(displayName, sizeof(displayName), countStr);
+            menu.AddItem(sPerkIndex, displayName);
+        }
     }
 
     menu.Display(client, MENU_TIME_FOREVER);
@@ -367,7 +397,25 @@ public void panel_PrintSurPerkSelect(int client, int perk)
     char buffer[128];
     // Option 1: Select
     Format(buffer, sizeof(buffer), "%T", "ZF_Menu_PerkSelect_Select", client);
-    menu.AddItem("select", buffer, surPerkEnabled(perk) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+    int limit = zf_surPerksLimit[perk];
+    bool disabled = !surPerkEnabled(perk);
+    int current = getSurPerkCount(perk);
+    char countStr[32];
+    if (limit != -1)
+    {
+        if (current >= limit)
+        {
+            disabled = true;
+        }
+        Format(countStr, sizeof(countStr), " [%d/%d]", current, limit);
+        StrCat(buffer, sizeof(buffer), countStr);
+    }
+    else
+    {
+        Format(countStr, sizeof(countStr), " [%d/∞]", current);
+        StrCat(buffer, sizeof(buffer), countStr);
+    }
+    menu.AddItem("select", buffer, disabled ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
 
     // Option 2: Back is handled by ExitButton
     menu.ExitButton = true;
@@ -428,7 +476,25 @@ public void panel_PrintZomPerkSelect(int client, int perk)
     char buffer[128];
     // Option 1: Select
     Format(buffer, sizeof(buffer), "%T", "ZF_Menu_PerkSelect_Select", client);
-    menu.AddItem("select", buffer, zomPerkEnabled(perk) ? ITEMDRAW_DEFAULT : ITEMDRAW_DISABLED);
+    int limit = zf_zomPerksLimit[perk];
+    bool disabled = !zomPerkEnabled(perk);
+    int current = getZomPerkCount(perk);
+    char countStr[32];
+    if (limit != -1)
+    {
+        if (current >= limit)
+        {
+            disabled = true;
+        }
+        Format(countStr, sizeof(countStr), " [%d/%d]", current, limit);
+        StrCat(buffer, sizeof(buffer), countStr);
+    }
+    else
+    {
+        Format(countStr, sizeof(countStr), " [%d/∞]", current);
+        StrCat(buffer, sizeof(buffer), countStr);
+    }
+    menu.AddItem("select", buffer, disabled ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
 
     // Option 2: Back is handled by ExitButton
     menu.ExitButton = true;

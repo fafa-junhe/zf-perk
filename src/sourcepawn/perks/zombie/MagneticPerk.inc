@@ -21,7 +21,7 @@
 #include "../../perk_macros.inc"
 
 // Defines from all_perks.md
-#define ZF_MAGNETIC_RADIUSSQ (500.0 * 500.0)
+#define ZF_MAGNETIC_RADIUSSQ (800.0 * 800.0)
 
 methodmap MagneticPerk < ZombieBasePerk {
     public MagneticPerk(int client) {
@@ -70,20 +70,23 @@ FUNCTION(MagneticPerk, onPeriodic)) {
         bool isBuilding = StrEqual(classname, "obj_sentrygun") || StrEqual(classname, "obj_dispenser") || StrEqual(classname, "obj_teleporter");
 
         if (isBuilding) {
-            if (GetEntProp(i, Prop_Data, "m_iTeamNum") == zomTeam()) {
+            int team = GetEntProp(i, Prop_Data, "m_iTeamNum");
+            if (team == zomTeam()) {
                 continue;
             }
 
             float build_pos[3];
             GetEntPropVector(i, Prop_Send, "m_vecOrigin", build_pos);
 
-            if (GetVectorDistance(zom_pos, build_pos, true) <= ZF_MAGNETIC_RADIUSSQ) {
-                AcceptEntityInput(i, "SetDisabled");
-                if (GetRandomInt(0, 5) == 0) {
+            float distanceSq = GetVectorDistance(zom_pos, build_pos, true);
+
+            if (distanceSq <= ZF_MAGNETIC_RADIUSSQ) {
+                SetEntProp(i, Prop_Send, "m_bDisabled", 1);
+                if (GetRandomInt(0, 5) >= 2) {
                     fxSpark(i);
                 }
             } else {
-                AcceptEntityInput(i, "SetEnabled");
+                SetEntProp(i, Prop_Send, "m_bDisabled", 0);
             }
         }
     }

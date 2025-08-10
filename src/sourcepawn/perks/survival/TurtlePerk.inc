@@ -1,5 +1,5 @@
 #if defined __TurtlePerk_included
-#endinput
+    #endinput
 #endif
 #define __TurtlePerk_included
 
@@ -16,16 +16,19 @@
 #include "../../perk_vtable.inc"
 #include "../../perk_macros.inc"
 
-#define ZF_TURTLE_ATTACK -50
-#define ZF_TURTLE_DEFEND 75
-#define ZF_TURTLE_SPEED -100
-#define ZF_TURTLE_CRIT -100
+#define ZF_TURTLE_ATTACK        -50
+#define ZF_TURTLE_DEFEND        75
+#define ZF_TURTLE_SPEED         -100
+#define ZF_TURTLE_CRIT          -100
 #define ZF_TURTLE_STUN_DURATION 1.0
 
-methodmap TurtlePerk < SurvivorBasePerk {
-    public TurtlePerk(int client) {
+methodmap TurtlePerk < SurvivorBasePerk
+{
+
+public     TurtlePerk(int client)
+    {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
-        TurtlePerk sm = view_as<TurtlePerk>(sm_base);
+        TurtlePerk       sm      = view_as<TurtlePerk>(sm_base);
 
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, TurtlePerkFgetName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, TurtlePerkFgetShortdesc);
@@ -37,23 +40,28 @@ methodmap TurtlePerk < SurvivorBasePerk {
     }
 }
 
-stock SurvivorBasePerk TurtlePerkFnew(int client) {
+stock SurvivorBasePerk TurtlePerkFnew(int client)
+{
     return new TurtlePerk(client);
 }
 
-FUNCTION(TurtlePerk, getName), char[] buffer, int maxlen) {
+FUNCTION(TurtlePerk, getName), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "Turtle");
 }
 
-FUNCTION(TurtlePerk, getShortdesc), char[] buffer, int maxlen) {
+FUNCTION(TurtlePerk, getShortdesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "TurtlePerk_shortdesc");
 }
 
-FUNCTION(TurtlePerk, getDesc), char[] buffer, int maxlen) {
+FUNCTION(TurtlePerk, getDesc), char[] buffer, int maxlen)
+{
     strcopy(buffer, maxlen, "TurtlePerk_desc");
 }
 
-FUNCTION(TurtlePerk, updateClientPermStats)) {
+FUNCTION(TurtlePerk, updateClientPermStats))
+{
     int client = _inst.client;
     addStat(client, ZFStatAtt, ZFStatTypePerm, ZF_TURTLE_ATTACK);
     addStat(client, ZFStatDef, ZFStatTypePerm, ZF_TURTLE_DEFEND);
@@ -61,9 +69,11 @@ FUNCTION(TurtlePerk, updateClientPermStats)) {
     addStat(client, ZFStatCrit, ZFStatTypePerm, ZF_TURTLE_CRIT);
 }
 
-FUNCTION_FLOAT(TurtlePerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype) {
-    if (victim == _inst.client && attackWasBackstab(attacker, inflictor, damage)) {
-PrintHintText(victim, "%t", "TurtlePerk_Hint_BackstabBlocked");
+FUNCTION_FLOAT(TurtlePerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype)
+{
+    if (victim == _inst.client && attackWasBackstab(attacker, inflictor, damage))
+    {
+        PrintHintText(victim, "%t", "TurtlePerk_Hint_BackstabBlocked");
         TF2_StunPlayer(attacker, ZF_TURTLE_STUN_DURATION, _, 0, attacker);
         fxSpark(victim);
         return 0.0;

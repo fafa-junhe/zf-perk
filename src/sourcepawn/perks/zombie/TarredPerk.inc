@@ -18,18 +18,22 @@
 #define ZF_TARRED_DURATION_MELEE       10
 #define ZF_TARRED_DURATION_SLICK       30.0
 #define ZF_TARRED_ROF                  -20
-#define ZF_TARRED_SPEED_MELEE          -40
-#define ZF_TARRED_SPEED_SLICK          -30
+#define ZF_TARRED_SPEED_MELEE          -60
+#define ZF_TARRED_SPEED_SLICK          -50
 #define ZF_TARRED_TIMER                30
 #define ZF_TARRED_RADIUS               75.0
-#define ZF_TARRED_PROJECTILE_SPEED     900.0
+#define ZF_TARRED_PROJECTILE_SPEED     1600.0
 #define ZF_TARRED_PROJECTILE_MODEL     "models/props_halloween/hwn_flask_vial.mdl"
-#define ZF_TARRED_MAX_DIST             1000.0
+#define ZF_TARRED_MAX_DIST             2000.0
+#define ZF_TARRED_SPIT_COUNT           5
+#define ZF_TARRED_SPIT_INTERVAL        0.2
 
 // Data slots
 #define TARRED_DATA_COOLDOWN           (PERK_DATA_START_INDEX + 0)
 #define TARRED_DATA_POOLS_HANDLE       (PERK_DATA_START_INDEX + 1)
 #define TARRED_DATA_PROJECTILES_HANDLE (PERK_DATA_START_INDEX + 2)
+#define TARRED_DATA_SPIT_COUNT         (PERK_DATA_START_INDEX + 3)
+#define TARRED_DATA_SPIT_TIMER_HANDLE  (PERK_DATA_START_INDEX + 4)
 
 methodmap TarredPerk < ZombieBasePerk
 {
@@ -50,9 +54,10 @@ public     TarredPerk(int client)
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, TarredPerkFonDeath);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, TarredPerkFonPlayerSpawn);
 
-        sm.cooldown    = 0.0;
-        sm.pools       = new DataPack();
-        sm.projectiles = new DataPack();
+        sm.cooldown          = 0.0;
+        sm.pools             = new DataPack();
+        sm.projectiles       = new DataPack();
+        sm.spit_timer_handle = null;
 
         return sm;
     }
@@ -104,6 +109,37 @@ public         set(DataPack value)
             this.WriteCell(view_as<int>(value));
         }
     }
+
+    property int spit_count
+    {
+
+public         get()
+        {
+            this.Position = view_as<DataPackPos>(TARRED_DATA_SPIT_COUNT);
+            return this.ReadCell();
+        }
+
+public         set(int value)
+        {
+            this.Position = view_as<DataPackPos>(TARRED_DATA_SPIT_COUNT);
+            this.WriteCell(value);
+        }
+    }
+    property Handle spit_timer_handle
+    {
+
+public         get()
+        {
+            this.Position = view_as<DataPackPos>(TARRED_DATA_SPIT_TIMER_HANDLE);
+            return view_as<Handle>(this.ReadCell());
+        }
+
+public         set(Handle value)
+        {
+            this.Position = view_as<DataPackPos>(TARRED_DATA_SPIT_TIMER_HANDLE);
+            this.WriteCell(view_as<int>(value));
+        }
+    }
 }
 
 stock BasePerk TarredPerkFnew(int client)
@@ -136,7 +172,13 @@ FUNCTION(TarredPerk, onPlayerSpawn))
     {
         _inst.projectiles = new DataPack();
     }
-    _inst.cooldown = 0.0; // 重置冷却时间
+    _inst.cooldown   = 0.0; // 重置冷却时间
+    _inst.spit_count = 0;
+    if (_inst.spit_timer_handle != null)
+    {
+        KillTimer(_inst.spit_timer_handle);
+        _inst.spit_timer_handle = null;
+    }
 }
 
 FUNCTION(TarredPerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype)
@@ -174,6 +216,11 @@ FUNCTION(TarredPerk, onDeath), int victim, int killer, int assist, int inflictor
         }
         projectiles.Reset();
     }
+    if (_inst.spit_timer_handle != null)
+    {
+        KillTimer(_inst.spit_timer_handle);
+        _inst.spit_timer_handle = null;
+    }
 }
 
 FUNCTION(TarredPerk, onCallForMedic))
@@ -182,40 +229,100 @@ FUNCTION(TarredPerk, onCallForMedic))
     {
         return;
     }
-    _inst.cooldown = float(ZF_TARRED_TIMER);
+    if (_inst.spit_count > 0 || _inst.spit_timer_handle != null)
+    {
+        return;
+    }
+    _inst.cooldown   = float(ZF_TARRED_TIMER);
+    _inst.spit_count = ZF_TARRED_SPIT_COUNT;
 
-    int client = _inst.client;
+    DataPack pack           = new DataPack();
+    pack.WriteCell(GetClientUserId(_inst.client));
+    _inst.spit_timer_handle = CreateTimer(ZF_TARRED_SPIT_INTERVAL, timer_SpitTarProjectile, pack, TIMER_REPEAT);
+}
+
+public Action timer_SpitTarProjectile(Handle timer, DataPack pack)
+{
+    pack.Reset();
+    int userid = pack.ReadCell();
+    int client = GetClientOfUserId(userid);
+
+    if (!validLivingZom(client))
+    {
+        pack.Reset();
+        delete pack;
+        return Plugin_Stop;
+    }
+
+    BasePerk perk = g_hPerks[client];
+    if (perk == null)
+    {
+        pack.Reset();
+        delete pack;
+        return Plugin_Stop;
+    }
+
+    char perkName[32];
+    perk.getName(perkName, sizeof(perkName));
+    if (!StrEqual(perkName, "Tarred"))
+    {
+        pack.Reset();
+        delete pack;
+        return Plugin_Stop;
+    }
+
+    TarredPerk tarred_perk = view_as<TarredPerk>(perk);
+    if (tarred_perk.spit_count <= 0)
+    {
+        tarred_perk.spit_timer_handle = null;
+        pack.Reset();
+        delete pack;
+        return Plugin_Stop;
+    }
+
     float eye_pos[3], eye_ang[3];
     GetClientEyePosition(client, eye_pos);
-    eye_pos[2] += 40;
     GetClientEyeAngles(client, eye_ang);
+
+    eye_ang[0] += GetRandomFloat(-10.0, 5.0);
+    eye_ang[1] += GetRandomFloat(-8.0, 8.0);
 
     int color[3] = {25, 25, 25}; // Tar color
 
-    
-    int item_index = getFreeItemIndex(client, 1); // Tarred perk only throws one projectile at a time
+    int item_index = getFreeItemIndex(client, ZF_TARRED_SPIT_COUNT);
     if (item_index == -1)
     {
-        PrintHintText(client, "Cannot throw another tar slick yet.");
-        return;
+        PrintHintText(client, "Too many projectiles active.");
+        return Plugin_Continue;
     }
 
     int projectile = fxCreateModelThrown(ZF_TARRED_PROJECTILE_MODEL, client, eye_pos, eye_ang, ZF_TARRED_PROJECTILE_SPEED, color);
 
     if (projectile == -1)
     {
-        return;
+        return Plugin_Continue;
     }
 
     setItemMetadata(projectile, item_index);
     zf_item[client][item_index] = projectile;
 
-    TarredPerk tarred_perk = view_as<TarredPerk>(_inst);
-    DataPack   projectiles = tarred_perk.projectiles;
+    DataPack projectiles = tarred_perk.projectiles;
     projectiles.WriteCell(projectile);
     projectiles.WriteFloat(eye_pos[0]);
     projectiles.WriteFloat(eye_pos[1]);
     projectiles.WriteFloat(eye_pos[2]);
+
+    tarred_perk.spit_count--;
+
+    if (tarred_perk.spit_count <= 0)
+    {
+        tarred_perk.spit_timer_handle = null;
+        pack.Reset();
+        delete pack;
+        return Plugin_Stop;
+    }
+
+    return Plugin_Continue;
 }
 
 stock void createTarPool(int owner, int projectile, const float pos[3], const float hitAng[3])
@@ -240,7 +347,7 @@ stock void createTarPool(int owner, int projectile, const float pos[3], const fl
 
     // Clean up the projectile from zf_item array
     int item_index = getItemMetadata(projectile);
-    if (item_index >= 0 && item_index < 1) // Only one item slot for Tarred
+    if (item_index >= 0 && item_index < ZF_TARRED_SPIT_COUNT)
     {
         zf_item[owner][item_index] = -1;
     }

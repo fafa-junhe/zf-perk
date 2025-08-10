@@ -40,7 +40,7 @@ public     LeapPerk(int client)
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, LeapPerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, LeapPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, LeapPerkFupdateClientPermStats);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, LeapPerkFonTakeDamage);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE_POST, LeapPerkFonTakeDamagePost);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, LeapPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, LeapPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, LeapPerkFupdateCondStats);
@@ -96,13 +96,12 @@ FUNCTION(LeapPerk, updateClientPermStats))
     addStat(_inst.client, ZFStatDef, ZFStatTypePerm, ZF_LEAP_COMBAT);
 }
 
-FUNCTION_FLOAT(LeapPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype)
+FUNCTION(LeapPerk, onTakeDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype)
 {
-    if (victim == _inst.client && damagetype == TF2_DMGTYPE_FALL)
+    if (victim == _inst.client && damagetype & DMG_FALL)
     {
-        return 0.0;    // Immune to fall damage
+        addHealth(_inst.client, RoundToNearest(damage), false);    // Immune to fall damage
     }
-    return damage;    // No change for other damage types
 }
 
 FUNCTION(LeapPerk, onCallForMedic))

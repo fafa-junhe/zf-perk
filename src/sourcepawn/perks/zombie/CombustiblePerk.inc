@@ -47,7 +47,7 @@ methodmap CombustiblePerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, CombustiblePerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, CombustiblePerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, CombustiblePerkFupdateClientPermStats);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, CombustiblePerkFonTakeDamage);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, CombustiblePerkFonDeath);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, CombustiblePerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, CombustiblePerkFonPlayerSpawn);
 
@@ -76,27 +76,31 @@ FUNCTION(CombustiblePerk, updateClientPermStats)) {
     addStat(_inst.client, ZFStatDef, ZFStatTypePerm, ZF_COMBUSTIBLE_DEFEND);
 }
 
-FUNCTION_FLOAT(CombustiblePerk, onTakeDamage), int victim, int attacker,  int inflictor, float damage, int damagetype) {
+FUNCTION(CombustiblePerk, onDeath), int victim, int killer, int assist, int inflictor, int damagetype) {
     int client = _inst.client;
-    if (victim != client) return damage;
+    if (victim != client) return;
 
-    // 检查是否是来自幸存者的非近战致命一击
-    if (validSur(attacker) && !(damagetype & DMG_CLUB)) {
-        if (damage >= GetClientHealth(client) && !_inst.hasExploded) {
-            _inst.hasExploded = true;
-            // 是致命一击，触发爆炸
-            int explosionDamage = (TF2_GetPlayerClass(victim) == TFClass_Heavy) ? ZF_COMBUSTIBLE_DAMAGE_HEAVY : ZF_COMBUSTIBLE_DAMAGE;
-            
-            float pos[3];
-            GetClientAbsOrigin(victim, pos);
-            applyDamageRadial(victim, explosionDamage, pos, ZF_COMBUSTIBLE_RADIUS, true, GetClientTeam(victim));
-            fxExplosionBig(victim);
-            
-            // 设置重生计时器
-            CreateTimer(ZF_COMBUSTIBLE_RESPAWNTIME, Timer_RespawnClient, victim, TIMER_FLAG_NO_MAPCHANGE);
-        }
+
+    // 如果本条命已经爆炸过，则直接返回
+    if (_inst.hasExploded) {
+        return;
     }
-    return damage; // 返回原始伤害，让玩家正常死亡
+
+    // 检查是否是来自幸存者的非近战攻击
+    if (validSur(killer) && !(damagetype & DMG_CLUB)) {
+        _inst.hasExploded = true;
+        
+        // 触发爆炸
+        int explosionDamage = (TF2_GetPlayerClass(victim) == TFClass_Heavy) ? ZF_COMBUSTIBLE_DAMAGE_HEAVY : ZF_COMBUSTIBLE_DAMAGE;
+        
+        float pos[3];
+        GetClientAbsOrigin(victim, pos); // 在玩家实体失效前获取其最后位置
+        applyDamageRadial(victim, explosionDamage, pos, ZF_COMBUSTIBLE_RADIUS, true, GetClientTeam(victim));
+        fxExplosionBig(victim);
+        
+        // 设置重生计时器
+        CreateTimer(ZF_COMBUSTIBLE_RESPAWNTIME, Timer_RespawnClient, victim, TIMER_FLAG_NO_MAPCHANGE);
+    } 
 }
 
 public Action Timer_RespawnClient(Handle timer, any client) {

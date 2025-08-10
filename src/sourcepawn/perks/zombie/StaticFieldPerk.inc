@@ -101,6 +101,7 @@ FUNCTION(StaticFieldPerk, onPeriodic)) {
                 float speed = GetVectorLength(velocity);
 
                 if (speed > 50.0) { // 避免对微小移动造成伤害
+                    fxCreateSoundToClient(ZFSND_SPARK, i);
                     float damage = speed * STATIC_FIELD_DAMAGE_FACTOR;
                     SDKHooks_TakeDamage(i, client, client, damage, DMG_SHOCK);
                 }
