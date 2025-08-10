@@ -118,7 +118,7 @@ FUNCTION(PhantasmPerk, onCallForMedic)) {
 
         PrintHintText(client, "%t", "PhantasmPerk_Enter_Void_Walk");
     } else {
-        PrintHintText(client, "%t", "Ability_On_Cooldown", RoundToNearest(_inst.cooldown));
+        PrintHintText(client, "%t", "PhantasmPerk_Status_Cooldown", RoundToNearest(_inst.cooldown));
     }
 }
 
