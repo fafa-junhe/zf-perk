@@ -16,7 +16,7 @@
 #include "../../perk_vtable.inc"
 #include "../../perk_macros.inc"
 
-#define ZF_TURTLE_ATTACK        -50
+#define ZF_TURTLE_ATTACK        -40
 #define ZF_TURTLE_DEFEND        75
 #define ZF_TURTLE_SPEED         -100
 #define ZF_TURTLE_CRIT          -100

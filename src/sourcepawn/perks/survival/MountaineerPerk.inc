@@ -11,8 +11,8 @@
 #include "../../zf_util_fx.inc"
 #include <sdktools_trace>
 
-#define MOUNTAINEER_CLIMB_SPEED      200.0
-#define MOUNTAINEER_GRAPPLE_COOLDOWN 12
+#define MOUNTAINEER_CLIMB_SPEED      400.0
+#define MOUNTAINEER_GRAPPLE_COOLDOWN 6
 #define MOUNTAINEER_GRAPPLE_FORCE    1000.0
 
 #define MOUNTAINEER_DATA_TIMER       (PERK_DATA_START_INDEX + 0)

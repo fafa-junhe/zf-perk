@@ -10,7 +10,7 @@
 #include "../../zf_util_base.inc"
 #include "../../zf_util_fx.inc"
 
-#define ALCHEMIST_POTION_GEN_TIME  25
+#define ALCHEMIST_POTION_GEN_TIME  15
 #define ALCHEMIST_MAX_POTIONS      3
 #define ALCHEMIST_AOE_DURATION     7.0
 #define ALCHEMIST_AOE_RADIUS       180.0

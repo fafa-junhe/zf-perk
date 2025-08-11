@@ -11,7 +11,7 @@
 
 #define GAMBLER_CRIT_REDUCTION       -100
 #define GAMBLER_MAX_LUCK             30
-#define GAMBLER_KILL_LUCK_GAIN       2
+#define GAMBLER_KILL_LUCK_GAIN       4
 #define GAMBLER_ASSIST_LUCK_GAIN     1
 #define GAMBLER_HIT_LUCK_COST        1
 #define GAMBLER_SELF_DAMAGE          10.0

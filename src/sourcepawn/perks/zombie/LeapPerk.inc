@@ -21,7 +21,7 @@
 
 // Defines from all_perks.md
 #define ZF_LEAP_COMBAT      -20
-#define ZF_LEAP_COOLDOWN    4
+#define ZF_LEAP_COOLDOWN    6
 #define ZF_LEAP_FORCE       1300.0
 #define ZF_LEAP_FORCE_SCOUT 1900.0
 

@@ -43,6 +43,7 @@ methodmap MarkedPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, MarkedPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, MarkedPerkFonPlayerSpawn);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, MarkedPerkFonDeath);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_GAME_FRAME, MarkedPerkFOnGameFrame);
 
         // Initialize data
         sm.Position = view_as<DataPackPos>(MARKED_DATA_TARGET);
@@ -119,6 +120,14 @@ FUNCTION(MarkedPerk, onPlayerSpawn)) {
     // 不直接调用 doMarkedSelect，而是让 onPeriodic 在15秒后调用
 }
 
+FUNCTION(MarkedPerk, OnGameFrame)) {
+    int target = _inst.target;
+    int client = _inst.client;
+    if (target > 0 && validLivingSur(target)) {
+        fxSprite(client, target, {255, 0, 0, 200}, ZFSPR_CROSSHAIR_INDEX);
+    }
+}
+
 FUNCTION(MarkedPerk, onPeriodic)) {
     int target = _inst.target;
 
@@ -137,10 +146,7 @@ FUNCTION(MarkedPerk, onPeriodic)) {
 
 FUNCTION(MarkedPerk, updateCondStats), char[] buffer, int maxlen) {
     int target = _inst.target;
-    int client = _inst.client;
     if (target > 0 && validLivingSur(target)) {
-        int color[4] = {255, 0, 0, 200}; // Red for marked target
-        fxBeam(client, target, color);
         char targetName[MAX_NAME_LENGTH];
         GetClientName(target, targetName, sizeof(targetName));
         Format(buffer, maxlen, "%t", "MarkedPerk_Status_Target", targetName);

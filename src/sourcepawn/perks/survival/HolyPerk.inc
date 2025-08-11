@@ -14,7 +14,7 @@
 #include "../../perk_vtable.inc"
 #include "../../perk_macros.inc"
 
-#define ZF_HOLY_DEFENCE  10
+#define ZF_HOLY_DEFENCE  20
 #define ZF_HOLY_RADIUSSQ (400 * 400)
 #define ZF_HOLY_REGEN    20
 

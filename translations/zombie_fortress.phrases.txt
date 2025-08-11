@@ -943,7 +943,7 @@
 	"EchoPerk_desc"
 	{
 		"en"	"You are immune to knockback effects. Every\nzombie melee attack you receive stores a small\namount of “Echo Energy”. Call for a medic to\nrelease all energy, causing a powerful knockback\nto nearby zombies. The more energy, the stronger\nthe knockback. “You can't push me, but I can\npush you off a cliff.”\nRecommended for: Any class that needs to hold a position."
-		"chi"	"你免疫击退效果.你受到的每一次僵尸近战攻击,都会储存一小部分“回响能量”.\n发医生语音可以释放所有能量,对周围的僵尸造成一次强力的击退,能量越多,击退力度越强.\n \n“僵尸们,已经结束了.我占领了高地!”\n推荐职业: 任何."
+		"chi"	"你的防御力提高且免疫击退效果.\n你受到的每一次僵尸近战攻击,都会储存一小部分“回响能量”.\n发医生语音可以释放所有能量,对周围的僵尸造成一次强力的击退,能量越多,击退力度越强.\n \n“僵尸们,已经结束了.我占领了高地!”\n推荐职业: 任何."
 	}
 	"EchoPerk_Hint_EnergyStored"
 	{
@@ -1343,7 +1343,6 @@
 		"en"	"Bullet ricocheted! (%d)"
 		"chi"	"子弹已弹射!(%d)"
 	}
-
 	//------------------------------------------------
 	// Scavenger (拾荒者)
 	//------------------------------------------------
@@ -1372,7 +1371,6 @@
 		"en"	"You found metal!"
 		"chi"	"你找到了金属!"
 	}
-
 	//------------------------------------------------
 	// Selfless (利他主义者)
 	//------------------------------------------------
@@ -1697,7 +1695,7 @@
 	"BountyHunterPerk_desc"
 	{
 		"en"		"Press E to scan for nearby AOE zombies (Toxic, Static Field) for 5 seconds (20s cooldown).\nKilling an AOE zombie permanently grants +5% damage and +5% critical chance."
-		"chi"		"发医生语音来扫描附近的范围效果僵尸(剧毒、电场...),高亮显示它们5秒钟.\n击杀这些僵尸会获得永久的攻击力与暴击率提高.\n \n“我可不像那些见到谁都从中学习的家伙;我只挑关键目标!”\n推荐职业: 士兵、爆破手."
+		"chi"		"发医生语音来扫描附近的关键僵尸,并用激光暂时指示它们.\n击杀这些僵尸会获得永久的攻击力与暴击率提高,并为你回复部分生命值.\n \n“我可不像那些见到谁都从中学习的家伙;我只挑关键目标!”\n推荐职业: 士兵、爆破手."
 	}
 
 	"BountyHunterPerk_Hint_Cooldown"
@@ -1709,19 +1707,19 @@
 	"BountyHunterPerk_Hint_Found"
 	{
 		"en"		"AOE zombies marked!"
-		"chi"		"已标记目标僵尸!"
+		"chi"		"已标记关键僵尸!"
 	}
 
 	"BountyHunterPerk_Hint_NotFound"
 	{
 		"en"		"No AOE zombies found in range."
-		"chi"		"范围内未发现目标僵尸."
+		"chi"		"范围内未发现关键僵尸."
 	}
 
 	"BountyHunterPerk_Hint_Bonus"
 	{
 		"en"		"Bounty collected! You feel stronger."
-		"chi"		"赏金到手!你感觉更强了."
+		"chi"		"赏金到手!你获得了额外增益."
 	}
 
 	"BountyHunterPerk_Status_Cooldown"
@@ -2024,7 +2022,7 @@
 	}
 	"GravityWarperPerk_shortdesc"
 	{
-		"en"	"Gravity Warper - Change gravity, disrupt jumps"
+		"en"	" Gravity Warper - Change gravity, disrupt jumps"
 		"chi"	"重力僵尸(Gravity)——干扰幸存者移动"
 	}
 	"GravityWarperPerk_desc"
@@ -2118,7 +2116,7 @@
 	"HunterPerk_Status_Destroyed"
 	{
 		"en"	"Respawn point destroyed"
-		"chi"	"重生点已被摧毁"
+		"chi"	"猎手僵尸的重生点已被摧毁!"
 	}
 	"HunterPerk_Status_Active"
 	{
@@ -2195,7 +2193,7 @@
 	"MarkedPerk_desc"
 	{
 		"en"	"The system will randomly select a survivor as your target.\nYou deal extremely high damage to your target, but reduced damage to others.\nIf your target dies and more than one survivor remains,\na new target will be chosen after 10 seconds.\n\"The target has been marked!\"\nRecommended classes: Scout, Heavy."
-		"chi"	"系统会随机选择一名幸存者作为你的目标.\n你对目标能造成极高伤害,但是对其他人造成较低伤害.\n当前目标死亡后,若剩余的幸存者超过1个,10秒后将自动选择一个新目标.\n \n“目标已经标记出来了!”\n推荐职业: 侦察兵、机枪手."
+		"chi"	"系统会随机选择一名幸存者作为你的目标.\n你对目标能造成极高伤害,但是对其他人造成较低伤害.\n当前目标死亡后,15秒后将自动选择一个新目标.\n \n“目标已经标记出来了!”\n推荐职业: 侦察兵、机枪手、狙击手."
 	}
 	"MarkedPerk_Hint_NewTarget"
 	{
@@ -2302,7 +2300,7 @@
 	"PhantasmPerk_desc"
 	{
 		"en"	"Your health and attack power are both low. Call\nfor a medic to enter the “Void Walk” state for\n4 seconds. In this state, you can pass through\nsurvivors and the obstacles they build (such as\nCarpenter's barricades), but you cannot attack.\n12s cooldown. “Walls can't stop me either.”\nRecommended class: Spy."
-		"chi"	"你的攻击力和防御力降低.\n发医生语音可以进入“虚空行走”状态,持续1秒,能够穿过一切障碍.\n该状态结束后会陷入0.5秒的眩晕状态,冷却时间12秒.\n \n“*无实体*”\n推荐职业: 间谍."
+		"chi"	"你的攻击力和防御力降低.\n发医生语音可以进入“虚空行走”状态,持续1秒,能够穿过一切障碍.\n该状态结束后会陷入0.5秒的眩晕状态,冷却时间15秒.\n \n“*无实体*”\n推荐职业: 间谍."
 	}
 	"PhantasmPerk_Enter_Void_Walk"
 	{
@@ -2515,35 +2513,6 @@
 	}
 
 	//------------------------------------------------
-	// Tarred (吐油僵尸)
-	//------------------------------------------------
-	"Tarred"
-	{
-		"en"	"Tarred"
-		"chi"	"吐油僵尸"
-	}
-	"TarredPerk_shortdesc"
-	{
-		"en"	"Tarred - Crowd control"
-		"chi"	"吐油僵尸(Tarred)——吐出减速的焦油"
-	}
-	"TarredPerk_desc"
-	{
-		"en"	"Your melee attacks or a spit tar puddle will slow enemies.\nSpit has a 30s cooldown, and the puddle lasts for 30s."
-		"chi"	"发医生语音来吐出焦油.\n焦油能降低幸存者的移动速度与攻击速度,持续30秒.\n你的近战攻击附带焦油效果.\n \n“*古怪的嚎叫声*”\n推荐职业: 侦察兵."
-	}
-	"TarredPerk_Status_Cooldown"
-	{
-		"en"	"Spit Cooldown: %.0fs"
-		"chi"	"吐油冷却: %.0f秒"
-	}
-	"TarredPerk_Status_Ready"
-	{
-		"en"	"Spit Ready"
-		"chi"	"吐油已就绪"
-	}
-
-	//------------------------------------------------
 	// Toxic (剧毒僵尸)
 	//------------------------------------------------
 	"Toxic"
@@ -2559,7 +2528,7 @@
 	"ToxicPerk_desc"
 	{
 		"en"	"Hitting with or being hit by a melee attack poisons the enemy for 10 seconds.\nYou emit a poison gas aura when standing still. -90% attack power."
-		"chi"	"你的攻击力降低. \n当你保持不动时,能对附近的幸存者持续造成伤害. \n \n“记住这个职业:Toxic.” \n推荐职业: 侦察兵、间谍."
+		"chi"	"你的攻击力降低,但你的攻击能让幸存者中毒. \n当你保持不动时,能对附近的幸存者持续造成伤害. \n \n“记住这个职业:Toxic.” \n推荐职业: 侦察兵、机枪手、间谍."
 	}
 
 	 "ToxicPerk_Status_Active"

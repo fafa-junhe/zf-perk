@@ -20,7 +20,7 @@
 #include "../../perk_vtable.inc"
 #include "../../perk_macros.inc"
 
-#define ZF_NINJA_ATTACK                -(40)
+#define ZF_NINJA_ATTACK                -(20)
 #define ZF_NINJA_SPEED                 50
 #define ZF_NINJA_DURATION_DECOY_ACTIVE 25
 #define ZF_NINJA_DURATION_DECOY_DECAY  5

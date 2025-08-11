@@ -11,10 +11,10 @@
 #include "../../zf_util_fx.inc"
 
 #define ECHO_KNOCKBACK_BASE_FORCE   200.0
-#define ECHO_KNOCKBACK_ENERGY_SCALE 50.0
+#define ECHO_KNOCKBACK_ENERGY_SCALE 90.0
 #define ECHO_AURA_RADIUS            300.0
 #define ECHO_AURA_RADIUS_SQ         (ECHO_AURA_RADIUS * ECHO_AURA_RADIUS)
-#define ECHO_DEFEND 10
+#define ECHO_DEFEND 30
 
 methodmap EchoPerk < SurvivorBasePerk
 {

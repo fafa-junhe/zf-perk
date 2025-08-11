@@ -141,17 +141,14 @@ public Action Timer_RemovePoison(Handle timer, any poison_entity)
 
 FUNCTION(ToxicPerk, onDealDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype)
 {
-    ZF_LogDebug("ToxicPerk::onDealDamagePost: _inst.client=%d, victim=%d, attacker=%d", _inst.client, victim, attacker);
 
     bool isOwner = attacker == _inst.client;
     bool isVictimSurvivor = validLivingSur(victim);
     bool isMelee = attackWasMelee(attacker, inflictor, damagetype);
 
-    ZF_LogDebug("ToxicPerk::onDealDamagePost Checks: isOwner=%d, isVictimSurvivor=%d, isMelee=%d", isOwner, isVictimSurvivor, isMelee);
 
     if (isOwner && isVictimSurvivor && isMelee)
     {
-        ZF_LogDebug("ToxicPerk::onDealDamagePost: All checks passed. Applying poison to victim %d.", victim);
         addCond(victim, ZFCondPoisoned, 10);
         zf_lastPoison[victim] = attacker;
     }

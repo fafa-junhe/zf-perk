@@ -24,7 +24,7 @@
 #define ZF_COMBUSTIBLE_DAMAGE 120
 #define ZF_COMBUSTIBLE_DAMAGE_HEAVY 200
 #define ZF_COMBUSTIBLE_DEFEND -200
-#define ZF_COMBUSTIBLE_RADIUS 300
+#define ZF_COMBUSTIBLE_RADIUS 200
 #define ZF_COMBUSTIBLE_RESPAWNTIME 4.5
 
 methodmap CombustiblePerk < ZombieBasePerk {
@@ -123,6 +123,6 @@ FUNCTION(CombustiblePerk, onPlayerSpawn))
 
 FUNCTION(CombustiblePerk, updateCondStats), char[] buffer, int maxlen) {
     // Visual hint for the player
-    fxExplosionTiny(_inst.client);
-Format(buffer, maxlen, "%t", "CombustiblePerk_Status_Ready");
+    fxExplosionBig(_inst.client, false);
+    Format(buffer, maxlen, "%t", "CombustiblePerk_Status_Ready");
 }

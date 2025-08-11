@@ -74,8 +74,8 @@ int         g_iLastAimTarget[MAXPLAYERS + 1];
 int         g_iDebugTarget[MAXPLAYERS + 1];
 int         g_iDebugStat[MAXPLAYERS + 1];
 int         g_iWeaponOwners[4096] = { 0, ... }; // Global array to track weapon ownership
-int         g_iLastSurvivorDied;
-
+ArrayList   g_hDeadSurvivors;
+ 
 // 用于CSV日志记录的会话统计
 int g_iSessionKills[MAXPLAYERS + 1];
 int g_iSessionAssists[MAXPLAYERS + 1];
@@ -130,10 +130,10 @@ Handle g_hPlayerAimTimer[MAXPLAYERS + 1];
 // Cvar Handles
 Handle zf_cvForceOn;
 Handle zf_cvRatio;
-Handle zf_cvAllowTeamPref;
 Handle zf_cvSwapOnPayload;
 Handle zf_cvSwapOnAttdef;
-
+Handle zf_cvLastSurvivorsZombieRatio;
+ 
 ////////////////////////////////////////////////////////////
 //
 // Sourcemod Callbacks
@@ -166,7 +166,8 @@ public void OnPluginStart()
     utilFxInit();
     perkInit();
     InitZombieVisuals();
-
+    g_hDeadSurvivors = new ArrayList();
+ 
     // Initialize session stats
     for (int i = 0; i <= MAXPLAYERS; i++)
     {
@@ -179,11 +180,11 @@ public void OnPluginStart()
     CreateConVar("sm_zf_version", PLUGIN_VERSION, "Current Zombie Fortress Version", FCVAR_SPONLY | FCVAR_REPLICATED | FCVAR_NOTIFY);
     zf_cvForceOn       = CreateConVar("sm_zf_force_on", "1", "<0/1> Activate ZF for non-ZF maps.", FCVAR_REPLICATED | FCVAR_NOTIFY, true, 0.0, true, 1.0);
     zf_cvRatio         = CreateConVar("sm_zf_ratio", "0.65", "<0.01-1.00> Percentage of players that start as survivors.", FCVAR_REPLICATED | FCVAR_NOTIFY, true, 0.01, true, 1.0);
-    zf_cvAllowTeamPref = CreateConVar("sm_zf_allowteampref", "1", "<0/1> Allow use of team preference criteria.", FCVAR_REPLICATED | FCVAR_NOTIFY, true, 0.0, true, 1.0);
     zf_cvSwapOnPayload = CreateConVar("sm_zf_swaponpayload", "1", "<0/1> Swap teams on non-ZF payload maps.", FCVAR_REPLICATED | FCVAR_NOTIFY, true, 0.0, true, 1.0);
     zf_cvSwapOnAttdef  = CreateConVar("sm_zf_swaponattdef", "1", "<0/1> Swap teams on non-ZF attack/defend maps.", FCVAR_REPLICATED | FCVAR_NOTIFY, true, 0.0, true, 1.0);
+    zf_cvLastSurvivorsZombieRatio = CreateConVar("sm_zf_last_survivors_zombie_ratio", "0.8", "<0.0-1.0> Percentage of last survivors to become zombies.", FCVAR_REPLICATED | FCVAR_NOTIFY, true, 0.0, true, 1.0);
     AutoExecConfig(true, "zombie_fortress_perk");
-
+ 
     // Hook events
     HookEvent("teamplay_round_start", event_RoundStart);
     HookEvent("teamplay_setup_finished", event_SetupEnd);
@@ -215,7 +216,6 @@ public void OnPluginStart()
     AddCommandListener(hook_JoinClass, "joinclass");
     AddCommandListener(hook_VoiceMenu, "voicemenu");
     // Hook Client Console Commands
-    AddCommandListener(hook_zfTeamPref, "zf_teampref");
     // Hook Client Chat / Console Commands
     RegConsoleCmd("zf", cmd_zfMenu);
     RegConsoleCmd("zf_menu", cmd_zfMenu);
@@ -295,8 +295,13 @@ public void OnMapEnd()
     setRoundState(RoundPost);
     zfDisable();
     perk_OnMapEnd();
+    if (g_hDeadSurvivors != null)
+    {
+        CloseHandle(g_hDeadSurvivors);
+        g_hDeadSurvivors = null;
+    }
 }
-
+ 
 public void OnPluginEnd()
 {
     // Only perform cleanup if the plugin was active.
@@ -412,7 +417,6 @@ public void OnTakeDamagePost(int victim, int attacker, int inflictor, float dama
 {
     if (!zf_bEnabled) return;
 
-    ZF_LogDebug("OnTakeDamagePost: victim=%d, attacker=%d, inflictor=%d, damage=%.2f, damagetype=%d", victim, attacker, inflictor, damage, damagetype);
 
     perk_OnTakeDamagePost(victim, attacker, inflictor, damage, damagetype);
     perk_OnDealDamagePost(attacker, victim, inflictor, damage, damagetype);
@@ -610,42 +614,6 @@ public Action hook_VoiceMenu(int client,
     return Plugin_Continue;
 }
 
-public Action hook_zfTeamPref(int client,
-                       const char[] command, int argc)
-{
-    char cmd[32];
-
-    if (!zf_bEnabled) return Plugin_Continue;
-
-    // Get team preference
-    if (argc == 0)
-    {
-        if (prefGet(client, TeamPref) == ZF_TEAMPREF_SUR)
-            ReplyToCommand(client, "%t", "ZF_Menu_Pref_Survivor");
-        else if (prefGet(client, TeamPref) == ZF_TEAMPREF_ZOM)
-            ReplyToCommand(client, "%t", "ZF_Menu_Pref_Zombie");
-        else if (prefGet(client, TeamPref) == ZF_TEAMPREF_NONE)
-            ReplyToCommand(client, "%t", "ZF_Menu_Pref_Random");
-        return Plugin_Handled;
-    }
-
-    GetCmdArg(1, cmd, sizeof(cmd));
-
-    // Set team preference
-    if (StrEqual(cmd, "sur", false))
-        prefSet(client, TeamPref, ZF_TEAMPREF_SUR);
-    else if (StrEqual(cmd, "zom", false))
-        prefSet(client, TeamPref, ZF_TEAMPREF_ZOM);
-    else if (StrEqual(cmd, "none", false))
-        prefSet(client, TeamPref, ZF_TEAMPREF_NONE);
-    else {
-        // Error in command format, display usage
-        GetCmdArg(0, cmd, sizeof(cmd));
-        ReplyToCommand(client, "%t", "ZF_TeamPrefUsage", cmd);
-    }
-
-    return Plugin_Handled;
-}
 
 public Action cmd_zfMenu(int client, int args)
 {
@@ -772,11 +740,11 @@ public Action event_RoundStart(Handle event,
         g_iLastSurvivorPerk[i]  = 0;
         g_eLastZombieClass[i]   = TFClass_Unknown;
         g_iLastZombiePerk[i]    = 0;
-    }
-    g_iLastSurvivorDied = 0;
-
-    // Reset session stats for all players
-    for (int i = 0; i <= MaxClients; i++)
+        }
+        g_hDeadSurvivors.Clear();
+     
+        // Reset session stats for all players
+        for (int i = 0; i <= MaxClients; i++)
     {
         g_iSessionKills[i] = 0;
         g_iSessionAssists[i] = 0;
@@ -830,27 +798,61 @@ public Action event_RoundStart(Handle event,
         players[idx] = players[0];
         players[0]   = temp;
 
-        // Prioritize the last survivor to die to become a zombie next round
-        if (g_iLastSurvivorDied != 0)
+        // Prioritize a percentage of the last survivors to die to become zombies next round
+        int deadSurvivorCount = g_hDeadSurvivors.Length;
+        if (deadSurvivorCount > 0)
         {
-            for (int i = 0; i < playerCount; i++)
+            float ratio = GetConVarFloat(zf_cvLastSurvivorsZombieRatio);
+            int numToMakeZombie = RoundToFloor(deadSurvivorCount * ratio);
+            if (numToMakeZombie > 0)
             {
-                if (players[i] == g_iLastSurvivorDied)
+                // Create a temporary array to hold players to be moved
+                int playersToMove[MAXPLAYERS];
+                int moveCount = 0;
+
+                // Iterate from the last died survivor backwards
+                for (int i = deadSurvivorCount - 1; i >= deadSurvivorCount - numToMakeZombie; i--)
                 {
-                    // Move this player to the end of the array
-                    int lastPlayer = players[playerCount - 1];
-                    players[playerCount - 1] = players[i];
-                    players[i] = lastPlayer;
-                    break;
+                    int deadClient = g_hDeadSurvivors.Get(i);
+                    // Find this player in the randomized list
+                    for (int j = 0; j < playerCount; j++)
+                    {
+                        if (players[j] == deadClient)
+                        {
+                            playersToMove[moveCount++] = deadClient;
+                            // Mark as moved by setting to 0, we'll clean up later
+                            players[j] = 0;
+                            break;
+                        }
+                    }
                 }
+
+                // Create a new player list, filtering out the moved players
+                int newPlayers[MAXPLAYERS];
+                int newPlayerCount = 0;
+                for (int i = 0; i < playerCount; i++)
+                {
+                    if (players[i] != 0)
+                    {
+                        newPlayers[newPlayerCount++] = players[i];
+                    }
+                }
+
+                // Add the moved players to the end of the new list
+                for (int i = 0; i < moveCount; i++)
+                {
+                    newPlayers[newPlayerCount++] = playersToMove[i];
+                }
+
+                // Copy the new list back to the original players array
+                for (int i = 0; i < newPlayerCount; i++)
+                {
+                    players[i] = newPlayers[i];
+                }
+                playerCount = newPlayerCount;
             }
         }
 
-        // Sort players using team preference criteria
-        if (GetConVarBool(zf_cvAllowTeamPref))
-        {
-            SortCustom1D(players, playerCount, view_as<SortFunc1D>(Sort_Preference));
-        }
 
         // Calculate team counts. At least one survivor must exist.
         surCount = RoundToFloor(playerCount * GetConVarFloat(zf_cvRatio));
@@ -1104,20 +1106,9 @@ public Action event_PlayerDeath(Handle event,
     // Handle survivor death logic, active round only.
     if (validSur(victim))
     {
-        // Check if this is the last survivor
-        int survivorCount = 0;
-        for (int i = 1; i <= MaxClients; i++)
-        {
-            if (validLivingSur(i))
-            {
-                survivorCount++;
-            }
-        }
-        if (survivorCount == 1)
-        {
-            g_iLastSurvivorDied = victim;
-        }
-
+        // Record the dying survivor
+        g_hDeadSurvivors.Push(victim);
+ 
         if (GetConVarBool(zf_cvDebug))
         {
             CreateTimer(0.1, timer_instantRespawn, victim, TIMER_FLAG_NO_MAPCHANGE);
@@ -1180,9 +1171,9 @@ public void TF2_OnConditionAdded(int client, TFCond cond)
 	if(cond == TFCond_Jarated)
 	{
         TF2_RemoveCondition(client, cond);
-		addStatTempStack(client, ZFStatSpeed, -150, 10);
+		addStatTempStack(client, ZFStatSpeed, -100, 6);
         SetEntityRenderColor(client, 255, 242, 89, 255);
-        CreateTimer(10.0, timer_reset_color, client, TIMER_FLAG_NO_MAPCHANGE);
+        CreateTimer(6.0, timer_reset_color, client, TIMER_FLAG_NO_MAPCHANGE);
 	}
     ZombieVisuals_OnConditionAdded(client, cond);
 }
@@ -1315,7 +1306,6 @@ public Action timer_initialHelp(Handle timer, any client)
 
 public Action timer_postSpawn(Handle timer, any client)
 {
-    ZF_LogDebug("timer_postSpawn: client=%d", client);
     if (IsClientInGame(client) && IsPlayerAlive(client))
     {
         perk_OnPlayerSpawn(client);
@@ -1785,15 +1775,6 @@ void zfSwapTeams()
 // Utility Functionality
 //
 ////////////////////////////////////////////////////////////
-public int Sort_Preference(int client1, int          client2,
-                    const int[] array, Handle hndl)
-{
-    // Used during round start to sort using client team preference.
-    int prefCli1 = IsFakeClient(client1) ? ZF_TEAMPREF_NONE : prefGet(client1, TeamPref);
-    int prefCli2 = IsFakeClient(client2) ? ZF_TEAMPREF_NONE : prefGet(client2, TeamPref);
-    return (prefCli1 < prefCli2) ? -1 : (prefCli1 > prefCli2) ? 1
-                                                              : 0;
-}
 
 ////////////////////////////////////////////////////////////
 //
@@ -1834,8 +1815,6 @@ public void panel_PrintMain(int client)
     Format(buffer, sizeof(buffer), "%T", "ZF_Menu_SelectZomPerk", client);
     DrawPanelItem(panel, buffer, 0);
 
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_ChangeTeamPref", client);
-    DrawPanelItem(panel, buffer, 0);
 
     Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Help", client);
     DrawPanelItem(panel, buffer, 0);
@@ -1873,30 +1852,25 @@ public void panel_HandleMain(Handle menu, MenuAction action, int param1, int par
             }
             case 3:
             {
-                panel_PrintPrefTeam(param1);
+                panel_PrintHelp(param1);
                 return;
             }
             case 4:
             {
-                panel_PrintHelp(param1);
+                panel_PrintPerkHelp(param1);
                 return;
             }
             case 5:
             {
-                panel_PrintPerkHelp(param1);
+                panel_PrintCredits(param1);
                 return;
             }
             case 6:
             {
-                panel_PrintCredits(param1);
-                return;
-            }
-            case 7:
-            {
                 panel_ChangeLanguage(param1);
                 return;
             }
-            case 8:    // Close
+            case 7:    // Close
             {
                 return;
             }
@@ -1904,72 +1878,6 @@ public void panel_HandleMain(Handle menu, MenuAction action, int param1, int par
     }
 }
 
-//
-// Main.PrefTeam
-//
-public void panel_PrintPrefTeam(int client)
-{
-    Handle panel = CreatePanel();
-    char   buffer[128];
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_ChangeTeamPref", client);
-    SetPanelTitle(panel, buffer);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Pref_Random", client);
-    if (prefGet(client, TeamPref) == ZF_TEAMPREF_NONE)
-        DrawPanelItem(panel, buffer, ITEMDRAW_DISABLED);
-    else
-        DrawPanelItem(panel, buffer);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Pref_Survivor", client);
-    if (prefGet(client, TeamPref) == ZF_TEAMPREF_SUR)
-        DrawPanelItem(panel, buffer, ITEMDRAW_DISABLED);
-    else
-        DrawPanelItem(panel, buffer);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Pref_Zombie", client);
-    if (prefGet(client, TeamPref) == ZF_TEAMPREF_ZOM)
-        DrawPanelItem(panel, buffer, ITEMDRAW_DISABLED);
-    else
-        DrawPanelItem(panel, buffer);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Close", client);
-    DrawPanelItem(panel, buffer);
-    SendPanelToClient(panel, client, panel_HandlePrefTeam, 30);
-    CloseHandle(panel);
-}
-
-public void panel_HandlePrefTeam(Handle menu, MenuAction action, int param1, int param2)
-{
-    if (action == MenuAction_Select)
-    {
-        switch (param2)
-        {
-            case 1:
-            {
-                prefSet(param1, TeamPref, ZF_TEAMPREF_NONE);
-                panel_PrintPrefTeam(param1);
-                return;
-            }
-            case 2:
-            {
-                prefSet(param1, TeamPref, ZF_TEAMPREF_SUR);
-                panel_PrintPrefTeam(param1);
-                return;
-            }
-            case 3:
-            {
-                prefSet(param1, TeamPref, ZF_TEAMPREF_ZOM);
-                panel_PrintPrefTeam(param1);
-                return;
-            }
-            case 4:    // Close
-            {
-                return;
-            }
-        }
-    }
-}
 
 //
 // Main.Help

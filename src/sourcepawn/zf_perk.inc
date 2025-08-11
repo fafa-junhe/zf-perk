@@ -1961,14 +1961,9 @@ public void perk_OnTakeDamagePost(int victim, int attacker, int inflictor, float
 
 public void perk_OnDealDamagePost(int attacker, int victim, int inflictor, float damage, int damagetype)
 {
-    ZF_LogDebug("perk_OnDealDamagePost: Dispatching to attacker %d (victim: %d)", attacker, victim);
     if (validClient(attacker) && g_hPerks[attacker] != null)
     {
         g_hPerks[attacker].onDealDamagePost(victim, attacker, inflictor, damage, damagetype);
-    }
-    else
-    {
-        ZF_LogDebug("perk_OnDealDamagePost: Attacker %d is not valid or has no perk.", attacker);
     }
 }
 
@@ -2127,6 +2122,7 @@ public void perk_OnPlayerSpawn(int client)
                 prefSet(client, SurPerk, nextPerk);
             }
             prefSet(client, SurPendPerk, nextPerk);
+            stripWeapons(client);
         }
         else if (isZom(client))
         {

@@ -25,11 +25,10 @@
 //
 #define MAX_PREF_TRIE_SIZE 512
 
-#define MAX_PREFS 7
+#define MAX_PREFS 6
 enum ZFPref
 {
   JoinState = 0,
-  TeamPref,  
   SurPerk,
   SurPendPerk,
   ZomPerk,
@@ -38,7 +37,6 @@ enum ZFPref
 };
 int DEFAULT_PREFS[MAX_PREFS] = {
   0,                  // JoinState
-  1,                  // TeamPref
   0,                  // SurPerk
   0,                  // SurPendPerk
   0,                  // ZomPerk
@@ -52,9 +50,6 @@ int DEFAULT_PREFS[MAX_PREFS] = {
 #define ZF_JOINSTATE_SUR 0x1
 #define ZF_JOINSTATE_ZOM 0x2
 
-#define ZF_TEAMPREF_SUR  0
-#define ZF_TEAMPREF_NONE 1
-#define ZF_TEAMPREF_ZOM  2
 
 //
 // Objects
@@ -100,7 +95,6 @@ stock void pref_OnClientConnect(int client)
       LogMessage("[ZF] pref_OnClientConnect %d(%s) not present.", client, steamID);      
 #endif      
       prefCache[client][JoinState]     = DEFAULT_PREFS[JoinState];
-      prefCache[client][TeamPref]      = DEFAULT_PREFS[TeamPref];
       prefCache[client][SurPerk]       = DEFAULT_PREFS[SurPerk];
       prefCache[client][SurPendPerk]   = DEFAULT_PREFS[SurPendPerk];
       prefCache[client][ZomPerk]       = DEFAULT_PREFS[ZomPerk];      
@@ -115,7 +109,6 @@ stock void pref_OnClientConnect(int client)
     // Can't get client's STEAM_ID as string. Update cache with default data.
     //      
     prefCache[client][JoinState]      = DEFAULT_PREFS[JoinState];
-    prefCache[client][TeamPref]       = DEFAULT_PREFS[TeamPref];
     prefCache[client][SurPerk]        = DEFAULT_PREFS[SurPerk];
     prefCache[client][SurPendPerk]    = DEFAULT_PREFS[SurPendPerk];
     prefCache[client][ZomPerk]        = DEFAULT_PREFS[ZomPerk];      

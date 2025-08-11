@@ -19,8 +19,8 @@
 #include "../../perk_macros.inc"
 
 // Defines from all_perks.md
-#define ZF_VAMPIRIC_LIFESTEAL_RATIO 0.5  // 50% of damage dealt is returned as health
-#define ZF_VAMPIRIC_REGEN 5             // Health regenerated per second
+#define ZF_VAMPIRIC_LIFESTEAL_RATIO 0.6  // 50% of damage dealt is returned as health
+#define ZF_VAMPIRIC_REGEN 10             // Health regenerated per second
 #define ZF_VAMPIRIC_DEFEND 10
 
 methodmap VampiricPerk < ZombieBasePerk {

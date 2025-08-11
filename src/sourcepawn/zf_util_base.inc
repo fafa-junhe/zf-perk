@@ -726,24 +726,24 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_BLITZKRIEG_PISTOL] = ZF_WEAPON_DATA[ZFWEAP_SCOUTPISTOL];
 
   // Soldier
-  ZF_WEAPON_DATA[ZFWEAP_ROCKETLAUNCHER]  =              0;
-  ZF_WEAPON_DATA[ZFWEAP_DIRECTHIT]       =              0;
-  ZF_WEAPON_DATA[ZFWEAP_BLACKBOX]        =              0;
+  ZF_WEAPON_DATA[ZFWEAP_ROCKETLAUNCHER]  =              F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_DIRECTHIT]       =              F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_BLACKBOX]        =              F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_ROCKETJUMPER]    =              0;
-  ZF_WEAPON_DATA[ZFWEAP_LIBERTY_LAUNCHER]   = 0;
-  ZF_WEAPON_DATA[ZFWEAP_COW_MANGLER_5000]  = 0;
-  ZF_WEAPON_DATA[ZFWEAP_ORIGINAL]           = 0;
-  ZF_WEAPON_DATA[ZFWEAP_AIR_STRIKE]         = 0;
-  ZF_WEAPON_DATA[ZFWEAP_BEGGARS_BAZOOKA]    = 0;
-  ZF_WEAPON_DATA[ZFWEAP_SOLDIERSHOTGUN]  = F_ISBULLET;
-  ZF_WEAPON_DATA[ZFWEAP_RESERVE_SHOOTER] = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_LIBERTY_LAUNCHER]   = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_COW_MANGLER_5000]  = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_ORIGINAL]           = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_AIR_STRIKE]         = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_BEGGARS_BAZOOKA]    = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_SOLDIERSHOTGUN]  = F_ISBULLET | F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_RESERVE_SHOOTER] = F_ISBULLET | F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_BUFFBANNER]      = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_BATTALIONBACKUP] = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_CONCHEROR]       = F_NOSTRIP;
-  ZF_WEAPON_DATA[ZFWEAP_BASE_JUMPER]     = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_BASE_JUMPER]     = 0;
   ZF_WEAPON_DATA[ZFWEAP_GUNBOATS]        = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_MANTREADS]       = F_NOSTRIP;
-  ZF_WEAPON_DATA[ZFWEAP_RIGHTEOUS_BISON] = 0;
+  ZF_WEAPON_DATA[ZFWEAP_RIGHTEOUS_BISON] = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_SHOVEL]          = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_EQUALIZER]       = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_ESCAPE_PLAN]     = F_NOSTRIP;
@@ -751,7 +751,7 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_HALFZATOICHI]    = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_DISCIPLINARY_ACTION] = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_MARKET_GARDENER]    = F_NOSTRIP;
-  ZF_WEAPON_DATA[ZFWEAP_PANIC_ATTACK]       = F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_PANIC_ATTACK]       = F_ISBULLET | F_NOSTRIP;
   // Reskins & Upgrades
   ZF_WEAPON_DATA[ZFWEAP_ROCKETLAUNCHER_UPGRADE] = ZF_WEAPON_DATA[ZFWEAP_ROCKETLAUNCHER];
   ZF_WEAPON_DATA[ZFWEAP_SHOTGUN_UPGRADE]        = ZF_WEAPON_DATA[ZFWEAP_SOLDIERSHOTGUN];
@@ -791,17 +791,17 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_RED_BEAR_SG] = ZF_WEAPON_DATA[ZFWEAP_SOLDIERSHOTGUN];
   
   // Pyro
-  ZF_WEAPON_DATA[ZFWEAP_FLAMETHROWER]    = F_ISAUTO;
-  ZF_WEAPON_DATA[ZFWEAP_BACKBURNER]      = F_ISAUTO;
-  ZF_WEAPON_DATA[ZFWEAP_DEGREASER]       = F_ISAUTO;
-  ZF_WEAPON_DATA[ZFWEAP_PHLOGISTINATOR]  = F_ISAUTO;
-  ZF_WEAPON_DATA[ZFWEAP_RAINBLOWER]      = F_ISAUTO;
-  ZF_WEAPON_DATA[ZFWEAP_DRAGONS_FURY]    = 0;
-  ZF_WEAPON_DATA[ZFWEAP_PYROSHOTGUN]     = F_ISBULLET;
-  ZF_WEAPON_DATA[ZFWEAP_FLAREGUN]        = 0;
-  ZF_WEAPON_DATA[ZFWEAP_MANMELTER]       = 0;
-  ZF_WEAPON_DATA[ZFWEAP_SCORCH_SHOT]     = 0;
-  ZF_WEAPON_DATA[ZFWEAP_DETONATOR]       = 0;
+  ZF_WEAPON_DATA[ZFWEAP_FLAMETHROWER]    = F_ISAUTO | F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_BACKBURNER]      = F_ISAUTO | F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_DEGREASER]       = F_ISAUTO | F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_PHLOGISTINATOR]  = F_ISAUTO | F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_RAINBLOWER]      = F_ISAUTO | F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_DRAGONS_FURY]    = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_PYROSHOTGUN]     = F_ISBULLET | F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_FLAREGUN]        = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_MANMELTER]       = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_SCORCH_SHOT]     = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_DETONATOR]       = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_GAS_PASSER]      = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_THERMAL_THRUSTER] = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_FIREAXE]         = F_NOSTRIP;
@@ -848,15 +848,15 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_WARHAWK_FT] = ZF_WEAPON_DATA[ZFWEAP_FLAMETHROWER];
   
   // Demoman
-  ZF_WEAPON_DATA[ZFWEAP_GRENADELAUNCHER]    = 0;
-  ZF_WEAPON_DATA[ZFWEAP_LOCHNLOAD]          = 0;
-  ZF_WEAPON_DATA[ZFWEAP_IRON_BOMBER]        = 0;
-  ZF_WEAPON_DATA[ZFWEAP_LOOSE_CANNON]       = 0;
+  ZF_WEAPON_DATA[ZFWEAP_GRENADELAUNCHER]    = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_LOCHNLOAD]          = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_IRON_BOMBER]        = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_LOOSE_CANNON]       = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_ALI_BABAS_WEE_BOOTIES] = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_BOOTLEGGER]         = F_NOSTRIP;
-  ZF_WEAPON_DATA[ZFWEAP_STICKYLAUNCHER]     = 0;
-  ZF_WEAPON_DATA[ZFWEAP_QUICKIEBOMB_LAUNCHER] = 0;
-  ZF_WEAPON_DATA[ZFWEAP_SCOTTISHRESISTANCE] = 0;
+  ZF_WEAPON_DATA[ZFWEAP_STICKYLAUNCHER]     = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_QUICKIEBOMB_LAUNCHER] = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_SCOTTISHRESISTANCE] = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_STICKYJUMPER]       = 0;
   ZF_WEAPON_DATA[ZFWEAP_CHARGINTARGE]       = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_SPLENDID_SCREEN]    = F_NOSTRIP;
@@ -966,25 +966,25 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_BUTCHER_BIRD_MINIGUN] = ZF_WEAPON_DATA[ZFWEAP_SASHA];
   
   // Engineer
-  ZF_WEAPON_DATA[ZFWEAP_ENGINEERSHOTGUN]     = F_ISBULLET;
-  ZF_WEAPON_DATA[ZFWEAP_FRONTIERJUSTICE]     = F_ISBULLET;
-  ZF_WEAPON_DATA[ZFWEAP_WIDOWMAKER]          = F_ISBULLET;
-  ZF_WEAPON_DATA[ZFWEAP_POMSON_6000]         = 0;
-  ZF_WEAPON_DATA[ZFWEAP_RESCUE_RANGER]       = 0;
-  ZF_WEAPON_DATA[ZFWEAP_ENGINEERPISTOL]      = F_ISAUTO|F_ISBULLET;
-  ZF_WEAPON_DATA[ZFWEAP_WRANGLER]            = 0;
-  ZF_WEAPON_DATA[ZFWEAP_SHORT_CIRCUIT]       = 0;
-  ZF_WEAPON_DATA[ZFWEAP_GIGER_COUNTER]       = F_NOSTRIP; // Reskin of wrangler? Set to 0 to be safe
+  ZF_WEAPON_DATA[ZFWEAP_ENGINEERSHOTGUN]     = F_ISBULLET | F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_FRONTIERJUSTICE]     = F_ISBULLET | F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_WIDOWMAKER]          = F_ISBULLET | F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_POMSON_6000]         = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_RESCUE_RANGER]       = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_ENGINEERPISTOL]      = F_ISAUTO|F_ISBULLET | F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_WRANGLER]            = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_SHORT_CIRCUIT]       = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_GIGER_COUNTER]       = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_WRENCH]              = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_GOLDENWRENCH]        = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_GUNSLINGER]          = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_SOUTHERNHOSPITALITY] = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_JAG]                 = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_EUREKA_EFFECT]       = F_NOSTRIP;
-  ZF_WEAPON_DATA[ZFWEAP_BUILDPDA]            = 0;
-  ZF_WEAPON_DATA[ZFWEAP_DESTROYPDA]          = 0;
-  ZF_WEAPON_DATA[ZFWEAP_PDA_TOOLBOX]         = 0;
-  ZF_WEAPON_DATA[ZFWEAP_CONSTRUCTION_PDA_RENAMED] = 0;
+  ZF_WEAPON_DATA[ZFWEAP_BUILDPDA]            = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_DESTROYPDA]          = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_PDA_TOOLBOX]         = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_CONSTRUCTION_PDA_RENAMED] = F_NOSTRIP;
   // Reskins & Upgrades
   ZF_WEAPON_DATA[ZFWEAP_WRENCH_UPGRADE] = ZF_WEAPON_DATA[ZFWEAP_WRENCH];
   ZF_WEAPON_DATA[ZFWEAP_FESTIVE_FRONTIER_JUSTICE] = ZF_WEAPON_DATA[ZFWEAP_FRONTIERJUSTICE];
@@ -1007,14 +1007,14 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_AIRWOLF_WRENCH] = ZF_WEAPON_DATA[ZFWEAP_WRENCH];
 
   // Medic
-  ZF_WEAPON_DATA[ZFWEAP_SYRINGEGUN]        = F_ISAUTO;
-  ZF_WEAPON_DATA[ZFWEAP_BLUTSAUGER]        = F_ISAUTO;
-  ZF_WEAPON_DATA[ZFWEAP_CRUSADERSCROSSBOW] = 0;
-  ZF_WEAPON_DATA[ZFWEAP_OVERDOSE]          = F_ISAUTO;
-  ZF_WEAPON_DATA[ZFWEAP_MEDIGUN]           = 0;
-  ZF_WEAPON_DATA[ZFWEAP_KRITZKRIEG]        = 0;
-  ZF_WEAPON_DATA[ZFWEAP_QUICK_FIX]         = 0;
-  ZF_WEAPON_DATA[ZFWEAP_VACCINATOR]        = 0;
+  ZF_WEAPON_DATA[ZFWEAP_SYRINGEGUN]        = F_ISAUTO | F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_BLUTSAUGER]        = F_ISAUTO | F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_CRUSADERSCROSSBOW] = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_OVERDOSE]          = F_ISAUTO | F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_MEDIGUN]           = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_KRITZKRIEG]        = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_QUICK_FIX]         = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_VACCINATOR]        = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_BONESAW]           = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_UBERSAW]           = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_VITASAW]           = F_NOSTRIP;
@@ -1424,7 +1424,6 @@ stock void stripWeapons(int client, bool keepPri = false)
         if(doStrip){
           if (!(ZF_WEAPON_DATA[weaponId] & (F_ISBULLET | F_ISAUTO))) 
             PrintHintText(client, "你的武器在黑名单中，已被禁用！");
-          LogError("[ZF] - stripToMelee() - weaponId: %d, slot %d", weaponId, i);
           TF2_RemoveWeaponSlot(client, i);
         }
         
@@ -2071,8 +2070,6 @@ stock void applyDamageRadialAtClient(
   float pos[3];
   GetClientEyePosition(client, pos);
 
-  PrintToServer("[DEBUG] applyDamageRadialAtClient -> client: %N (%d), damage: %d, radius: %d, doFx: %d, pos: [%.1f, %.1f, %.1f]",
-    client, client, damage, radius, doFx, pos[0], pos[1], pos[2]);
 
   applyDamageRadial(client, damage, pos, radius, doFx, GetClientTeam(client));
 }
@@ -2085,19 +2082,15 @@ stock void applyDamageRadial(
   bool doFx = false,
   int team = 0)
 {
-  PrintToServer("[DEBUG] applyDamageRadial called -> attacker: %N (%d), damage: %d, radius: %d, doFx: %d, team: %d, pos: [%.1f, %.1f, %.1f]",
-    attacker, attacker, damage, radius, doFx, team, pos[0], pos[1], pos[2]);
 
   if((damage <= 0) || (radius <= 0))
   {
-    PrintToServer("[DEBUG] applyDamageRadial -> Invalid damage (%d) or radius (%d), skipping.", damage, radius);
     return;
   }
 
   int ent = CreateEntityByName("env_explosion");
   if(IsValidEntity(ent))
   {
-    PrintToServer("[DEBUG] env_explosion created -> ent: %d", ent);
 
     char strTargetName[16];
     char strAddOutput[64];
@@ -2110,14 +2103,9 @@ stock void applyDamageRadial(
 
     if (validClient(attacker))
     {
-        PrintToServer("[DEBUG] Setting attacker props -> attacker: %N (%d)", attacker, attacker);
         SetEntPropEnt(ent, Prop_Data, "m_hInflictor", attacker);
         SetEntPropEnt(ent, Prop_Data, "m_hOwnerEntity", attacker);
         SetEntPropEnt(ent, Prop_Data, "m_hEntityIgnore", attacker);
-    }
-    else
-    {
-        PrintToServer("[DEBUG] Attacker (%d) not valid client, skipping ownership set.", attacker);
     }
 
     if (team >= 2)
@@ -2125,16 +2113,13 @@ stock void applyDamageRadial(
         char sTeam[4];
         IntToString(team, sTeam, sizeof(sTeam));
         DispatchKeyValue(ent, "iTeamNum", sTeam);
-        PrintToServer("[DEBUG] Setting explosion team to %s", sTeam);
     }
 
     SetEntPropFloat(ent, Prop_Data, "m_flDamageForce", 100.0);  // Optional tweak
 
     DispatchSpawn(ent);
-    PrintToServer("[DEBUG] env_explosion dispatched and spawned.");
 
     TeleportEntity(ent, pos, NULL_VECTOR, NULL_VECTOR);
-    PrintToServer("[DEBUG] env_explosion teleported to [%.1f, %.1f, %.1f]", pos[0], pos[1], pos[2]);
 
     Format(strAddOutput, sizeof(strAddOutput), "OnUser1 !self:explode::%f:1", 0.01);
     SetVariantString(strAddOutput);
@@ -2146,12 +2131,6 @@ stock void applyDamageRadial(
     AcceptEntityInput(ent, "AddOutput");
     AcceptEntityInput(ent, "FireUser2");
 
-    PrintToServer("[DEBUG] env_explosion scheduled for explode and kill.");
-  }
-  else
-  {
-    LogError("[ZF] applyDamageRadial -> Failed to create env_explosion. Pos: [%.2f, %.2f, %.2f], damage: %d, radius: %d",
-      pos[0], pos[1], pos[2], damage, radius);
   }
 }
 

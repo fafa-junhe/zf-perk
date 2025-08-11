@@ -34,7 +34,7 @@ methodmap HorrifyingPerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, HorrifyingPerkFgetShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, HorrifyingPerkFgetDesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, HorrifyingPerkFupdateClientPermStats);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE_POST, HorrifyingPerkFonTakeDamagePost);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEAL_DAMAGE_POST, HorrifyingPerkFonDealDamagePost);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, HorrifyingPerkFonRemove);
 
         return sm;
@@ -69,7 +69,7 @@ FUNCTION(HorrifyingPerk, onRemove)) {
     }
 }
 
-FUNCTION(HorrifyingPerk, onTakeDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype) {
+FUNCTION(HorrifyingPerk, onDealDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype) {
     if (attacker != _inst.client || !isSur(victim) || !(damagetype & DMG_CLUB)) {
         return;
     }

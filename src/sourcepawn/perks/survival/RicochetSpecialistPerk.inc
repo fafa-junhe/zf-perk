@@ -14,7 +14,7 @@
 #define RICOCHET_CHANCE                   50
 #define RICOCHET_DAMAGE_MULTIPLIER_BULLET 0.7    // The "passive" 30% damage reduction for bullets
 #define RICOCHET_BOUNCE_DAMAGE_MULTIPLIER 0.5    // Each bounce deals half the damage of the previous hit
-#define RICOCHET_MAX_BOUNCES              2
+#define RICOCHET_MAX_BOUNCES              4
 #define RICOCHET_SEARCH_RADIUS            400.0
 #define RICOCHET_SEARCH_RADIUS_SQ         (RICOCHET_SEARCH_RADIUS * RICOCHET_SEARCH_RADIUS)
 
@@ -72,7 +72,7 @@ FUNCTION(RicochetSpecialistPerk, getDesc), char[] buffer, int maxlen)
 FUNCTION(RicochetSpecialistPerk, onTakeDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype)
 {
     // This perk only applies to the owner, hitting a zombie, with a bullet, and not already a ricochet.
-    if (attacker != _inst.client || !isZom(victim) || !(damagetype & DMG_BULLET) || (damagetype & DMG_RICOCHET))
+    if (attacker != _inst.client || !isZom(victim) || !(damagetype & DMG_CLUB) || (damagetype & DMG_RICOCHET))
     {
         return;
     }

@@ -67,6 +67,8 @@ public     FriendPerk(int client)
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_ASSIST_KILL, FriendPerkFonAssistKill);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, FriendPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, FriendPerkFonPeriodic);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_GAME_FRAME, FriendPerkFOnGameFrame);
+
         sm_base.Position = FRIEND_PERK_DATA_FRIEND;
         sm_base.WriteCell(0);    // friendId
         sm_base.Position = FRIEND_PERK_DATA_CRIT_TIME;
@@ -182,6 +184,25 @@ FUNCTION(FriendPerk, onPeriodic))
     }
 }
 
+FUNCTION(FriendPerk, OnGameFrame))
+{
+    int client = _inst.client;
+    int friend = _inst.friendId;
+
+    if (friend > 0 && validLivingSur(friend))
+    {
+        float clientPos[3];
+        GetClientAbsOrigin(client, clientPos);
+        float friendPos[3];
+        GetClientAbsOrigin(friend, friendPos);
+        if (GetVectorDistance(clientPos, friendPos, true) <= ZF_FRIEND_RADIUSSQ)
+        {
+            fxSprite(client, friend, { 10, 50, 200, 200 }, ZFSPR_DOMINATED_INDEX);
+            fxSprite(friend, client, { 10, 50, 200, 200 }, ZFSPR_DOMINATED_INDEX);
+        }
+    }
+}
+
 FUNCTION(FriendPerk, updateCondStats), char[] buffer, int maxlen)
 {
     int client = _inst.client;
@@ -202,9 +223,6 @@ FUNCTION(FriendPerk, updateCondStats), char[] buffer, int maxlen)
                 addHealth(friend, ZF_FRIEND_REGEN);
                 addStat(client, ZFStatAtt, ZFStatTypeCond, ZF_FRIEND_ATTACK);
                 addStat(friend, ZFStatAtt, ZFStatTypeCond, ZF_FRIEND_ATTACK);
-                int color[4] = {10, 50, 200, 200}; // Blue for friend
-                fxBeam(client, friend, color);
-                fxBeam(friend, client, color);
             }
         }
         else {                      // Friend has died

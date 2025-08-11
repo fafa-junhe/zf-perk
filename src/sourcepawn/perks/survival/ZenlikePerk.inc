@@ -14,7 +14,7 @@
 #include "../../perk_vtable.inc"
 #include "../../perk_macros.inc"
 
-#define ZF_ZENLIKE_CRIT_INC 3
+#define ZF_ZENLIKE_CRIT_INC 6
 #define ZF_ZENLIKE_CRIT_DEC 25
 #define ZF_ZENLIKE_HEAL     1
 #define ZF_ZENLIKE_REGEN    1

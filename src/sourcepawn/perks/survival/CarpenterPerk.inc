@@ -15,9 +15,9 @@
 #include "../../zf_util_fx.inc"
 #define CARPENTER_ATTACK               -40
 #define CARPENTER_DEFEND               25
-#define CARPENTER_BARRICADE_HEALTH     500
-#define CARPENTER_COOLDOWN             25
-#define CARPENTER_MAX_ITEMS            4
+#define CARPENTER_BARRICADE_HEALTH     250
+#define CARPENTER_COOLDOWN             15
+#define CARPENTER_MAX_ITEMS            6
 #define CARPENTER_DROP_RADSQ_BARRICADE (250 * 250)
 #define CARPENTER_DROP_RADSQ_CLIENT    (150 * 150)
 

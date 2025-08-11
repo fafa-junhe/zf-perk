@@ -218,6 +218,10 @@ stock char ZFSPR_DOMINATED[]   = "materials/HUD/leaderboard_dominated.vmt";
 stock char ZFSPR_CROSSHAIR[]   = "materials/HUD/leaderboard_class_sniper.vmt";
 stock char ZFSPR_BEAM[]        = "materials/sprites/laserbeam.vmt";
 stock int ZFSPR_BEAM_INDEX;
+
+stock int ZFSPR_DEATH_INDEX;
+stock int ZFSPR_DOMINATED_INDEX;
+stock int ZFSPR_CROSSHAIR_INDEX;
 ////////////////////////////////////////////////////////////
 //
 // Util Init
@@ -234,6 +238,9 @@ stock void
 
 stock void utilFxPrecache()
 {
+    ZFSPR_DEATH_INDEX = PrecacheModel(ZFSPR_DEATH, true);
+    ZFSPR_DOMINATED_INDEX = PrecacheModel(ZFSPR_DOMINATED, true);
+    ZFSPR_CROSSHAIR_INDEX = PrecacheModel(ZFSPR_CROSSHAIR, true);
     // Precache models.
     PrecacheModel(ZFMDL_SUPPLYCRATE, true);
     PrecacheModel(ZFMDL_MINE, true);
@@ -504,10 +511,11 @@ stock void fxExplosionHuge(int entity){
     fxCreateSoundToAll(ZFSND_EXPLOSION, entity);
 }
 
-stock void fxExplosionBig(int entity)
+stock void fxExplosionBig(int entity, bool sound = true)
 {
     fxCreateParticle(ZFPART_EXPLOSION0, entity, AttachNone, 2.0);
-    fxCreateSoundToAll(ZFSND_EXPLOSION, entity);
+    if (sound)
+        fxCreateSoundToAll(ZFSND_EXPLOSION, entity);
 }
 
 stock void fxExplosionTiny(int entity)
@@ -886,10 +894,23 @@ stock bool fxIsSpriteValid(int entSpr, int entAnc)
     return (entSpr > 0) && IsValidEdict(entSpr) && IsValidEntity(entSpr) && entClassnameContains(entSpr, "env_sprite") && (entAnc > 0) && IsValidEdict(entAnc) && IsValidEntity(entAnc) && entClassnameContains(entAnc, "prop_physics_multiplayer");
 }
 
-stock void fxBeam(int client, int target, int color[4])
+stock void fxSprite(int client, int target, int color[4], int modelIndex, float life = 0.1, float size = 0.4, int brightness = 100)
 {
-    if (!validClient(client) || !validClient(target) || client == target || !IsPlayerAlive(target))
+    if (!validClient(client) || !validClient(target) || !IsPlayerAlive(target))
         return;
+
+    float pos[3];
+    GetClientAbsOrigin(target, pos);
+    pos[2] += 100.0; // Adjust height to be around head level.
+
+    TE_SetupGlowSprite(
+        pos,
+        modelIndex,
+        life,
+        size,
+        brightness
+    );
+    TE_SendToClient(client, 0.0);
 
     float startPos[3], endPos[3];
 

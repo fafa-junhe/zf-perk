@@ -19,7 +19,7 @@
 #define OVERLORD_CREEP_HEALTH 400 // 菌毯生命值
 #define OVERLORD_CREEP_RADIUS 250.0 // 菌毯光环半径
 #define OVERLORD_CREEP_LIFETIME 60.0 // 菌毯持续时间
-#define OVERLORD_CREEP_REPRODUCE_TIME 15.0 // 菌毯繁殖时间
+#define OVERLORD_CREEP_REPRODUCE_TIME 5.0 // 菌毯繁殖时间
 #define OVERLORD_BUFF_SPEED 20  // 菌毯速度加成
 #define OVERLORD_BUFF_REGEN 5   // 菌毯回血加成
 
