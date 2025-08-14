@@ -252,7 +252,7 @@
 	"ZF_Help_Text_SurvivorClasses_Full"
 	{
 		"en"	"Available survivor classes: Soldier, Pyro, Demoman, Engineer, Medic, and Sniper."
-		"chi"	"幸存者可使用的兵种: 士兵、火焰兵、爆破手、工程师和医生."
+		"chi"	"幸存者可使用的兵种: 士兵、火焰兵、爆破手、工程师和医生. \n火箭伞兵和黏弹跳跃者已被禁用。"
 	}
 	"ZF_Help_Text_SurvivorWeapons"
 	{
@@ -651,15 +651,35 @@
 		"en"	"Perk: %s"
 		"chi"	"职业: %s"
 	}
-	"ZF_HUD_Bonuses1"
+	"ZF_HUD_Attack"
 	{
-		"en"	"Attack: %s%%, Defense: %s%%"
-		"chi"	"攻击力: %s%%, 防御力: %s%%"
+		"en"	"Attack: "
+		"chi"	"攻击力: "
 	}
-	"ZF_HUD_Bonuses2"
+	"ZF_HUD_Defense"
 	{
-		"en"	"Crit Chance: %s%%, Speed: %s%%"
-		"chi"	"暴击率: %s%%, 速度: %s%%"
+		"en"	"Defense: "
+		"chi"	"防御力: "
+	}
+	"ZF_HUD_Crit"
+	{
+		"en"	"Crit Chance: "
+		"chi"	"暴击率: "
+	}
+	"ZF_HUD_Speed"
+	{
+		"en"	"Speed: "
+		"chi"	"速度: "
+	}
+	"ZF_HUD_Value"
+	{
+		"en"	"%s%%"
+		"chi"	"%s%%"
+	}
+	"ZF_HUD_Separator"
+	{
+		"en"	", "
+		"chi"	", "
 	}
 	"ZF_HUD_KilledBy"
 	{
@@ -739,7 +759,7 @@
 	"AlchemistPerk_desc"
 	{
 		"en"	"You automatically brew a potion every 40 seconds,\nholding up to 3. Call for a medic to throw a\npotion, creating an effect area for 10 seconds\nupon impact. Allies in the area slowly heal and\ngain a speed boost; zombies are slowed and take\nminor damage over time. “Taste my new invention!”\nRecommended classes: Medic, Soldier."
-		"chi"	"你每25秒会获得一瓶药剂,最多持有3瓶.\n发医生语音来投掷药剂,击中地面会产生持续7秒的药剂区域.\n幸存者进入会缓慢回血并获得速度加成；\n僵尸进入则会减速并持续受到少量伤害.\n \n“This is not meth.”\n推荐职业: 士兵、医生."
+		"chi"	"你每15秒会获得一瓶药剂,最多持有3瓶.\n发医生语音来投掷药剂,击中地面会产生持续7秒的药剂区域.\n幸存者进入会缓慢回血并获得速度加成；\n僵尸进入则会减速并持续受到少量伤害.\n \n“This is not meth.”\n推荐职业: 士兵、医生."
 	}
 	"AlchemistPerk_Hint_PotionReady"
 	{
@@ -826,7 +846,7 @@
 	"CarpenterPerk_desc"
 	{
 		"en"	"You have a defense bonus, but your attack power\nis weakened. Call for a medic to build a 500\nHP barricade, which can be destroyed by both\nsides. 25s cooldown. Max 4 barricades at a\ntime. “This road is closed.”\nRecommended classes: Pyro, Engineer, Medic."
-		"chi"	"你有防御力加成,但是你的攻击力减弱.\n发医生语音来建造一个500点生命值的路障,敌我均可破坏,冷却时间25秒.\n你同时最多拥有4个路障.\n \n“此路不通.”\n推荐职业: 火焰兵、工程师、医生."
+		"chi"	"你有防御力加成,但是你的攻击力减弱.\n发医生语音来建造一个250点生命值的路障,敌我均可破坏,冷却时间15秒.\n你同时最多拥有5个路障.\n \n“此路不通.”\n推荐职业: 火焰兵、工程师、医生."
 	}
 	"CarpenterPerk_Hint_NotGrounded"
 	{
@@ -1336,7 +1356,7 @@
 	"RicochetSpecialistPerk_desc"
 	{
 		"en"	"Your bullet weapon damage is reduced by 30%, but\nyour bullets have a 50% chance to ricochet to a\nnearby zombie after hitting a zombie, ricochet\ndamage is half of the original damage. Can\nricochet up to twice. And a lightning effect is\ndisplayed to represent the ricochet. “One stone\nfor two birds? I can do one stone for three.”\nRecommended classes: Engineer, Sniper."
-		"chi"	"你的子弹类武器伤害降低30%.\n但你的子弹在击中僵尸后有50%的几率弹射到附近另一个僵尸身上;\n弹射伤害为原伤害的50%且最多弹射两次.\n弹射发生时会显示一个电击特效.\n \n“一石二鸟?我能做到一石三鸟.”\n推荐职业: 工程师."
+		"chi"	"你的非近战武器伤害降低30%.\n但它们在击中僵尸后有50%的几率弹射到附近另一个僵尸身上;\n弹射伤害为原伤害的50%且最多弹射四次.\n弹射发生时会显示一个电击特效.\n \n“一石二鸟?我能做到一石四鸟.”\n推荐职业: 工程师."
 	}
 	"RicochetSpecialist_Hint_Bounced"
 	{
@@ -1432,70 +1452,6 @@
 	{
 		"en"	"Phase Ready"
 		"chi"	"无敌已就绪"
-	}
-
-	//------------------------------------------------
-	// Stash (贮藏者)
-	//------------------------------------------------
-	"Stash"
-	{
-		"en"	"Stash"
-		"chi"	"贮藏者"
-	}
-	"StashPerk_shortdesc"
-	{
-		"en"	"Stash - Place a stash"
-		"chi"	"贮藏者(Stash)——放置藏身处"
-	}
-	"StashPerk_desc"
-	{
-		"en"	"\nYou can place a stash by crouching and calling\nfor a medic. The stash needs to be far from other\nsurvivors or stashes. The stash will replenish\nyour ammo, health, and provide temporary buffs.\nThe stash lasts for 30 seconds and has a 30-second\ncooldown."
-		"chi"	"\n你可以通过蹲下来发医生语音来放置一个藏身处.\n藏身处需要远离其他幸存者或藏身处.\n藏身处会为你补充弹药、生命,并提供临时加成.\n藏身处持续时间30秒,冷却时间30秒.\n \n“在外游走,总是需要做好最坏的打算.”\n推荐职业: 士兵、工程师."
-	}
-	"StashPerk_Hint_Ready"
-	{
-		"en"	"Your stash is ready."
-		"chi"	"你的藏身处已准备就绪."
-	}
-	"StashPerk_Hint_CanPlaceNew"
-	{
-		"en"	"You can place a new stash."
-		"chi"	"你可以放置一个新的藏身处."
-	}
-	"StashPerk_Hint_PickedUp"
-	{
-		"en"	"You picked up your stash."
-		"chi"	"你拾取了你的藏身处."
-	}
-	"StashPerk_Hint_TooCloseToSurvivor"
-	{
-		"en"	"Too close to other survivors."
-		"chi"	"离其他幸存者太近了."
-	}
-	"StashPerk_Hint_TooCloseToStash"
-	{
-		"en"	"Too close to another stash."
-		"chi"	"离另一个藏身处太近了."
-	}
-	"StashPerk_Hint_Placed"
-	{
-		"en"	"Stash placed. Warming up..."
-		"chi"	"藏身处已放置.准备中..."
-	}
-	"StashPerk_Status_Warmup"
-	{
-		"en"	"Warming up: %ds"
-		"chi"	"准备中: %d秒"
-	}
-	"StashPerk_Status_Cooldown"
-	{
-		"en"	"Cooldown: %ds"
-		"chi"	"冷却中: %d秒"
-	}
-	"StashPerk_Status_Ready"
-	{
-		"en"	"Ready"
-		"chi"	"已就绪"
 	}
 
 	//------------------------------------------------
@@ -1695,7 +1651,7 @@
 	"BountyHunterPerk_desc"
 	{
 		"en"		"Press E to scan for nearby AOE zombies (Toxic, Static Field) for 5 seconds (20s cooldown).\nKilling an AOE zombie permanently grants +5% damage and +5% critical chance."
-		"chi"		"发医生语音来扫描附近的关键僵尸,并用激光暂时指示它们.\n击杀这些僵尸会获得永久的攻击力与暴击率提高,并为你回复部分生命值.\n \n“我可不像那些见到谁都从中学习的家伙;我只挑关键目标!”\n推荐职业: 士兵、爆破手."
+		"chi"		"发医生语音来扫描附近的关键僵尸,并用激光暂时指示它们.\n目前的关键僵尸包括:磁化僵尸、剧毒僵尸、电场僵尸、重力僵尸。\n击杀这些僵尸会获得永久的攻击力与暴击率提高,并为你回复部分生命值.\n \n“我可不像那些见到谁都从中学习的家伙;我只挑关键目标!”\n推荐职业: 士兵、爆破手."
 	}
 
 	"BountyHunterPerk_Hint_Cooldown"
@@ -1732,6 +1688,78 @@
 	{
 		"en"		"Scan Ready"
 		"chi"		"扫描准备就绪"
+	}
+
+	"BountyHunterPerk_Status_Scaning"
+	{
+		"en"		"Scaning"
+		"chi"		"正在扫描中"
+	}
+		
+	//------------------------------------------------
+	// aegis 神盾手
+	//------------------------------------------------
+	
+	"Aegis"
+    {
+        "en" "Aegis"
+        "chi" "神盾手"
+    }
+		
+	"AegisPerk_shortdesc"
+    {
+        "en" "Press E to drop a shield. Allies can pick it up for a defense bonus."
+        "chi" "按 E 键放置一个护盾。队友拾取后可获得防御加成。"
+    }
+    "AegisPerk_desc"
+    {
+        "en" "Press E to drop a shield at your feet. You can place up to 5 shields per life. Allies can melee the shield to equip it, permanently gaining +10% damage resistance. Cooldown: 15 seconds."
+        "chi" "按 E 键在脚下放置一个护盾，每条命最多可放置5个。队友可以通过近战攻击拾取护盾，永久获得 +10% 伤害抗性。冷却时间：15秒。"
+    }
+    "AegisPerk_Status_Cooldown"
+    {
+        "en" "Shield Cooldown: %ds"
+        "chi" "护盾冷却: %d秒"
+    }
+    "AegisPerk_Status_Full"
+    {
+        "en" "Shields Full"
+        "chi" "护盾已满"
+    }
+    "AegisPerk_Status_Ready"
+    {
+        "en" "Shields: %d/%d"
+        "chi" "护盾: %d/%d"
+    }
+    "AegisPerk_Hint_Cooldown"
+    {
+        "en" "You must wait %d more seconds to place a shield."
+        "chi" "你需要等待 %d 秒才能放置护盾。"
+    }
+    "AegisPerk_Hint_NotGrounded"
+    {
+        "en" "You must be on the ground to place a shield."
+        "chi" "你必须在地面上才能放置护盾。"
+    }
+    "AegisPerk_Hint_Full"
+    {
+        "en" "You have the maximum number of shields placed."
+        "chi" "你已放置了最大数量的护盾。"
+    }
+    "AegisPerk_Hint_ShieldEquipped"
+    {
+        "en" "Shield equipped! You feel tougher."
+        "chi" "已装备护盾！你感觉更坚固了。"
+    }
+	"AegisPerk_Hint_PlayersNearby"
+	{
+		"en"	"Cannot place a shield - other players are nearby."
+		"chi"	"无法设置护盾 - 附近有其他玩家."
+	}
+	"AegisPerk_Hint_WaitUntilGrace"
+	{
+		"en"	"Cannot place a shield - must wait until grace period end."
+		"chi"	"无法设置护盾 - 需要等待准备时间结束."
 	}
 
 	//================================================================================
@@ -2140,7 +2168,7 @@
 	"LeapPerk_desc"
 	{
 		"en"	"Your attack and defense are reduced, but you take no fall damage.\nCall for a medic to perform a mighty leap. 4s cooldown.\n\"Taking off!\"\nRecommended classes: Scout, Spy."
-		"chi"	"你的攻击力与防御力降低,但不受掉落伤害.\n发医生语音来施展大跳,冷却时间4秒.\n \n“起飞!”\n推荐职业: 侦察兵、间谍."
+		"chi"	"你的攻击力与防御力降低,但不受掉落伤害.\n发医生语音来施展大跳,冷却时间6秒.\n \n“起飞!”\n推荐职业: 侦察兵、间谍."
 	}
 	"LeapPerk_Status_Cooldown"
 	{
@@ -2324,13 +2352,13 @@
 	}
 	"PhantasmPerk_Status_Active"
 	{
-		"en"	"Void Walk: %.1fs"
-		"chi"	"虚空行走: %.1fs"
+		"en"	"Void Walk: %fs"
+		"chi"	"虚空行走: %fs"
 	}
 	"PhantasmPerk_Status_Cooldown"
 	{
-		"en"	"Cooldown: %.0fs"
-		"chi"	"冷却: %.0fs"
+		"en"	"Cooldown: %fs"
+		"chi"	"冷却: %fs"
 	}
 	"PhantasmPerk_Status_Ready"
 	{
@@ -2582,7 +2610,7 @@
 	"VindictivePerk_desc"
 	{
 		"en"	"Upon death, you deal damage once to your killer."
-		"chi"	"你的击杀与助攻能使你获得永久性的全方面加成. \n \n“我想这是死去的智者.” \n推荐职业: 任何."
+		"chi"	"你的击杀与助攻能使你获得永久性的全方面加成.\n加成上限为:50%额外攻击力/防御力,25%额外暴击率/速度。 \n \n“我想这是死去的智者.” \n推荐职业: 任何."
 	}
 
 	//------------------------------------------------
@@ -2699,3 +2727,4 @@
 		"chi"	"修改职业"
 	}
 }
+    

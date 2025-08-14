@@ -24,9 +24,7 @@ public     EchoPerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         EchoPerk         sm      = view_as<EchoPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, EchoPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, EchoPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, EchoPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, EchoPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, EchoPerkFonTakeDamage);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, EchoPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, EchoPerkFupdateCondStats);
@@ -55,6 +53,11 @@ FUNCTION(EchoPerk, getShortdesc), char[] buffer, int maxlen)
 FUNCTION(EchoPerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "EchoPerk_desc");
+}
+
+FUNCTION_INT(EchoPerk, getCategory))
+{
+    return 2;
 }
 
 FUNCTION(EchoPerk, onPlayerSpawn))

@@ -31,9 +31,7 @@ methodmap LeaderPerk < SurvivorBasePerk {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         LeaderPerk sm = view_as<LeaderPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, LeaderPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, LeaderPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, LeaderPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, LeaderPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, LeaderPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, LeaderPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, LeaderPerkFonCallForMedic);
@@ -58,6 +56,11 @@ FUNCTION(LeaderPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(LeaderPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "LeaderPerk_desc");
+}
+
+FUNCTION_INT(LeaderPerk, getCategory))
+{
+    return 3;
 }
 
 FUNCTION(LeaderPerk, onPeriodic))

@@ -40,14 +40,11 @@ methodmap VindictivePerk < ZombieBasePerk {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         VindictivePerk sm = view_as<VindictivePerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, VindictivePerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, VindictivePerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, VindictivePerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, VindictivePerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, VindictivePerkFonKill);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_ASSIST_KILL, VindictivePerkFonAssistKill);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, VindictivePerkFonPlayerSpawn);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, VindictivePerkFupdateClientPermStats);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_GRACE_END, VindictivePerkFonGraceEnd);
+        PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, VindictivePerkFupdateCondStats);
 
         // Initialize data pack
         sm.Position = view_as<DataPackPos>(VINDICTIVE_DATA_DAMAGE_BONUS);
@@ -97,25 +94,15 @@ FUNCTION(VindictivePerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "VindictivePerk_desc");
 }
 
-FUNCTION(VindictivePerk, onPlayerSpawn)) {
-    // Reset bonuses on spawn
-    _inst.damage_bonus = 0;
-    _inst.utility_bonus = 0;
+
+FUNCTION_INT(VindictivePerk, getCategory))
+{
+    return 1;
 }
 
-FUNCTION(VindictivePerk, onGraceEnd))
-{
-    _inst.damage_bonus = 0;
-    _inst.utility_bonus = 0;
-}
 
 FUNCTION(VindictivePerk, updateClientPermStats)) {
-    // Apply the stored bonuses
-    int client = _inst.client;
-    addStat(client, ZFStatAtt, ZFStatTypePerm, _inst.damage_bonus);
-    addStat(client, ZFStatDef, ZFStatTypePerm, _inst.damage_bonus);
-    addStat(client, ZFStatSpeed, ZFStatTypePerm, _inst.utility_bonus);
-    addStat(client, ZFStatCrit, ZFStatTypePerm, _inst.utility_bonus);
+    // No longer used for permanent stats, handled by conditional stats now.
 }
 
 FUNCTION(VindictivePerk, onKill), int victim, int killer, int assist, int inflictor, int damagetype) {
@@ -128,4 +115,13 @@ FUNCTION(VindictivePerk, onAssistKill), int victim, int killer, int assist, int 
     // Add assist bonus, respecting the cap
     _inst.damage_bonus = min(_inst.damage_bonus + ZF_VINDICTIVE_DAMAGE_ON_ASSIST, ZF_VINDICTIVE_DAMAGE_CAP);
     _inst.utility_bonus = min(_inst.utility_bonus + ZF_VINDICTIVE_UTILITY_ON_ASSIST, ZF_VINDICTIVE_UTILITY_CAP);
+}
+
+FUNCTION(VindictivePerk, updateCondStats)) {
+    // Apply the stored bonuses as conditional stats
+    int client = _inst.client;
+    addStat(client, ZFStatAtt, ZFStatTypeCond, _inst.damage_bonus);
+    addStat(client, ZFStatDef, ZFStatTypeCond, _inst.damage_bonus);
+    addStat(client, ZFStatSpeed, ZFStatTypeCond, _inst.utility_bonus);
+    addStat(client, ZFStatCrit, ZFStatTypeCond, _inst.utility_bonus);
 }

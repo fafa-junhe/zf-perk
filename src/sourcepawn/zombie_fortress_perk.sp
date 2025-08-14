@@ -71,10 +71,9 @@ int         g_iLastSurvivorPerk[MAXPLAYERS + 1];
 TFClassType g_eLastZombieClass[MAXPLAYERS + 1];
 int         g_iLastZombiePerk[MAXPLAYERS + 1];
 int         g_iLastAimTarget[MAXPLAYERS + 1];
-int         g_iDebugTarget[MAXPLAYERS + 1];
-int         g_iDebugStat[MAXPLAYERS + 1];
 int         g_iWeaponOwners[4096] = { 0, ... }; // Global array to track weapon ownership
 ArrayList   g_hDeadSurvivors;
+ArrayList   g_hLastRoundSurvivors;
  
 // 用于CSV日志记录的会话统计
 int g_iSessionKills[MAXPLAYERS + 1];
@@ -82,11 +81,12 @@ int g_iSessionAssists[MAXPLAYERS + 1];
 int g_iSessionDeaths[MAXPLAYERS + 1];
 
 #include "zf_perk.inc"
+#include "zf_util_bot.inc"
+#include "zf_util_ui.inc"
 
 //
 // Plugin Information
 //
-#define PLUGIN_VERSION "4.5.2fix4"
 
 public Plugin myinfo =
 {
@@ -132,7 +132,6 @@ Handle zf_cvForceOn;
 Handle zf_cvRatio;
 Handle zf_cvSwapOnPayload;
 Handle zf_cvSwapOnAttdef;
-Handle zf_cvLastSurvivorsZombieRatio;
  
 ////////////////////////////////////////////////////////////
 //
@@ -165,8 +164,10 @@ public void OnPluginStart()
     utilPrefInit();
     utilFxInit();
     perkInit();
+    utilUiInit();
     InitZombieVisuals();
     g_hDeadSurvivors = new ArrayList();
+    g_hLastRoundSurvivors = new ArrayList();
  
     // Initialize session stats
     for (int i = 0; i <= MAXPLAYERS; i++)
@@ -182,7 +183,6 @@ public void OnPluginStart()
     zf_cvRatio         = CreateConVar("sm_zf_ratio", "0.65", "<0.01-1.00> Percentage of players that start as survivors.", FCVAR_REPLICATED | FCVAR_NOTIFY, true, 0.01, true, 1.0);
     zf_cvSwapOnPayload = CreateConVar("sm_zf_swaponpayload", "1", "<0/1> Swap teams on non-ZF payload maps.", FCVAR_REPLICATED | FCVAR_NOTIFY, true, 0.0, true, 1.0);
     zf_cvSwapOnAttdef  = CreateConVar("sm_zf_swaponattdef", "1", "<0/1> Swap teams on non-ZF attack/defend maps.", FCVAR_REPLICATED | FCVAR_NOTIFY, true, 0.0, true, 1.0);
-    zf_cvLastSurvivorsZombieRatio = CreateConVar("sm_zf_last_survivors_zombie_ratio", "0.8", "<0.0-1.0> Percentage of last survivors to become zombies.", FCVAR_REPLICATED | FCVAR_NOTIFY, true, 0.0, true, 1.0);
     AutoExecConfig(true, "zombie_fortress_perk");
  
     // Hook events
@@ -299,6 +299,11 @@ public void OnMapEnd()
     {
         CloseHandle(g_hDeadSurvivors);
         g_hDeadSurvivors = null;
+    }
+    if (g_hLastRoundSurvivors != null)
+    {
+        CloseHandle(g_hLastRoundSurvivors);
+        g_hLastRoundSurvivors = null;
     }
 }
  
@@ -563,6 +568,18 @@ public Action hook_JoinClass(int client,
 
     if (IsFakeClient(client) && (StrEqual(cmd1, "spy", false) || StrEqual(cmd1, "engineer", false)))
     {
+        // Define an array of valid survivor classes for bots
+        char validClasses[4][32] = {"soldier", "pyro", "demoman", "medic"};
+        
+        // Pick a random class from the array
+        int randomIndex = GetRandomInt(0, sizeof(validClasses) - 1);
+        char randomClass[32];
+        strcopy(randomClass, sizeof(randomClass), validClasses[randomIndex]);
+        
+        // Set the bot's class
+        TF2_SetPlayerClass(client, TF2_GetClass(randomClass));
+        
+        // Block the original class change
         return Plugin_Handled;
     }
 
@@ -741,8 +758,22 @@ public Action event_RoundStart(Handle event,
         g_eLastZombieClass[i]   = TFClass_Unknown;
         g_iLastZombiePerk[i]    = 0;
         }
-        g_hDeadSurvivors.Clear();
+        if (g_hDeadSurvivors != null)
+        {
+            g_hDeadSurvivors.Clear();
+        } else {
+            g_hDeadSurvivors = new ArrayList();
+        }
      
+        // Although g_hLastRoundSurvivors is populated at the end of a round,
+        // we clear it here as a safety measure to ensure a clean state for the new round,
+        // especially if the previous round ended abnormally.
+        if (g_hLastRoundSurvivors != null)
+        {
+            g_hLastRoundSurvivors.Clear();
+        } else {
+            g_hLastRoundSurvivors = new ArrayList();
+        }
         // Reset session stats for all players
         for (int i = 0; i <= MaxClients; i++)
     {
@@ -789,85 +820,61 @@ public Action event_RoundStart(Handle event,
             }
         }
 
-        // Randomize, sort players
+        // Randomize the initial list of players
         SortIntegers(players, playerCount, Sort_Random);
         // NOTE: As of SM 1.3.1, SortIntegers w/ Sort_Random doesn't
         //       sort the first element of the array. Temp fix below.
-        int idx      = GetRandomInt(0, playerCount - 1);
-        int temp     = players[idx];
-        players[idx] = players[0];
-        players[0]   = temp;
-
-        // Prioritize a percentage of the last survivors to die to become zombies next round
-        int deadSurvivorCount = g_hDeadSurvivors.Length;
-        if (deadSurvivorCount > 0)
+        if (playerCount > 1)
         {
-            float ratio = GetConVarFloat(zf_cvLastSurvivorsZombieRatio);
-            int numToMakeZombie = RoundToFloor(deadSurvivorCount * ratio);
-            if (numToMakeZombie > 0)
+            int idx      = GetRandomInt(0, playerCount - 1);
+            int temp     = players[idx];
+            players[idx] = players[0];
+            players[0]   = temp;
+        }
+
+        // Prioritize survivors from the last round by moving them to the front of the already randomized list.
+        int lastRoundSurvivorCount = g_hLastRoundSurvivors.Length;
+        if (lastRoundSurvivorCount > 0)
+        {
+            int frontOfList = 0;
+            for (int i = 0; i < playerCount && frontOfList < lastRoundSurvivorCount; i++)
             {
-                // Create a temporary array to hold players to be moved
-                int playersToMove[MAXPLAYERS];
-                int moveCount = 0;
-
-                // Iterate from the last died survivor backwards
-                for (int i = deadSurvivorCount - 1; i >= deadSurvivorCount - numToMakeZombie; i--)
+                int client = players[i];
+                bool wasSurvivor = false;
+                for (int j = 0; j < lastRoundSurvivorCount; j++)
                 {
-                    int deadClient = g_hDeadSurvivors.Get(i);
-                    // Find this player in the randomized list
-                    for (int j = 0; j < playerCount; j++)
+                    if (g_hLastRoundSurvivors.Get(j) == client)
                     {
-                        if (players[j] == deadClient)
-                        {
-                            playersToMove[moveCount++] = deadClient;
-                            // Mark as moved by setting to 0, we'll clean up later
-                            players[j] = 0;
-                            break;
-                        }
+                        wasSurvivor = true;
+                        break;
                     }
                 }
 
-                // Create a new player list, filtering out the moved players
-                int newPlayers[MAXPLAYERS];
-                int newPlayerCount = 0;
-                for (int i = 0; i < playerCount; i++)
+                if (wasSurvivor)
                 {
-                    if (players[i] != 0)
-                    {
-                        newPlayers[newPlayerCount++] = players[i];
-                    }
+                    // Swap this player with the one at the `frontOfList` position.
+                    // This preserves the initial randomization among the prioritized group.
+                    int temp = players[frontOfList];
+                    players[frontOfList] = players[i];
+                    players[i] = temp;
+                    frontOfList++;
                 }
-
-                // Add the moved players to the end of the new list
-                for (int i = 0; i < moveCount; i++)
-                {
-                    newPlayers[newPlayerCount++] = playersToMove[i];
-                }
-
-                // Copy the new list back to the original players array
-                for (int i = 0; i < newPlayerCount; i++)
-                {
-                    players[i] = newPlayers[i];
-                }
-                playerCount = newPlayerCount;
             }
         }
 
-
-        // Calculate team counts. At least one survivor must exist.
+        // Calculate team counts based on the ratio.
         surCount = RoundToFloor(playerCount * GetConVarFloat(zf_cvRatio));
-        if (playerCount > 0)
+
+        // --- Team Balance Rules ---
+        // 1. If there are players but the calculation resulted in zero survivors, force at least one.
+        if (playerCount > 0 && surCount == 0)
         {
-            // Ensure at least one survivor
-            if (surCount < 1)
-            {
-                surCount = 1;
-            }
-            // Ensure at least one zombie if there are multiple players
-            if (surCount >= playerCount && playerCount > 1)
-            {
-                surCount = playerCount - 1;
-            }
+            surCount = 1;
+        }
+        // 2. If there are multiple players but the calculation resulted in zero zombies, force at least one.
+        if (playerCount > 1 && surCount == playerCount)
+        {
+            surCount = playerCount - 1;
         }
 
         // Assign active players to survivor and zombie teams.
@@ -942,6 +949,7 @@ public Action event_RoundEnd(Handle event,
             LogPlayerSessionData(i);
         }
     }
+
 
     perk_OnRoundEnd();
 
@@ -1121,7 +1129,7 @@ public Action event_PlayerDeath(Handle event,
             g_iLastSurvivorPerk[victim]  = prefGet(victim, SurPerk);
 
             // Transfer player to zombie team.
-            CreateTimer(6.0, timer_zombify, victim, TIMER_FLAG_NO_MAPCHANGE);
+            CreateTimer(2.0, timer_zombify, victim, TIMER_FLAG_NO_MAPCHANGE);
         }
     }
 
@@ -1266,6 +1274,26 @@ public Action timer_graceStartPost(Handle timer)
             AcceptEntityInput(index, "Disable");
     }
 
+    // Ensure there is at least one survivor.
+    if (GetTeamClientCount(surTeam()) == 0 && GetTeamClientCount(zomTeam()) > 0)
+    {
+        // Find a random zombie to move to the survivor team.
+        int zombies[MAXPLAYERS];
+        int zombieCount = 0;
+        for (int i = 1; i <= MaxClients; i++)
+        {
+            if (IsClientInGame(i) && isZom(i))
+            {
+                zombies[zombieCount++] = i;
+            }
+        }
+
+        if (zombieCount > 0)
+        {
+            int unluckyZombie = zombies[GetRandomInt(0, zombieCount - 1)];
+            spawnClient(unluckyZombie, surTeam());
+        }
+    }
     return Plugin_Continue;
 }
 
@@ -1398,20 +1426,27 @@ void handle_gameFrameLogic()
 
 void handle_winCondition()
 {
-    // 1. Check for any survivors that are still alive.
-    bool anySurvivorAlive = false;
+    // 1. Check for win conditions.
+    int survivorCount = 0;
+    int zombieCount = 0;
     for (int i = 1; i <= MaxClients; i++)
     {
-        if (IsClientInGame(i) && IsPlayerAlive(i) && isSur(i))
+        if (IsClientInGame(i) && IsPlayerAlive(i))
         {
-            anySurvivorAlive = true;
-            break;
+            if (isSur(i))
+            {
+                survivorCount++;
+            }
+            else if (isZom(i))
+            {
+                zombieCount++;
+            }
         }
     }
 
-    // 2. If no survivors are alive and at least 1 zombie is playing,
-    //    end round with zombie win.
-    if (!anySurvivorAlive && (GetTeamClientCount(zomTeam()) > 0))
+    // 2. Handle win conditions.
+    // Case A: No survivors left, zombies win.
+    if (survivorCount == 0 && GetTeamClientCount(zomTeam()) > 0)
     {
         endRound(zomTeam());
     }
@@ -1775,1131 +1810,6 @@ void zfSwapTeams()
 // Utility Functionality
 //
 ////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////
-//
-// Help Functionality
-//
-////////////////////////////////////////////////////////////
-public void help_printZFInfoChat(int client)
-{
-    if (client == 0)
-    {
-        PrintToChatAll("%t", "ZF_MenuHint");
-    }
-    else {
-        PrintToChatAll("%t", "ZF_MenuHint");
-    }
-}
-
-////////////////////////////////////////////////////////////
-//
-// Main Menu Functionality
-//
-////////////////////////////////////////////////////////////
-
-//
-// Main //edit:2023.6.29 by spectator
-//
-public void panel_PrintMain(int client)
-{
-    Handle panel = CreatePanel();
-    char   buffer[128];
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Title", client, PLUGIN_VERSION);
-    SetPanelTitle(panel, buffer, false);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_SelectSurPerk", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_SelectZomPerk", client);
-    DrawPanelItem(panel, buffer, 0);
-
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Help", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_PerkHelp", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Credits", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Change_Language", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Close", client);
-    DrawPanelItem(panel, buffer, 0);
-    SendPanelToClient(panel, client, panel_HandleMain, 30);
-    CloseHandle(panel);
-}
-
-public void panel_HandleMain(Handle menu, MenuAction action, int param1, int param2)
-{
-    if (action == MenuAction_Select)
-    {
-        switch (param2)
-        {
-            case 1:
-            {
-                panel_PrintSurPerkList(param1, true);
-                return;
-            }
-            case 2:
-            {
-                panel_PrintZomPerkList(param1, true);
-                return;
-            }
-            case 3:
-            {
-                panel_PrintHelp(param1);
-                return;
-            }
-            case 4:
-            {
-                panel_PrintPerkHelp(param1);
-                return;
-            }
-            case 5:
-            {
-                panel_PrintCredits(param1);
-                return;
-            }
-            case 6:
-            {
-                panel_ChangeLanguage(param1);
-                return;
-            }
-            case 7:    // Close
-            {
-                return;
-            }
-        }
-    }
-}
-
-
-//
-// Main.Help
-//
-public void panel_PrintHelp(int client)
-{
-    Handle panel = CreatePanel();
-    char   buffer[128];
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Help", client);
-    SetPanelTitle(panel, buffer, false);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Help_Overview", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Help_SurvivorOverview", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Help_ZombieOverview", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Help_ClassSurvivor", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Help_ClassZombie", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Close", client);
-    DrawPanelItem(panel, buffer, 0);
-    SendPanelToClient(panel, client, panel_HandleHelp, 30);
-    CloseHandle(panel);
-}
-
-public void panel_HandleHelp(Handle menu, MenuAction action, int param1, int param2)
-{
-    if (action == MenuAction_Select)
-    {
-        switch (param2)
-        {
-            case 1:
-            {
-                panel_PrintHelpOverview(param1);
-                return;
-            }
-            case 2:
-            {
-                panel_PrintHelpTeam(param1, surTeam());
-                return;
-            }
-            case 3:
-            {
-                panel_PrintHelpTeam(param1, zomTeam());
-                return;
-            }
-            case 4:
-            {
-                panel_PrintHelpSurClass(param1);
-                return;
-            }
-            case 5:
-            {
-                panel_PrintHelpZomClass(param1);
-                return;
-            }
-            case 6:    // Close
-            {
-                return;
-            }
-        }
-    }
-}
-
-//
-// Main.Help.Overview
-//
-public void panel_PrintHelpOverview(int client)
-{
-    Handle panel = CreatePanel();
-    char   buffer[256];
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Help_Title_Overview", client);
-    SetPanelTitle(panel, buffer, false);
-
-    DrawPanelText(panel, "----------------------------------------");
-
-    char fullText[512];
-    Format(fullText, sizeof(fullText), "%T", "ZF_Help_Text_Overview_Full", client);
-    char lines[4][128];
-    int  numLines = ExplodeString(fullText, "\n", lines, 4, 128);
-    for (int i = 0; i < numLines; i++)
-    {
-        DrawPanelText(panel, lines[i]);
-    }
-
-    DrawPanelText(panel, "----------------------------------------");
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Back", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Close", client);
-    DrawPanelItem(panel, buffer, 0);
-    SendPanelToClient(panel, client, panel_HandleHelpOverview, 30);
-    CloseHandle(panel);
-}
-
-public void panel_HandleHelpOverview(Handle menu, MenuAction action, int param1, int param2)
-{
-    if (action == MenuAction_Select)
-    {
-        switch (param2)
-        {
-            case 1:    // Back
-            {
-                panel_PrintHelp(param1);
-                return;
-            }
-            case 2:    // Close
-            {
-                return;
-            }
-        }
-    }
-}
-
-//
-// Main.Help.Team
-//
-public void panel_PrintHelpTeam(int client, int team)
-{
-    Handle panel = CreatePanel();
-    char   buffer[256];
-
-    if (team == surTeam())
-    {
-        Format(buffer, sizeof(buffer), "%T", "ZF_Help_Title_SurvivorTeam", client);
-        SetPanelTitle(panel, buffer, false);
-
-        DrawPanelText(panel, "----------------------------------------");
-
-        Format(buffer, sizeof(buffer), "%T", "ZF_Help_Text_SurvivorClasses_Full", client);
-        DrawPanelText(panel, buffer);
-
-        Format(buffer, sizeof(buffer), "%T", "ZF_Help_Text_SurvivorWeapons", client);
-        DrawPanelText(panel, buffer);
-
-        DrawPanelText(panel, "----------------------------------------");
-    }
-    else if (team == zomTeam()) {
-        Format(buffer, sizeof(buffer), "%T", "ZF_Help_Title_ZombieTeam", client);
-        SetPanelTitle(panel, buffer, false);
-
-        DrawPanelText(panel, "----------------------------------------");
-
-        char fullText[512];
-        Format(fullText, sizeof(fullText), "%T", "ZF_Help_Text_ZombieTeam_Full", client);
-        char lines[4][128];
-        int  numLines = ExplodeString(fullText, "\n", lines, 4, 128);
-        for (int i = 0; i < numLines; i++)
-        {
-            DrawPanelText(panel, lines[i]);
-        }
-
-        DrawPanelText(panel, "----------------------------------------");
-    }
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Back", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Close", client);
-    DrawPanelItem(panel, buffer, 0);
-    SendPanelToClient(panel, client, panel_HandleHelpTeam, 30);
-    CloseHandle(panel);
-}
-
-public void panel_HandleHelpTeam(Handle menu, MenuAction action, int param1, int param2)
-{
-    if (action == MenuAction_Select)
-    {
-        switch (param2)
-        {
-            case 1:    // Back
-            {
-                panel_PrintHelp(param1);
-                return;
-            }
-            case 2:    // Close
-            {
-                return;
-            }
-        }
-    }
-}
-
-//
-// Main.Help.Class
-//
-public void panel_PrintHelpSurClass(int client)
-{
-    Handle panel = CreatePanel();
-    char   buffer[128];
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Help_Title_SurvivorClasses", client);
-    SetPanelTitle(panel, buffer, false);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Class_Soldier", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Class_Sniper", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Class_Medic", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Class_Demoman", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Class_Pyro", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Class_Engineer", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Close", client);
-    DrawPanelItem(panel, buffer, 0);
-    SendPanelToClient(panel, client, panel_HandleHelpSurClass, 30);
-    CloseHandle(panel);
-}
-
-public void panel_HandleHelpSurClass(Handle menu, MenuAction action, int param1, int param2)
-{
-    if (action == MenuAction_Select)
-    {
-        switch (param2)
-        {
-            case 1:
-            {
-                panel_PrintClass(param1, TFClass_Soldier);
-                return;
-            }
-            case 2:
-            {
-                panel_PrintClass(param1, TFClass_Sniper);
-                return;
-            }
-            case 3:
-            {
-                panel_PrintClass(param1, TFClass_Medic);
-                return;
-            }
-            case 4:
-            {
-                panel_PrintClass(param1, TFClass_DemoMan);
-                return;
-            }
-            case 5:
-            {
-                panel_PrintClass(param1, TFClass_Pyro);
-                return;
-            }
-            case 6:
-            {
-                panel_PrintClass(param1, TFClass_Engineer);
-                return;
-            }
-            case 7:    // Close
-            {
-                return;
-            }
-        }
-    }
-}
-
-public void panel_PrintHelpZomClass(int client)
-{
-    Handle panel = CreatePanel();
-    char   buffer[128];
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Help_Title_ZombieClasses", client);
-    SetPanelTitle(panel, buffer, false);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Class_Scout", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Class_Heavy", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Class_Spy", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Close", client);
-    DrawPanelItem(panel, buffer, 0);
-    SendPanelToClient(panel, client, panel_HandleHelpZomClass, 30);
-    CloseHandle(panel);
-}
-
-public void panel_HandleHelpZomClass(Handle menu, MenuAction action, int param1, int param2)
-{
-    if (action == MenuAction_Select)
-    {
-        switch (param2)
-        {
-            case 1:
-            {
-                panel_PrintClass(param1, TFClass_Scout);
-                return;
-            }
-            case 2:
-            {
-                panel_PrintClass(param1, TFClass_Heavy);
-                return;
-            }
-            case 3:
-            {
-                panel_PrintClass(param1, TFClass_Spy);
-                return;
-            }
-            case 4:    // Close
-            {
-                return;
-            }
-        }
-    }
-}
-
-public void panel_PrintClass(int client, TFClassType class)
-{
-    Handle panel = CreatePanel();
-    char   buffer[256];
-    switch (class)
-    {
-        case TFClass_Soldier:
-        {
-            Format(buffer, sizeof(buffer), "%T", "ZF_Help_Class_Soldier", client);
-            SetPanelTitle(panel, buffer, false);
-            DrawPanelText(panel, "----------------------------------------");
-            char fullText[1024];
-            Format(fullText, sizeof(fullText), "%T", "ZF_Help_Text_Soldier_Full", client);
-            char lines[10][128];
-            int  numLines = ExplodeString(fullText, "\n", lines, 10, 128);
-            for (int i = 0; i < numLines; i++)
-            {
-                DrawPanelText(panel, lines[i]);
-            }
-            DrawPanelText(panel, "----------------------------------------");
-        }
-        case TFClass_Pyro:
-        {
-            Format(buffer, sizeof(buffer), "%T", "ZF_Help_Class_Pyro", client);
-            SetPanelTitle(panel, buffer, false);
-            DrawPanelText(panel, "----------------------------------------");
-            char fullText[1024];
-            Format(fullText, sizeof(fullText), "%T", "ZF_Help_Text_Pyro_Full", client);
-            char lines[10][128];
-            int  numLines = ExplodeString(fullText, "\n", lines, 10, 128);
-            for (int i = 0; i < numLines; i++)
-            {
-                DrawPanelText(panel, lines[i]);
-            }
-            DrawPanelText(panel, "----------------------------------------");
-        }
-        case TFClass_DemoMan:
-        {
-            Format(buffer, sizeof(buffer), "%T", "ZF_Help_Class_Demoman", client);
-            SetPanelTitle(panel, buffer);
-            DrawPanelText(panel, "----------------------------------------");
-            char fullText[1024];
-            Format(fullText, sizeof(fullText), "%T", "ZF_Help_Text_Demoman_Full", client);
-            char lines[10][128];
-            int  numLines = ExplodeString(fullText, "\n", lines, 10, 128);
-            for (int i = 0; i < numLines; i++)
-            {
-                DrawPanelText(panel, lines[i]);
-            }
-            DrawPanelText(panel, "----------------------------------------");
-        }
-        case TFClass_Engineer:
-        {
-            Format(buffer, sizeof(buffer), "%T", "ZF_Help_Class_Engineer", client);
-            SetPanelTitle(panel, buffer, false);
-            DrawPanelText(panel, "----------------------------------------");
-            char fullText[1024];
-            Format(fullText, sizeof(fullText), "%T", "ZF_Help_Text_Engineer_Full", client);
-            char lines[10][128];
-            int  numLines = ExplodeString(fullText, "\n", lines, 10, 128);
-            for (int i = 0; i < numLines; i++)
-            {
-                DrawPanelText(panel, lines[i]);
-            }
-            DrawPanelText(panel, "----------------------------------------");
-        }
-        case TFClass_Medic:
-        {
-            Format(buffer, sizeof(buffer), "%T", "ZF_Help_Class_Medic", client);
-            SetPanelTitle(panel, buffer, false);
-            DrawPanelText(panel, "----------------------------------------");
-            char fullText[1024];
-            Format(fullText, sizeof(fullText), "%T", "ZF_Help_Text_Medic_Full", client);
-            char lines[10][128];
-            int  numLines = ExplodeString(fullText, "\n", lines, 10, 128);
-            for (int i = 0; i < numLines; i++)
-            {
-                DrawPanelText(panel, lines[i]);
-            }
-            DrawPanelText(panel, "----------------------------------------");
-        }
-        case TFClass_Sniper:
-        {
-            Format(buffer, sizeof(buffer), "%T", "ZF_Help_Class_Sniper", client);
-            SetPanelTitle(panel, buffer, false);
-            DrawPanelText(panel, "----------------------------------------");
-            char fullText[1024];
-            Format(fullText, sizeof(fullText), "%T", "ZF_Help_Text_Sniper_Full", client);
-            char lines[10][128];
-            int  numLines = ExplodeString(fullText, "\n", lines, 10, 128);
-            for (int i = 0; i < numLines; i++)
-            {
-                DrawPanelText(panel, lines[i]);
-            }
-            DrawPanelText(panel, "----------------------------------------");
-        }
-        case TFClass_Scout:
-        {
-            Format(buffer, sizeof(buffer), "%T", "ZF_Help_Class_Scout", client);
-            SetPanelTitle(panel, buffer, false);
-            DrawPanelText(panel, "----------------------------------------");
-            char fullText[1024];
-            Format(fullText, sizeof(fullText), "%T", "ZF_Help_Text_Scout_Full", client);
-            char lines[10][128];
-            int  numLines = ExplodeString(fullText, "\n", lines, 10, 128);
-            for (int i = 0; i < numLines; i++)
-            {
-                DrawPanelText(panel, lines[i]);
-            }
-            DrawPanelText(panel, "----------------------------------------");
-        }
-        case TFClass_Heavy:
-        {
-            Format(buffer, sizeof(buffer), "%T", "ZF_Help_Class_Heavy", client);
-            SetPanelTitle(panel, buffer, false);
-            DrawPanelText(panel, "----------------------------------------");
-            char fullText[1024];
-            Format(fullText, sizeof(fullText), "%T", "ZF_Help_Text_Heavy_Full", client);
-            char lines[10][128];
-            int  numLines = ExplodeString(fullText, "\n", lines, 10, 128);
-            for (int i = 0; i < numLines; i++)
-            {
-                DrawPanelText(panel, lines[i]);
-            }
-            DrawPanelText(panel, "----------------------------------------");
-        }
-        case TFClass_Spy:
-        {
-            Format(buffer, sizeof(buffer), "%T", "ZF_Help_Class_Spy", client);
-            SetPanelTitle(panel, buffer, false);
-            DrawPanelText(panel, "----------------------------------------");
-            char fullText[1024];
-            Format(fullText, sizeof(fullText), "%T", "ZF_Help_Text_Spy_Full", client);
-            char lines[10][128];
-            int  numLines = ExplodeString(fullText, "\n", lines, 10, 128);
-            for (int i = 0; i < numLines; i++)
-            {
-                DrawPanelText(panel, lines[i]);
-            }
-            DrawPanelText(panel, "----------------------------------------");
-        }
-        default:
-        {
-            Format(buffer, sizeof(buffer), "%T", "ZF_Class_Spectator", client);
-            SetPanelTitle(panel, buffer, false);
-            DrawPanelText(panel, "----------------------------------------");
-            char fullText[1024];
-            Format(fullText, sizeof(fullText), "%T", "ZF_Help_Text_Spectator_Full", client);
-            char lines[10][128];
-            int  numLines = ExplodeString(fullText, "\n", lines, 10, 128);
-            for (int i = 0; i < numLines; i++)
-            {
-                DrawPanelText(panel, lines[i]);
-            }
-            DrawPanelText(panel, "----------------------------------------");
-        }
-    }
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Back", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Close", client);
-    DrawPanelItem(panel, buffer, 0);
-    SendPanelToClient(panel, client, panel_HandleClass, 8);
-    CloseHandle(panel);
-}
-
-public void panel_HandleClass(Handle menu, MenuAction action, int param1, int param2)
-{
-    if (action == MenuAction_Select)
-    {
-        switch (param2)
-        {
-            case 1:    // Back
-            {
-                panel_PrintHelp(param1);
-                return;
-            }
-            case 2:    // Close
-            {
-                return;
-            }
-        }
-    }
-}
-
-//
-// Main.PerkHelp
-//
-void panel_PrintPerkHelp(int client)
-{
-    Handle panel = CreatePanel();
-    char   buffer[256];
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Help_Title_PerkHelp", client);
-    SetPanelTitle(panel, buffer, false);
-
-    DrawPanelText(panel, "----------------------------------------");
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Help_Text_PerkHelp1", client);
-    DrawPanelText(panel, buffer);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Help_Text_PerkHelp2", client);
-    DrawPanelText(panel, buffer);
-
-    DrawPanelText(panel, "----------------------------------------");
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Back_Brackets", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Close_Brackets", client);
-    DrawPanelItem(panel, buffer, 0);
-    SendPanelToClient(panel, client, panel_HandlePerkHelp, 30);
-    CloseHandle(panel);
-}
-
-public void panel_HandlePerkHelp(Handle menu, MenuAction action, int param1, int param2)
-{
-    if (action == MenuAction_Select)
-    {
-        switch (param2)
-        {
-            case 1:    // Back
-            {
-                panel_PrintHelp(param1);
-                return;
-            }
-            case 2:    // Close
-            {
-                return;
-            }
-        }
-    }
-}
-
-stock void GetClassNameFromEnum(TFClassType classType, char[] buffer, int maxlen)
-{
-    switch (classType)
-    {
-        case TFClass_Unknown:
-        {
-            strcopy(buffer, maxlen, "Unknown");
-        }
-        case TFClass_Scout:
-        {
-            strcopy(buffer, maxlen, "Scout");
-        }
-        case TFClass_Sniper:
-        {
-            strcopy(buffer, maxlen, "Sniper");
-        }
-        case TFClass_Soldier:
-        {
-            strcopy(buffer, maxlen, "Soldier");
-        }
-        case TFClass_DemoMan:
-        {
-            strcopy(buffer, maxlen, "Demoman");
-        }
-        case TFClass_Medic:
-        {
-            strcopy(buffer, maxlen, "Medic");
-        }
-        case TFClass_Heavy:
-        {
-            strcopy(buffer, maxlen, "Heavy");
-        }
-        case TFClass_Pyro:
-        {
-            strcopy(buffer, maxlen, "Pyro");
-        }
-        case TFClass_Spy:
-        {
-            strcopy(buffer, maxlen, "Spy");
-        }
-        case TFClass_Engineer:
-        {
-            strcopy(buffer, maxlen, "Engineer");
-        }
-        default:
-        {
-            strcopy(buffer, maxlen, "Spectator");
-        }
-    }
-}
-
-public int Sort_Kills(int index1, int index2, Handle array, Handle hndl)
-{
-    DataPack pack1 = view_as<DataPack>(GetArrayCell(array, index1));
-    DataPack pack2 = view_as<DataPack>(GetArrayCell(array, index2));
-
-    pack1.Reset();
-    pack1.ReadCell();    // skip client
-    int kills1 = pack1.ReadCell();
-
-    pack2.Reset();
-    pack2.ReadCell();    // skip client
-    int kills2 = pack2.ReadCell();
-
-    return kills2 - kills1;
-}
-
-
-//
-// Main.Credits
-//
-public void panel_PrintCredits(int client)
-{
-    Handle panel = CreatePanel();
-    char   buffer[256];
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Credits", client);
-    SetPanelTitle(panel, buffer, false);
-
-    DrawPanelText(panel, "----------------------------------------");
-    Format(buffer, sizeof(buffer), "%T", "ZF_Credits_Original", client);
-    DrawPanelText(panel, buffer);
-    Format(buffer, sizeof(buffer), "%T", "ZF_Credits_Recode", client);
-    DrawPanelText(panel, buffer);
-    Format(buffer, sizeof(buffer), "%T", "ZF_Credits_Original_Translation", client);
-    DrawPanelText(panel, buffer);
-    Format(buffer, sizeof(buffer), "%T", "ZF_Credits_Original_Balancing", client);
-    DrawPanelText(panel, buffer);
-    Format(buffer, sizeof(buffer), "%T", "ZF_Credits_Reremake", client);
-    DrawPanelText(panel, buffer);
-    Format(buffer, sizeof(buffer), "%T", "ZF_Credits_Special_thanks", client);
-    DrawPanelText(panel, buffer);
-    DrawPanelText(panel, "----------------------------------------");
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Back", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Close", client);
-    DrawPanelItem(panel, buffer, 0);
-    SendPanelToClient(panel, client, panel_HandleCredits, 30);
-    CloseHandle(panel);
-}
-
-//
-// Main.Credits
-//
-public void panel_ChangeLanguage(int client)
-{
-    Handle panel = CreatePanel();
-    char   buffer[256];
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Change_Language", client);
-    SetPanelTitle(panel, buffer, false);
-
-    DrawPanelText(panel, "----------------------------------------");
-    Format(buffer, sizeof(buffer), "%T", "ZF_Change_Language_Guide", client);
-    DrawPanelText(panel, buffer);
-    DrawPanelText(panel, "----------------------------------------");
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Back", client);
-    DrawPanelItem(panel, buffer, 0);
-
-    Format(buffer, sizeof(buffer), "%T", "ZF_Menu_Close", client);
-    DrawPanelItem(panel, buffer, 0);
-    SendPanelToClient(panel, client, panel_HandleCredits, 30);
-    CloseHandle(panel);
-}
-
-public void panel_HandleCredits(Handle menu, MenuAction action, int param1, int param2)
-{
-    if (action == MenuAction_Select)
-    {
-        switch (param2)
-        {
-            case 1:    // Back
-            {
-                panel_PrintMain(param1);
-                return;
-            }
-            case 2:    // Close
-            {
-                return;
-            }
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////
-//
-// Debug Menu Functionality
-//
-////////////////////////////////////////////////////////////
-public Action cmd_zfDebugMenu(int client, int args)
-{
-    if (!GetConVarBool(zf_cvDebug))
-    {
-        PrintToChat(client, "%T", "ZF_Debug_Not_Enabled", client);
-        return Plugin_Handled;
-    }
-
-    if (!CheckCommandAccess(client, "zfdebug", ADMFLAG_ROOT))
-    {
-        PrintToChat(client, "%T", "ZF_Debug_No_Access", client);
-        return Plugin_Handled;
-    }
-
-    panel_DebugPlayerList(client);
-    return Plugin_Handled;
-}
-
-public void panel_DebugPlayerList(int client)
-{
-    Menu menu = CreateMenu(panel_HandleDebugPlayerList);
-    char title[128];
-    Format(title, sizeof(title), "%T", "ZF_Debug_Menu_Title", client);
-    SetMenuTitle(menu, title);
-    SetMenuExitButton(menu, true);
-
-    for (int i = 1; i <= MaxClients; i++)
-    {
-        if (IsClientInGame(i))
-        {
-            char info[32];
-            IntToString(i, info, sizeof(info));
-            char name[MAX_NAME_LENGTH];
-            GetClientName(i, name, sizeof(name));
-            AddMenuItem(menu, info, name);
-        }
-    }
-    DisplayMenu(menu, client, MENU_TIME_FOREVER);
-}
-
-public int panel_HandleDebugPlayerList(Menu menu, MenuAction action, int client, int item)
-{
-    if (action == MenuAction_Select)
-    {
-        char info[32];
-        GetMenuItem(menu, item, info, sizeof(info));
-        int target             = StringToInt(info);
-        g_iDebugTarget[client] = target;
-        panel_DebugActionMenu(client);
-    }
-    else if (action == MenuAction_End)
-    {
-        CloseHandle(menu);
-    }
-    return 0;
-}
-
-public void panel_DebugActionMenu(int client)
-{
-    Menu menu = CreateMenu(panel_HandleDebugActionMenu);
-    char title[128];
-    Format(title, sizeof(title), "%T", "ZF_Debug_Action_Title", client, g_iDebugTarget[client]);
-    SetMenuTitle(menu, title);
-    SetMenuExitButton(menu, true);
-
-    char buffer[128];
-    Format(buffer, sizeof(buffer), "%T", "ZF_Debug_Modify_Stats", client);
-    AddMenuItem(menu, "stats", buffer);
-    Format(buffer, sizeof(buffer), "%T", "ZF_Debug_Change_Team", client);
-    AddMenuItem(menu, "team", buffer);
-    Format(buffer, sizeof(buffer), "%T", "ZF_Debug_Change_Class", client);
-    AddMenuItem(menu, "class", buffer);
-    Format(buffer, sizeof(buffer), "%T", "ZF_Debug_Change_Perk", client);
-    AddMenuItem(menu, "perk", buffer);
-
-    DisplayMenu(menu, client, MENU_TIME_FOREVER);
-}
-
-public int panel_HandleDebugActionMenu(Menu menu, MenuAction action, int client, int item)
-{
-    if (action == MenuAction_Select)
-    {
-        char info[32];
-        GetMenuItem(menu, item, info, sizeof(info));
-        if (StrEqual(info, "stats"))
-        {
-            panel_DebugModifyStats(client);
-        }
-        else if (StrEqual(info, "team"))
-        {
-            panel_DebugChangeTeam(client);
-        }
-        else if (StrEqual(info, "class"))
-        {
-            panel_DebugChangeClass(client);
-        }
-        else if (StrEqual(info, "perk"))
-        {
-            // TODO: Implement perk change menu
-        }
-    }
-    else if (action == MenuAction_End)
-    {
-        CloseHandle(menu);
-    }
-    return 0;
-}
-
-public void panel_DebugChangeTeam(int client)
-{
-    Menu menu = CreateMenu(panel_HandleDebugChangeTeam);
-    char title[128];
-    Format(title, sizeof(title), "%T", "ZF_Debug_Change_Team", client);
-    SetMenuTitle(menu, title);
-    SetMenuExitButton(menu, true);
-
-    AddMenuItem(menu, "2", "Survivor");
-    AddMenuItem(menu, "3", "Zombie");
-    AddMenuItem(menu, "1", "Spectator");
-
-    DisplayMenu(menu, client, MENU_TIME_FOREVER);
-}
-
-public int panel_HandleDebugChangeTeam(Menu menu, MenuAction action, int client, int item)
-{
-    if (action == MenuAction_Select)
-    {
-        char info[32];
-        GetMenuItem(menu, item, info, sizeof(info));
-        int team   = StringToInt(info);
-        int target = g_iDebugTarget[client];
-        if (team == surTeam())
-            spawnClient(target, surTeam());
-        else if (team == zomTeam())
-            spawnClient(target, zomTeam());
-        else
-            ChangeClientTeam(target, team);
-    }
-    else if (action == MenuAction_End)
-    {
-        CloseHandle(menu);
-    }
-    return 0;
-}
-
-public void panel_DebugChangeClass(int client)
-{
-    Menu menu = CreateMenu(panel_HandleDebugChangeClass);
-    char title[128];
-    Format(title, sizeof(title), "%T", "ZF_Debug_Change_Class", client);
-    SetMenuTitle(menu, title);
-    SetMenuExitButton(menu, true);
-
-    if (isSur(g_iDebugTarget[client]))
-    {
-        AddMenuItem(menu, "soldier", "Soldier");
-        AddMenuItem(menu, "pyro", "Pyro");
-        AddMenuItem(menu, "demoman", "Demoman");
-        AddMenuItem(menu, "engineer", "Engineer");
-        AddMenuItem(menu, "medic", "Medic");
-        AddMenuItem(menu, "sniper", "Sniper");
-    }
-    else if (isZom(g_iDebugTarget[client]))
-    {
-        AddMenuItem(menu, "scout", "Scout");
-        AddMenuItem(menu, "heavyweapons", "Heavy");
-        AddMenuItem(menu, "spy", "Spy");
-    }
-
-    DisplayMenu(menu, client, MENU_TIME_FOREVER);
-}
-
-// --- Start of Debug Stat Modification Menus ---
-
-// This is an assumption as perk_structs.inc is not available.
-// Based on HUD code, there are at least 4 stats.
-#if !defined TOTAL_ZFSTATS
-    #define TOTAL_ZFSTATS 4
-enum ZFStat
-{
-    ZFStatAtt,
-    ZFStatDef,
-    ZFStatCrit,
-    ZFStatSpeed
-};
-#endif
-
-stock void GetStatNameFromEnum(ZFStat stat, char[] buffer, int maxlen)
-{
-    switch (stat)
-    {
-        case ZFStatAtt:
-        {
-            strcopy(buffer, maxlen, "Attack");
-        }
-        case ZFStatDef:
-        {
-            strcopy(buffer, maxlen, "Defense");
-        }
-        case ZFStatCrit:
-        {
-            strcopy(buffer, maxlen, "Critical Hit");
-        }
-        case ZFStatSpeed:
-        {
-            strcopy(buffer, maxlen, "Speed");
-        }
-        default:
-        {
-            strcopy(buffer, maxlen, "Unknown Stat");
-        }
-    }
-}
-
-public void panel_DebugModifyStats(int client)
-{
-    Menu menu = CreateMenu(panel_HandleDebugModifyStats);
-    char title[128];
-    Format(title, sizeof(title), "%T", "ZF_Debug_Modify_Stats", client);
-    SetMenuTitle(menu, title);
-    SetMenuExitButton(menu, false);
-
-    char statName[64];
-    char statIndexStr[4];
-    for (int i = 0; i < TOTAL_ZFSTATS; i++)
-    {
-        GetStatNameFromEnum(view_as<ZFStat>(i), statName, sizeof(statName));
-        IntToString(i, statIndexStr, sizeof(statIndexStr));
-        AddMenuItem(menu, statIndexStr, statName);
-    }
-
-    AddMenuItem(menu, "back", "Back");
-    DisplayMenu(menu, client, MENU_TIME_FOREVER);
-}
-
-public int panel_HandleDebugModifyStats(Menu menu, MenuAction action, int client, int item)
-{
-    if (action == MenuAction_Select)
-    {
-        char info[32];
-        GetMenuItem(menu, item, info, sizeof(info));
-        if (StrEqual(info, "back"))
-        {
-            panel_DebugActionMenu(client);
-        }
-        else
-        {
-            g_iDebugStat[client] = view_as<ZFStat>(StringToInt(info));
-            panel_DebugModifyStatValue(client);
-        }
-    }
-    else if (action == MenuAction_End)
-    {
-        CloseHandle(menu);
-    }
-    return 0;
-}
-
-public void panel_DebugModifyStatValue(int client)
-{
-    Menu menu = CreateMenu(panel_HandleDebugModifyStatValue);
-
-    char title[128];
-    char statName[64];
-    char targetName[MAX_NAME_LENGTH];
-    GetClientName(g_iDebugTarget[client], targetName, sizeof(targetName));
-    GetStatNameFromEnum(view_as<ZFStat>(g_iDebugStat[client]), statName, sizeof(statName));
-
-    Format(title, sizeof(title), "Modify %s for %s", statName, targetName);
-    SetMenuTitle(menu, title);
-    SetMenuExitButton(menu, false);
-
-    AddMenuItem(menu, "100", "+100");
-    AddMenuItem(menu, "10", "+10");
-    AddMenuItem(menu, "1", "+1");
-    AddMenuItem(menu, "-1", "-1");
-    AddMenuItem(menu, "-10", "-10");
-    AddMenuItem(menu, "-100", "-100");
-    AddMenuItem(menu, "back", "Back");
-
-    DisplayMenu(menu, client, MENU_TIME_FOREVER);
-}
-
-public int panel_HandleDebugModifyStatValue(Menu menu, MenuAction action, int client, int item)
-{
-    if (action == MenuAction_Select)
-    {
-        char info[32];
-        GetMenuItem(menu, item, info, sizeof(info));
-
-        if (StrEqual(info, "back"))
-        {
-            panel_DebugModifyStats(client);
-        }
-        else
-        {
-            int    value  = StringToInt(info);
-            int    target = g_iDebugTarget[client];
-            ZFStat stat   = view_as<ZFStat>(g_iDebugStat[client]);
-
-            addStat(target, stat, ZFStatTypePerm, value);
-
-            // Re-display the menu to show it was successful and allow more changes
-            panel_DebugModifyStatValue(client);
-        }
-    }
-    else if (action == MenuAction_End)
-    {
-        CloseHandle(menu);
-    }
-    return 0;
-}
-
 // ====================================================================================================
 //
 // CSV Logging
@@ -2987,22 +1897,4 @@ public void LogAndResetSession(int client)
     g_iSessionKills[client] = 0;
     g_iSessionAssists[client] = 0;
     g_iSessionDeaths[client] = 0;
-}
-
-// --- End of Debug Stat Modification Menus ---
-public int panel_HandleDebugChangeClass(Menu menu, MenuAction action, int client, int item)
-{
-    if (action == MenuAction_Select)
-    {
-        char info[32];
-        GetMenuItem(menu, item, info, sizeof(info));
-        int target = g_iDebugTarget[client];
-        TF2_SetPlayerClass(target, TF2_GetClass(info));
-        TF2_RespawnPlayer(target);
-    }
-    else if (action == MenuAction_End)
-    {
-        CloseHandle(menu);
-    }
-    return 0;
 }

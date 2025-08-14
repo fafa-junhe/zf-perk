@@ -21,16 +21,14 @@
 // Defines from all_perks.md
 #define ZF_VAMPIRIC_LIFESTEAL_RATIO 0.6  // 50% of damage dealt is returned as health
 #define ZF_VAMPIRIC_REGEN 10             // Health regenerated per second
-#define ZF_VAMPIRIC_DEFEND 10
+#define ZF_VAMPIRIC_DEFEND -10
 
 methodmap VampiricPerk < ZombieBasePerk {
     public VampiricPerk(int client) {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         VampiricPerk sm = view_as<VampiricPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, VampiricPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, VampiricPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, VampiricPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, VampiricPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEAL_DAMAGE_POST, VampiricPerkFonDealDamagePost);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, VampiricPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, VampiricPerkFupdateClientPermStats);
@@ -53,6 +51,11 @@ FUNCTION(VampiricPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(VampiricPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "VampiricPerk_desc");
+}
+
+FUNCTION_INT(VampiricPerk, getCategory))
+{
+    return 2;
 }
 
 FUNCTION(VampiricPerk, updateClientPermStats)) {

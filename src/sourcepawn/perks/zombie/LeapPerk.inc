@@ -36,9 +36,7 @@ public     LeapPerk(int client)
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         LeapPerk       sm      = view_as<LeapPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, LeapPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, LeapPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, LeapPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, LeapPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, LeapPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE_POST, LeapPerkFonTakeDamagePost);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, LeapPerkFonCallForMedic);
@@ -88,6 +86,11 @@ FUNCTION(LeapPerk, getShortdesc), char[] buffer, int maxlen)
 FUNCTION(LeapPerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "LeapPerk_desc");
+}
+
+FUNCTION_INT(LeapPerk, getCategory))
+{
+    return 5;
 }
 
 FUNCTION(LeapPerk, updateClientPermStats))

@@ -29,9 +29,7 @@ public     HeroicPerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         HeroicPerk       sm      = view_as<HeroicPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, HeroicPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, HeroicPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, HeroicPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, HeroicPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, HeroicPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, HeroicPerkFonKill);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_ASSIST_KILL, HeroicPerkFonAssistKill);
@@ -59,6 +57,11 @@ FUNCTION(HeroicPerk, getShortdesc), char[] buffer, int maxlen)
 FUNCTION(HeroicPerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "HeroicPerk_desc");
+}
+
+FUNCTION_INT(HeroicPerk, getCategory))
+{
+    return 1;
 }
 
 FUNCTION(HeroicPerk, updateClientPermStats))

@@ -29,9 +29,7 @@ methodmap ScorchingPerk < ZombieBasePerk {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         ScorchingPerk sm = view_as<ScorchingPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, ScorchingPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, ScorchingPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, ScorchingPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, ScorchingPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, ScorchingPerkFupdatePermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, ScorchingPerkFonTakeDamage);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE_POST, ScorchingPerkFonTakeDamagePost);
@@ -59,6 +57,12 @@ FUNCTION(ScorchingPerk, getShortdesc), char[] buffer, int maxlen) {
 FUNCTION(ScorchingPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "ScorchingPerk_desc");
 }
+
+FUNCTION_INT(ScorchingPerk, getCategory))
+{
+    return 1;
+}
+
 
 FUNCTION(ScorchingPerk, updatePermStats)) {
     addStat(_inst.client, ZFStatSpeed, ZFStatTypePerm, ZF_SCORCHING_SPEED);

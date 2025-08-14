@@ -32,9 +32,7 @@ methodmap OverlordPerk < ZombieBasePerk {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         OverlordPerk sm = view_as<OverlordPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, OverlordPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, OverlordPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, OverlordPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, OverlordPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, OverlordPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, OverlordPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, OverlordPerkFonCallForMedic);
@@ -97,6 +95,11 @@ FUNCTION(OverlordPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(OverlordPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "OverlordPerk_desc");
+}
+
+FUNCTION_INT(OverlordPerk, getCategory))
+{
+    return 3;
 }
 
 FUNCTION(OverlordPerk, updateClientPermStats)) {

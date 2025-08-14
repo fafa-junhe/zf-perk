@@ -37,9 +37,7 @@ methodmap HunterPerk < ZombieBasePerk {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         HunterPerk sm = view_as<HunterPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, HunterPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, HunterPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, HunterPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, HunterPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, HunterPerkFonPlayerSpawn);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, HunterPerkFonDeath);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, HunterPerkFonCallForMedic);
@@ -103,16 +101,14 @@ FUNCTION(HunterPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "HunterPerk_desc");
 }
 
+FUNCTION_INT(HunterPerk, getCategory))
+{
+    return 5;
+}
+
 FUNCTION(HunterPerk, onPlayerSpawn)) {
     int client = _inst.client;
     _inst.placed_spawn = false;
-    
-    // Clean up the old spawn point entity if it exists
-    if (IsValidEdict(_inst.spawn_entity)) {
-        SDKUnhook(_inst.spawn_entity, SDKHook_OnTakeDamage, onSpawnPointTakeDamage);
-        AcceptEntityInput(_inst.spawn_entity, "Kill");
-        _inst.spawn_entity = -1;
-    }
 
     if (validAura(client)) {
         float spawn_pos[3];

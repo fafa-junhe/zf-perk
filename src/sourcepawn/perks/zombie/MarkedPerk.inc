@@ -34,9 +34,7 @@ methodmap MarkedPerk < ZombieBasePerk {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         MarkedPerk sm = view_as<MarkedPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, MarkedPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, MarkedPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, MarkedPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, MarkedPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_GRACE_END, MarkedPerkFonGraceEnd);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, MarkedPerkFonTakeDamage);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, MarkedPerkFupdateCondStats);
@@ -91,6 +89,12 @@ FUNCTION(MarkedPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(MarkedPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "MarkedPerk_desc");
+}
+
+
+FUNCTION_INT(MarkedPerk, getCategory))
+{
+    return 1;
 }
 
 

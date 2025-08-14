@@ -23,9 +23,7 @@ methodmap StaticFieldPerk < ZombieBasePerk {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         StaticFieldPerk sm = view_as<StaticFieldPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, StaticFieldPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, StaticFieldPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, StaticFieldPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, StaticFieldPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, StaticFieldPerkFonPlayerSpawn);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, StaticFieldPerkFonDeath);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, StaticFieldPerkFonRemove);
@@ -62,6 +60,11 @@ FUNCTION(StaticFieldPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(StaticFieldPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "StaticFieldPerk_desc");
+}
+
+FUNCTION_INT(StaticFieldPerk, getCategory))
+{
+    return 4;
 }
 
 FUNCTION(StaticFieldPerk, onPlayerSpawn)) {

@@ -21,9 +21,7 @@ public     ScavengerPerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         ScavengerPerk    sm      = view_as<ScavengerPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, ScavengerPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, ScavengerPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, ScavengerPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, ScavengerPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_AMMO_PICKUP, ScavengerPerkFonAmmoPickup);
 
         return sm;
@@ -48,6 +46,12 @@ FUNCTION(ScavengerPerk, getShortdesc), char[] buffer, int maxlen)
 FUNCTION(ScavengerPerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "ScavengerPerk_desc");
+}
+
+
+FUNCTION_INT(ScavengerPerk, getCategory))
+{
+    return 5;
 }
 
 // --- Vtable Functions

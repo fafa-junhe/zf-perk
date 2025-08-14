@@ -37,9 +37,7 @@ methodmap RoarPerk < ZombieBasePerk {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         RoarPerk sm = view_as<RoarPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, RoarPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, RoarPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, RoarPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, RoarPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, RoarPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, RoarPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, RoarPerkFupdateCondStats);
@@ -77,6 +75,11 @@ FUNCTION(RoarPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(RoarPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "RoarPerk_desc");
+}
+
+FUNCTION_INT(RoarPerk, getCategory))
+{
+    return 3;
 }
 
 FUNCTION(RoarPerk, onCallForMedic)) {

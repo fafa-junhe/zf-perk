@@ -30,9 +30,7 @@ public     CowardlyPerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         CowardlyPerk     sm      = view_as<CowardlyPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, CowardlyPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, CowardlyPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, CowardlyPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, CowardlyPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, CowardlyPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, CowardlyPerkFonTakeDamage);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, CowardlyPerkFupdateCondStats);
@@ -64,6 +62,11 @@ stock SurvivorBasePerk CowardlyPerkFnew(int client)
     return new CowardlyPerk(client);
 }
 
+FUNCTION_INT(CowardlyPerk, getCategory))
+{
+    return 2;
+}
+
 FUNCTION(CowardlyPerk, getName), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "Cowardly");
@@ -87,7 +90,7 @@ FUNCTION_FLOAT(CowardlyPerk, onTakeDamage), int victim, int attacker, int inflic
     }
     if (((_inst.perk_timer == 0)) && (validClient(attacker)) && (validZom(attacker)))
     {
-        if ((damagetype & (1 << 3)))
+        if ((damagetype & DMG_CLUB))
         {
             _inst.perk_timer = (ZF_COWARDLY_DURATION_SCARED + ZF_COWARDLY_DURATION_COOLDOWN);
             fxYikes(_inst.client);

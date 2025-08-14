@@ -23,9 +23,7 @@ methodmap VolatilePerk < ZombieBasePerk {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         VolatilePerk sm = view_as<VolatilePerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, VolatilePerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, VolatilePerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, VolatilePerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, VolatilePerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, VolatilePerkFonTakeDamage);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, VolatilePerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, VolatilePerkFonPeriodic);
@@ -75,6 +73,14 @@ FUNCTION(VolatilePerk, getShortdesc), char[] buffer, int maxlen) {
 FUNCTION(VolatilePerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "VolatilePerk_desc");
 }
+
+
+FUNCTION_INT(VolatilePerk, getCategory))
+{
+    return 1;
+}
+
+
 
 FUNCTION(VolatilePerk, onPlayerSpawn)) {
     _inst.energy = 0.0;

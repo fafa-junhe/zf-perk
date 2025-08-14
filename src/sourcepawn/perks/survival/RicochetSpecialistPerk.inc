@@ -26,10 +26,8 @@ public     RicochetSpecialistPerk(int client)
         SurvivorBasePerk       sm_base = new SurvivorBasePerk(client);
         RicochetSpecialistPerk sm      = view_as<RicochetSpecialistPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, RicochetSpecialistPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, RicochetSpecialistPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, RicochetSpecialistPerkFgetDesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE_POST, RicochetSpecialistPerkFonTakeDamagePost);
+        PERK_REGISTER_BASIC_INFO(sm, RicochetSpecialistPerk);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEAL_DAMAGE_POST, RicochetSpecialistPerkFonDealDamagePost);
 
         static bool s_bInitialized = false;
         if (!s_bInitialized)
@@ -62,6 +60,11 @@ FUNCTION(RicochetSpecialistPerk, getDesc), char[] buffer, int maxlen)
     strcopy(buffer, maxlen, "RicochetSpecialistPerk_desc");
 }
 
+FUNCTION_INT(RicochetSpecialistPerk, getCategory))
+{
+    return 1;
+}
+
 // Use an unused damage type to mark our bounced damage and prevent recursive triggers.
 #define DMG_RICOCHET DMG_PREVENT_PHYSICS_FORCE
 
@@ -69,10 +72,10 @@ FUNCTION(RicochetSpecialistPerk, getDesc), char[] buffer, int maxlen)
  * This is the entry point for the ricochet effect.
  * It only triggers on the player's direct bullet hits, not from the bounced damage itself.
  */
-FUNCTION(RicochetSpecialistPerk, onTakeDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype)
+FUNCTION(RicochetSpecialistPerk, onDealDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype)
 {
     // This perk only applies to the owner, hitting a zombie, with a bullet, and not already a ricochet.
-    if (attacker != _inst.client || !isZom(victim) || !(damagetype & DMG_CLUB) || (damagetype & DMG_RICOCHET))
+    if (attacker != _inst.client || !isZom(victim) || (damagetype & DMG_RICOCHET))
     {
         return;
     }
@@ -129,6 +132,10 @@ public Action Ricochet_Chain(Handle timer, DataPack hPack)
     if (!validClient(victim) || !IsPlayerAlive(victim))
     {
         return Plugin_Stop;    // Target is no longer valid, stop the chain.
+    }
+    if (!validClient(attacker))
+    {
+        return Plugin_Stop;    // Attacker is no longer valid, stop the chain.
     }
 
     // --- Visuals & Sound ---

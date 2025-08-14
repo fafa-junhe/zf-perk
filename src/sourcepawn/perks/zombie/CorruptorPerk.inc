@@ -29,9 +29,7 @@ public     CorruptorPerk(int client)
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         CorruptorPerk  sm      = view_as<CorruptorPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, CorruptorPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, CorruptorPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, CorruptorPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, CorruptorPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, CorruptorPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_BUILDING_TAKE_DAMAGE, CorruptorPerkFonBuildingTakeDamage);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, CorruptorPerkFupdateCondStats);
@@ -111,6 +109,11 @@ FUNCTION(CorruptorPerk, getShortdesc), char[] buffer, int maxlen)
 FUNCTION(CorruptorPerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "CorruptorPerk_desc");
+}
+
+FUNCTION_INT(CorruptorPerk, getCategory))
+{
+    return 3;
 }
 
 FUNCTION(CorruptorPerk, updateClientPermStats))

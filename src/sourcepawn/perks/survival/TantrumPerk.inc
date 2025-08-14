@@ -26,9 +26,7 @@ public     TantrumPerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         TantrumPerk      sm      = view_as<TantrumPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, TantrumPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, TantrumPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, TantrumPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, TantrumPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, TantrumPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, TantrumPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, TantrumPerkFupdateCondStats);
@@ -74,6 +72,11 @@ FUNCTION(TantrumPerk, getShortdesc), char[] buffer, int maxlen)
 FUNCTION(TantrumPerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "TantrumPerk_desc");
+}
+
+FUNCTION_INT(TantrumPerk, getCategory))
+{
+    return 1;
 }
 
 FUNCTION(TantrumPerk, onCallForMedic))

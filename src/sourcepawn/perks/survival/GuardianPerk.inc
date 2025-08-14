@@ -28,9 +28,7 @@ public     GuardianPerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         GuardianPerk     sm      = view_as<GuardianPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, GuardianPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, GuardianPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, GuardianPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, GuardianPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, GuardianPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, GuardianPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, GuardianPerkFonPlayerSpawn);
@@ -114,6 +112,11 @@ FUNCTION(GuardianPerk, getShortdesc), char[] buffer, int maxlen)
 FUNCTION(GuardianPerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "GuardianPerk_desc");
+}
+
+FUNCTION_INT(GuardianPerk, getCategory))
+{
+    return 2;
 }
 
 FUNCTION(GuardianPerk, onPlayerSpawn))

@@ -14,6 +14,7 @@ methodmap SurvivorBasePerk < BasePerk {
         SurvivorBasePerk sm = view_as<SurvivorBasePerk>(sm_base);
 
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, SurvivorBasePerkFgetName);
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_CATEGORY, SurvivorBasePerkFgetCategory);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CHARITABLE_GIFT_TOUCHED, SurvivorBasePerkFonCharitableGiftTouched);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEAL_DAMAGE_POST, SurvivorBasePerkFonDealDamagePost);
 
@@ -32,6 +33,10 @@ stock BasePerk SurvivorBasePerkFnew(int client) {
 
 FUNCTION(SurvivorBasePerk, getName), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "Unselected");
+}
+
+FUNCTION_INT(SurvivorBasePerk, getCategory)) {
+    return 0;
 }
 
 

@@ -26,9 +26,7 @@ public     GamblerPerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         GamblerPerk      sm      = view_as<GamblerPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, GamblerPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, GamblerPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, GamblerPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, GamblerPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, GamblerPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALC_IS_ATTACK_CRITICAL, GamblerPerkFonCalcIsAttackCritical);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, GamblerPerkFonKill);
@@ -59,6 +57,11 @@ FUNCTION(GamblerPerk, getShortdesc), char[] buffer, int maxlen)
 FUNCTION(GamblerPerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "GamblerPerk_desc");
+}
+
+FUNCTION_INT(GamblerPerk, getCategory))
+{
+    return 1;
 }
 
 FUNCTION(GamblerPerk, onPlayerSpawn))

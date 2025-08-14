@@ -30,9 +30,7 @@ public     TrapperPerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         TrapperPerk      sm      = view_as<TrapperPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, TrapperPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, TrapperPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, TrapperPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, TrapperPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, TrapperPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, TrapperPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, TrapperPerkFonDeath);
@@ -61,6 +59,12 @@ FUNCTION(TrapperPerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "TrapperPerk_desc");
 }
+
+FUNCTION_INT(TrapperPerk, getCategory))
+{
+    return 3;
+}
+
 FUNCTION(TrapperPerk, updateCondStats), char[] buffer, int maxlen)
 {
     int client = _inst.client;
@@ -220,7 +224,7 @@ FUNCTION(TrapperPerk, onCallForMedic))
 
     float mineAng[3] = { 0.0, 0.0, 0.0 };    // 让地雷平躺，并朝向玩家看的方向
     mineAng[1]       = ang[1];
-    int entity       = fxCreateModelStatic(ZFMDL_MINE, client, true, true, finalPos, mineAng);
+    int entity       = fxCreateModelStatic(ZFMDL_MINE, client, true, false, finalPos, mineAng);
     if (entity != -1)
     {
         zf_item[client][itemIndex] = entity;

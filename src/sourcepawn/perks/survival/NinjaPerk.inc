@@ -46,9 +46,7 @@ public     NinjaPerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         NinjaPerk        sm      = view_as<NinjaPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, NinjaPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, NinjaPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, NinjaPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, NinjaPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_RUN_CMD, NinjaPerkFonPlayerRunCmd);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, NinjaPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, NinjaPerkFonPeriodic);
@@ -212,6 +210,13 @@ FUNCTION(NinjaPerk, getShortdesc), char[] buffer, int maxlen)
 FUNCTION(NinjaPerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "NinjaPerk_desc");
+}
+
+
+
+FUNCTION_INT(NinjaPerk, getCategory))
+{
+    return 5;
 }
 
 FUNCTION(NinjaPerk, updateClientPermStats))

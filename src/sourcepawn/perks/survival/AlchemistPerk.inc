@@ -35,9 +35,7 @@ public     AlchemistPerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         AlchemistPerk    sm      = view_as<AlchemistPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, AlchemistPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, AlchemistPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, AlchemistPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, AlchemistPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, AlchemistPerkFonPlayerSpawn);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, AlchemistPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, AlchemistPerkFonCallForMedic);
@@ -86,6 +84,11 @@ FUNCTION(AlchemistPerk, getShortdesc), char[] buffer, int maxlen)
 FUNCTION(AlchemistPerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "AlchemistPerk_desc");
+}
+
+FUNCTION_INT(AlchemistPerk, getCategory))
+{
+    return 3;
 }
 
 FUNCTION(AlchemistPerk, onPlayerSpawn))

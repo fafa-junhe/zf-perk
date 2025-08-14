@@ -28,9 +28,7 @@ methodmap MagneticPerk < ZombieBasePerk {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         MagneticPerk sm = view_as<MagneticPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, MagneticPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, MagneticPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, MagneticPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, MagneticPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, MagneticPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, MagneticPerkFonRemove);
 
@@ -52,6 +50,11 @@ FUNCTION(MagneticPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(MagneticPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "MagneticPerk_desc");
+}
+
+FUNCTION_INT(MagneticPerk, getCategory))
+{
+    return 4;
 }
 
 FUNCTION(MagneticPerk, onPeriodic)) {

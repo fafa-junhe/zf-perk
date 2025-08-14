@@ -30,9 +30,7 @@ methodmap HorrifyingPerk < ZombieBasePerk {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         HorrifyingPerk sm = view_as<HorrifyingPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, HorrifyingPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, HorrifyingPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, HorrifyingPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, HorrifyingPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, HorrifyingPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEAL_DAMAGE_POST, HorrifyingPerkFonDealDamagePost);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, HorrifyingPerkFonRemove);
@@ -55,6 +53,11 @@ FUNCTION(HorrifyingPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(HorrifyingPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "HorrifyingPerk_desc");
+}
+
+FUNCTION_INT(HorrifyingPerk, getCategory))
+{
+    return 3;
 }
 
 FUNCTION(HorrifyingPerk, updateClientPermStats)) {

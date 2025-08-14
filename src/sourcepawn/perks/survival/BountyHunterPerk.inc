@@ -35,9 +35,7 @@ public     BountyHunterPerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         BountyHunterPerk sm      = view_as<BountyHunterPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, BountyHunterPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, BountyHunterPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, BountyHunterPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, BountyHunterPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, BountyHunterPerkFonKill);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, BountyHunterPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, BountyHunterPerkFonPeriodic);
@@ -180,6 +178,21 @@ FUNCTION(BountyHunterPerk, onKill), int victim, int killer, int assist, int infl
     }
 }
 
+FUNCTION_INT(BountyHunterPerk, getCategory))
+{
+    return 1;
+}
+
+FUNCTION(BountyHunterPerk, updateCondStats), char[] buffer, int maxlen) {
+    if (_inst.cooldown_timer > 0)
+    {
+        Format(buffer, maxlen, "%t", "BountyHunterPerk_Status_Cooldown", _inst.cooldown_timer);
+    }
+    else {
+        Format(buffer, maxlen, "%t", "BountyHunterPerk_Status_Ready");
+    }
+
+}
 FUNCTION(BountyHunterPerk, OnGameFrame))
 {
     int client = _inst.client;
@@ -245,13 +258,5 @@ FUNCTION(BountyHunterPerk, OnGameFrame))
         }
     }
 
-    if (_inst.cooldown_timer > 0)
-    {
-        char buffer[64];
-        Format(buffer, sizeof(buffer), "%t", "BountyHunterPerk_Status_Cooldown", _inst.cooldown_timer);
-    }
-    else {
-        char buffer[64];
-        Format(buffer, sizeof(buffer), "%t", "BountyHunterPerk_Status_Ready");
-    }
+    
 }

@@ -21,9 +21,7 @@ methodmap AthleticPerk < SurvivorBasePerk {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         AthleticPerk sm = view_as<AthleticPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, AthleticPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, AthleticPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, AthleticPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, AthleticPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, AthleticPerkFupdateClientPermStats);
 
         return sm;
@@ -34,6 +32,10 @@ stock SurvivorBasePerk AthleticPerkFnew(int client) {
     return new AthleticPerk(client);
 }
 
+FUNCTION_INT(AthleticPerk, getCategory))
+{
+    return 5;
+}
 
 FUNCTION(AthleticPerk, getName), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "Athletic");

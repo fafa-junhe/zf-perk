@@ -43,9 +43,7 @@ methodmap CombustiblePerk < ZombieBasePerk {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         CombustiblePerk sm = view_as<CombustiblePerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, CombustiblePerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, CombustiblePerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, CombustiblePerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, CombustiblePerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, CombustiblePerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEATH, CombustiblePerkFonDeath);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, CombustiblePerkFupdateCondStats);
@@ -70,6 +68,11 @@ FUNCTION(CombustiblePerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(CombustiblePerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "CombustiblePerk_desc");
+}
+
+FUNCTION_INT(CombustiblePerk, getCategory))
+{
+    return 1;
 }
 
 FUNCTION(CombustiblePerk, updateClientPermStats)) {

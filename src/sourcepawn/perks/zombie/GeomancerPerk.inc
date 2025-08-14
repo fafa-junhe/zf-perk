@@ -32,9 +32,7 @@ methodmap GeomancerPerk < ZombieBasePerk {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         GeomancerPerk sm = view_as<GeomancerPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, GeomancerPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, GeomancerPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, GeomancerPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, GeomancerPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, GeomancerPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, GeomancerPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, GeomancerPerkFonPeriodic);
@@ -85,6 +83,11 @@ FUNCTION(GeomancerPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(GeomancerPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "GeomancerPerk_desc");
+}
+
+FUNCTION_INT(GeomancerPerk, getCategory))
+{
+    return 3;
 }
 
 FUNCTION(GeomancerPerk, updateClientPermStats)) {

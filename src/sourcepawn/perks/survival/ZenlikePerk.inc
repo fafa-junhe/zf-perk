@@ -15,7 +15,7 @@
 #include "../../perk_macros.inc"
 
 #define ZF_ZENLIKE_CRIT_INC 6
-#define ZF_ZENLIKE_CRIT_DEC 25
+#define ZF_ZENLIKE_CRIT_DEC 35
 #define ZF_ZENLIKE_HEAL     1
 #define ZF_ZENLIKE_REGEN    1
 
@@ -27,9 +27,7 @@ public     ZenlikePerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         ZenlikePerk      sm      = view_as<ZenlikePerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, ZenlikePerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, ZenlikePerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, ZenlikePerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, ZenlikePerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, ZenlikePerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALC_IS_ATTACK_CRITICAL, ZenlikePerkFonCalcIsAttackCritical);
 
@@ -57,11 +55,16 @@ FUNCTION(ZenlikePerk, getDesc), char[] buffer, int maxlen)
     strcopy(buffer, maxlen, "ZenlikePerk_desc");
 }
 
+FUNCTION_INT(ZenlikePerk, getCategory))
+{
+    return 1;
+}
+
 FUNCTION(ZenlikePerk, updateCondStats), char[] buffer, int maxlen)
 {
     int client = _inst.client;
 
-    if (isGrounded(client) && isCrouching(client) && isNotMoving(client))
+    if (isGrounded(client) && isCrouching(client))
     {
         zf_perkState[client] = min(100, zf_perkState[client] + ZF_ZENLIKE_CRIT_INC);
         if (!getCond(client, ZFCondPoisoned))

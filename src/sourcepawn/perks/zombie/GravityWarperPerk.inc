@@ -24,9 +24,7 @@ methodmap GravityWarperPerk < ZombieBasePerk {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         GravityWarperPerk sm = view_as<GravityWarperPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, GravityWarperPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, GravityWarperPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, GravityWarperPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, GravityWarperPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, GravityWarperPerkFonPlayerSpawn);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, GravityWarperPerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, GravityWarperPerkFupdateClientPermStats);
@@ -76,6 +74,11 @@ FUNCTION(GravityWarperPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(GravityWarperPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "GravityWarperPerk_desc");
+}
+
+FUNCTION_INT(GravityWarperPerk, getCategory))
+{
+    return 4;
 }
 
 FUNCTION(GravityWarperPerk, onPlayerSpawn)) {

@@ -26,9 +26,7 @@ public     MountaineerPerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         MountaineerPerk  sm      = view_as<MountaineerPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, MountaineerPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, MountaineerPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, MountaineerPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, MountaineerPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE_POST, MountaineerPerkFonTakeDamagePost);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_RUN_CMD, MountaineerPerkFonPlayerRunCmd);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, MountaineerPerkFonCallForMedic);
@@ -96,6 +94,11 @@ FUNCTION(MountaineerPerk, getDesc), char[] buffer, int maxlen)
     strcopy(buffer, maxlen, "MountaineerPerk_desc");
 }
 
+
+FUNCTION_INT(MountaineerPerk, getCategory))
+{
+    return 5;
+}
 
 FUNCTION(MountaineerPerk, onTakeDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype)
 {

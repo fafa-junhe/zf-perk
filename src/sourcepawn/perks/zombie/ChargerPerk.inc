@@ -40,9 +40,7 @@ public     ChargerPerk(int client)
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         ChargerPerk    sm      = view_as<ChargerPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, ChargerPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, ChargerPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, ChargerPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, ChargerPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, ChargerPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, ChargerPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, ChargerPerkFonPeriodic);
@@ -166,6 +164,15 @@ public bool TraceFilterCharger(int entity, int contentsMask, any data)
 
     if (entity > 0 && entity <= MaxClients)
         return false;
+    
+    char classname[64];
+    if (IsValidEdict(entity) && GetEdictClassname(entity, classname, sizeof(classname)))
+    {
+        if (StrContains(classname, "tf_projectile_", false) != -1)
+        {
+            return false;
+        }
+    }
 
     return true;
 }
@@ -186,6 +193,11 @@ FUNCTION(ChargerPerk, getShortdesc), char[] buffer, int maxlen)
 FUNCTION(ChargerPerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "ChargerPerk_desc");
+}
+
+FUNCTION_INT(ChargerPerk, getCategory))
+{
+    return 1;
 }
 
 FUNCTION(ChargerPerk, updateClientPermStats))

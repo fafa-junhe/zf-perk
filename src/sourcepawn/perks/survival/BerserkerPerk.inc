@@ -21,9 +21,7 @@ methodmap BerserkerPerk < SurvivorBasePerk {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         BerserkerPerk sm = view_as<BerserkerPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, BerserkerPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, BerserkerPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, BerserkerPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, BerserkerPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, BerserkerPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, BerserkerPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEAL_DAMAGE_POST, BerserkerPerkFonDealDamagePost);
@@ -60,6 +58,11 @@ FUNCTION(BerserkerPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(BerserkerPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "BerserkerPerk_desc");
+}
+
+FUNCTION_INT(BerserkerPerk, getCategory))
+{
+    return 1;
 }
 
 FUNCTION(BerserkerPerk, updateClientPermStats)) {

@@ -30,9 +30,7 @@ public     TurtlePerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         TurtlePerk       sm      = view_as<TurtlePerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, TurtlePerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, TurtlePerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, TurtlePerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, TurtlePerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, TurtlePerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, TurtlePerkFonTakeDamage);
 
@@ -58,6 +56,11 @@ FUNCTION(TurtlePerk, getShortdesc), char[] buffer, int maxlen)
 FUNCTION(TurtlePerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "TurtlePerk_desc");
+}
+
+FUNCTION_INT(TurtlePerk, getCategory))
+{
+    return 2;
 }
 
 FUNCTION(TurtlePerk, updateClientPermStats))

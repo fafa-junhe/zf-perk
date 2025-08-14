@@ -16,10 +16,13 @@
 #include <tf2>
 #include <tf2_stocks>
 
+#include <tf2items>
 int      zf_menuPerk[MAXPLAYERS + 1];
 int      zf_menuPerkListPage[MAXPLAYERS + 1];
 
 BasePerk g_hPerks[MAXPLAYERS + 1];
+// Forward declaration for function in main plugin file
+forward void LogAndResetSession(int client);
 
 // State
 int      zf_frameCounter;
@@ -58,6 +61,7 @@ int      zf_aura[MAXPLAYERS + 1];
 #define ICON_ANC 1
 int zf_icon[MAXPLAYERS + 1][2];
 #include "perk_structs.inc"
+#define ZF_PERK_NONE 0
 
 int                            zf_item[MAXPLAYERS + 1][MAX_ITEMS];
 ArrayList                      g_SurPerkTypes;
@@ -73,6 +77,7 @@ ArrayList                      g_ZomPerkCreators;
 #include "zf_util_base.inc"
 #include "zf_util_fx.inc"
 #include "zf_util_pref.inc"
+#include "zf_util_bot.inc"
 #include "zf_zombie_visuals.inc"
 #include "perks/zombie/MarkedPerk.inc"
 #include "perks/zombie/SwarmingPerk.inc"
@@ -82,7 +87,6 @@ int zf_perkAlphaMaster[MAXPLAYERS + 1];    // 记录每个僵尸的主控者（�
 //
 // Perk Objects
 //
-#define ZF_PERK_NONE 0
 
 #include "perks/BasePerk.inc"
 #include "perks/Registraion.inc"
@@ -98,7 +102,6 @@ stock int GetTotalZomPerks()
 {
     return g_ZomPerkTypes.Length;
 }
-
 
 // CVARS
 Handle     hCvarCripple;
@@ -1138,7 +1141,6 @@ stock bool isClientPerkNameEquals(int client, const char[] name)
     return StrEqual(perkName, name, false);
 }
 
-
 ////////////////////////////////////////////////////////////
 //
 // Perk Logic Helpers
@@ -1743,15 +1745,13 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
     // ZF_LogDebug("OnPlayerRunCmd: client=%d", client); // Spammy
     int prevButtons = buttons;
 
+    if (IsFakeClient(client))
+    {
+        bot_onPlayerRunCmd(client, buttons, impulse, vel, angles, weapon);
+    }
     if (g_hPerks[client] != null)
     {
         g_hPerks[client].onPlayerRunCmd(buttons, impulse, vel, angles, weapon);
-    }
-    if (isSur(client))
-    {
-    }
-    else if (isZom(client))
-    {
     }
 
     // Save buttons for next call.
@@ -1863,8 +1863,6 @@ public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float
     {
         return Plugin_Continue;
     }
-
-    
 
     if (damage != originalDamage)
     {
@@ -1993,7 +1991,7 @@ public void perk_OnPlayerSpawn(int client)
             {
                 if ((js & ZF_JOINSTATE_SUR) == 0)
                 {
-                    panel_PrintSurPerkList(client, true);
+                    panel_PrintPerkList(client, false);
                     prefSet(client, JoinState, (js | ZF_JOINSTATE_SUR));
                 }
             }
@@ -2001,7 +1999,7 @@ public void perk_OnPlayerSpawn(int client)
             {
                 if ((js & ZF_JOINSTATE_ZOM) == 0)
                 {
-                    panel_PrintZomPerkList(client, true);
+                    panel_PrintPerkList(client, true);
                     prefSet(client, JoinState, (js | ZF_JOINSTATE_ZOM));
                 }
             }
@@ -2010,10 +2008,14 @@ public void perk_OnPlayerSpawn(int client)
         //
         // Change perks if they were not selected during current game mode.
         //
-        if (IsFakeClient(client) || prefGet(client, PerkSelectMode) != zf_perkMode)
+        if (IsFakeClient(client))
+        {
+            bot_AutoSelectPerk(client);
+        }
+        else if (prefGet(client, PerkSelectMode) != zf_perkMode)
         {
             // If client is a bot, force random perk mode (1). Otherwise, use server's perk mode.
-            int mode = IsFakeClient(client) ? 1 : zf_perkMode;
+            int mode = zf_perkMode;
 
             //
             // Clear perks.
@@ -2118,7 +2120,7 @@ public void perk_OnPlayerSpawn(int client)
             if (teamChange || (nextPerk != prefGet(client, SurPerk)))
             {
                 perkChange = true;
-                LogAndResetSession(client); // 在更换Perk前记录数据
+                LogAndResetSession(client);    // 在更换Perk前记录数据
                 prefSet(client, SurPerk, nextPerk);
             }
             prefSet(client, SurPendPerk, nextPerk);
@@ -2142,7 +2144,7 @@ public void perk_OnPlayerSpawn(int client)
             if (teamChange || (nextPerk != prefGet(client, ZomPerk)))
             {
                 perkChange = true;
-                LogAndResetSession(client); // 在更换Perk前记录数据
+                LogAndResetSession(client);    // 在更换Perk前记录数据
                 prefSet(client, ZomPerk, nextPerk);
             }
             prefSet(client, ZomPendPerk, nextPerk);
@@ -2164,7 +2166,8 @@ public void perk_OnPlayerSpawn(int client)
                     EquipPlayerWeapon(client, weapon);
                 }
                 int weaponId = slotWeaponId(client, 2);
-                if (weaponId == ZFWEAP_JARATE || weaponId == ZFWEAP_FESTIVE_JARATE){
+                if (weaponId == ZFWEAP_JARATE || weaponId == ZFWEAP_FESTIVE_JARATE)
+                {
                     Handle item2 = TF2Items_CreateItem(OVERRIDE_ALL);
                     TF2Items_SetItemIndex(item2, ZFWEAP_FESTIVE_JARATE);
                     TF2Items_SetClassname(item2, "tf_weapon_jar");

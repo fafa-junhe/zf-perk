@@ -25,9 +25,7 @@ methodmap StirCrazyPerk < SurvivorBasePerk {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         StirCrazyPerk sm = view_as<StirCrazyPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, StirCrazyPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, StirCrazyPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, StirCrazyPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, StirCrazyPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, StirCrazyPerkFonPlayerSpawn);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, StirCrazyPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, StirCrazyPerkFonKill);
@@ -52,6 +50,11 @@ FUNCTION(StirCrazyPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(StirCrazyPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "StirCrazyPerk_desc");
+}
+
+FUNCTION_INT(StirCrazyPerk, getCategory))
+{
+    return 1;
 }
 
 FUNCTION(StirCrazyPerk, onPlayerSpawn)) {

@@ -22,6 +22,7 @@ methodmap BasePerk < DataPack {
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, BasePerk_getName);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, BasePerk_getShortdesc);
         PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, BasePerk_getDesc);
+        PERK_REGISTER_VTABLE(sm, VTABLE_GET_CATEGORY, BasePerk_getCategory);
         sm.Position = view_as<DataPackPos>(PERK_DATA_CLIENT);
         sm.WriteCell(client);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_RUN_CMD, BasePerk_onPlayerRunCmd);
@@ -60,6 +61,13 @@ methodmap BasePerk < DataPack {
 
     public void getDesc(char[] buffer, int maxlen) {
         PERK_IMPL_GET_STRING(VTABLE_GET_LONG_DESC, buffer, maxlen);
+    }
+
+    public int getCategory() {
+        int ret;
+        START_VTABLE_CALL(VTABLE_GET_CATEGORY);
+        Call_Finish(ret);
+        return ret;
     }
 
     property int client {
@@ -195,6 +203,10 @@ public void BasePerk_getDesc(BasePerk _inst, char[] buffer, int maxlen) {
     {
         Format(buffer, maxlen, "%sPerk_desc", name);
     }
+}
+
+public int BasePerk_getCategory(BasePerk _inst) {
+    return 0;
 }
 
 public void BasePerk_onPlayerRunCmd(BasePerk _inst, int buttons, int impulse, float vel[3], float angles[3], int weapon) {

@@ -29,9 +29,7 @@ methodmap SelflessPerk < SurvivorBasePerk {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         SelflessPerk sm = view_as<SelflessPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, SelflessPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, SelflessPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, SelflessPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, SelflessPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, SelflessPerkFonTakeDamage);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, SelflessPerkFonPlayerSpawn);
 
@@ -55,6 +53,11 @@ FUNCTION(SelflessPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(SelflessPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "SelflessPerk_desc");
+}
+
+FUNCTION_INT(SelflessPerk, getCategory))
+{
+    return 1;
 }
 
 FUNCTION(SelflessPerk, onPlayerSpawn))

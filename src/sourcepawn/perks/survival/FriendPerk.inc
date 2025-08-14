@@ -58,9 +58,7 @@ public     FriendPerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         FriendPerk       sm      = view_as<FriendPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, FriendPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, FriendPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, FriendPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, FriendPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_GRACE_END, FriendPerkFonGraceEnd);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, FriendPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, FriendPerkFonKill);
@@ -95,6 +93,11 @@ FUNCTION(FriendPerk, getShortdesc), char[] buffer, int maxlen)
 FUNCTION(FriendPerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "FriendPerk_desc");
+}
+
+FUNCTION_INT(FriendPerk, getCategory))
+{
+    return 3;
 }
 
 void FriendPerk_doFriendSelect(FriendPerk perk, int friend = -1)

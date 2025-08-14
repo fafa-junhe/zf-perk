@@ -63,6 +63,13 @@
     (%0).Position = view_as<DataPackPos>(%1); \
     (%0).WriteFunction(%2)
 
+#define PERK_REGISTER_BASIC_INFO(%0,%1) \
+    PERK_REGISTER_VTABLE(%0, VTABLE_GET_NAME, %1FgetName); \
+    PERK_REGISTER_VTABLE(%0, VTABLE_GET_SHORT_DESC, %1FgetShortdesc); \
+    PERK_REGISTER_VTABLE(%0, VTABLE_GET_LONG_DESC, %1FgetDesc); \
+    PERK_REGISTER_VTABLE(%0, VTABLE_GET_CATEGORY, %1FgetCategory)
+    
+
 #define START_VTABLE_CALL(%0) \
     this.Position = view_as<DataPackPos>(%0); \
     Function func = this.ReadFunction(); \
@@ -180,6 +187,7 @@
  * FUNCTION(MyPerk, MyFunction), arg1, arg2) // for arguments
  */
 #define FUNCTION(%1,%2) public void %1F%2(%1 _inst
+#define FUNCTION_INT(%1,%2) public int %1F%2(%1 _inst
 #define FUNCTION_FLOAT(%1,%2) public float %1F%2(%1 _inst
 
 #define PERK_IMPL_onBuildingTakeDamage(%0,%1,%2,%3,%4,%5,%6,%7) \

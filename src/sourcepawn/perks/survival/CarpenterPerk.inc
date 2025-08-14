@@ -16,29 +16,44 @@
 #define CARPENTER_ATTACK               -40
 #define CARPENTER_DEFEND               25
 #define CARPENTER_BARRICADE_HEALTH     250
-#define CARPENTER_COOLDOWN             15
-#define CARPENTER_MAX_ITEMS            6
+#define CARPENTER_COOLDOWN             13
+#define CARPENTER_MAX_ITEMS            4
 #define CARPENTER_DROP_RADSQ_BARRICADE (250 * 250)
 #define CARPENTER_DROP_RADSQ_CLIENT    (150 * 150)
 
-float     g_fCarpenterCooldown[MAXPLAYERS + 1];
+#define CARPENTER_DATA_TIMER (PERK_DATA_START_INDEX + 0)
 
 methodmap CarpenterPerk < SurvivorBasePerk
 {
-
-public     CarpenterPerk(int client)
+    public CarpenterPerk(int client)
     {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         CarpenterPerk    sm      = view_as<CarpenterPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, CarpenterPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, CarpenterPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, CarpenterPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, CarpenterPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, CarpenterPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, CarpenterPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, CarpenterPerkFonCallForMedic);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, CarpenterPerkFonPeriodic);
+
+        sm.Position = view_as<DataPackPos>(CARPENTER_DATA_TIMER);
+        sm.WriteCell(0);
 
         return sm;
+    }
+
+    property int perk_timer
+    {
+        public get()
+        {
+            this.Position = view_as<DataPackPos>(CARPENTER_DATA_TIMER);
+            return this.ReadCell();
+        }
+        public set(int value)
+        {
+            this.Position = view_as<DataPackPos>(CARPENTER_DATA_TIMER);
+            this.WriteCell(value);
+        }
     }
 }
 
@@ -70,12 +85,11 @@ FUNCTION(CarpenterPerk, updateClientPermStats))
 
 FUNCTION(CarpenterPerk, updateCondStats), char[] buffer, int maxlen)
 {
-    int client    = _inst.client;
-    int time_left = RoundFloat(g_fCarpenterCooldown[client] - GetGameTime());
+    int client = _inst.client;
 
-    if (time_left > 0)
+    if (_inst.perk_timer > 0)
     {
-        Format(buffer, maxlen, "%t", "CarpenterPerk_Status_Cooldown", time_left);
+        Format(buffer, maxlen, "%t", "CarpenterPerk_Status_Cooldown", _inst.perk_timer);
     }
     else {
         if (getFreeItemIndex(client, CARPENTER_MAX_ITEMS) == -1)
@@ -97,12 +111,26 @@ stock bool isCarpenter(int client)
     g_hPerks[client].getName(perkName, sizeof(perkName));
     return StrEqual(perkName, "Carpenter");
 }
+
+FUNCTION(CarpenterPerk, onPeriodic))
+{
+    if (_inst.perk_timer > 0)
+    {
+        _inst.perk_timer--;
+    }
+}
+
+FUNCTION_INT(CarpenterPerk, getCategory))
+{
+    return 3;
+}
+
 // vvvvvvvvvvvvvvvvvv MODIFIED LOGIC BELOW vvvvvvvvvvvvvvvvvv
 FUNCTION(CarpenterPerk, onCallForMedic))
 {
     int client = _inst.client;
 
-    if (g_fCarpenterCooldown[client] > GetGameTime())
+    if (_inst.perk_timer > 0)
         return;
 
     if (!isGrounded(client))
@@ -170,7 +198,7 @@ FUNCTION(CarpenterPerk, onCallForMedic))
     if (itemIndex < 0)
         return;
 
-    g_fCarpenterCooldown[client] = GetGameTime() + float(CARPENTER_COOLDOWN);
+    _inst.perk_timer = CARPENTER_COOLDOWN;
 
     removeItem(client, itemIndex);
 

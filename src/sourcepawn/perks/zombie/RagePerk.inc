@@ -35,9 +35,7 @@ methodmap RagePerk < ZombieBasePerk {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         RagePerk sm = view_as<RagePerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, RagePerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, RagePerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, RagePerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, RagePerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, RagePerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, RagePerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, RagePerkFonPeriodic);
@@ -92,6 +90,11 @@ FUNCTION(RagePerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "RagePerk_desc");
 }
 
+FUNCTION_INT(RagePerk, getCategory))
+{
+    return 2;
+}
+
 FUNCTION(RagePerk, onRemove)) {
     int client = _inst.client;
     if (_inst.perk_state == 1) {
@@ -139,6 +142,7 @@ FUNCTION(RagePerk, updateCondStats), char[] buffer, int maxlen) {
             resetClientStatType(client, ZFStatTypeCond);
             PrintHintText(client, "%t", "RagePerk_Expired");
         } else {
+            addStatTempStack(client, ZFStatDef, -10, ZF_RAGE_SPEED_DURATION);
             Format(buffer, maxlen, "%t", "RagePerk_Status_Active");
         }
     }

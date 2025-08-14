@@ -26,9 +26,7 @@ public     SpecterPerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         SpecterPerk      sm      = view_as<SpecterPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, SpecterPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, SpecterPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, SpecterPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, SpecterPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, SpecterPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, SpecterPerkFonPlayerSpawn);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_GRACE_END, SpecterPerkFonPlayerSpawn);
@@ -77,6 +75,11 @@ FUNCTION(SpecterPerk, getShortdesc), char[] buffer, int maxlen)
 FUNCTION(SpecterPerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "SpecterPerk_desc");
+}
+
+FUNCTION_INT(SpecterPerk, getCategory))
+{
+    return 1;
 }
 
 FUNCTION(SpecterPerk, updateClientPermStats))

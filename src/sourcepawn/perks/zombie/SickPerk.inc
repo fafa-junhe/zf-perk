@@ -39,9 +39,7 @@ public     SickPerk(int client)
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         SickPerk       sm      = view_as<SickPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, SickPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, SickPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, SickPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, SickPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, SickPerkFupdatePermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, SickPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, SickPerkFonPeriodic);
@@ -156,6 +154,11 @@ FUNCTION(SickPerk, getShortdesc), char[] buffer, int maxlen)
 FUNCTION(SickPerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "SickPerk_desc");
+}
+
+FUNCTION_INT(SickPerk, getCategory))
+{
+    return 1;
 }
 
 FUNCTION(SickPerk, updatePermStats))

@@ -37,9 +37,7 @@ methodmap AlphaPerk < ZombieBasePerk {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         AlphaPerk sm = view_as<AlphaPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, AlphaPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, AlphaPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, AlphaPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, AlphaPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, AlphaPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, AlphaPerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, AlphaPerkFonPeriodic);
@@ -81,6 +79,10 @@ FUNCTION(AlphaPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "AlphaPerk_desc");
 }
 
+FUNCTION_INT(AlphaPerk, getCategory))
+{
+    return 3;
+}
 
 // 新增 onKill 方法
 FUNCTION(AlphaPerk, onKill), int victim, int killer, int assist, int inflictor, int damagetype)

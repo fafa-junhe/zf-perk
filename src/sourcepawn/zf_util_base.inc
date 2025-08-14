@@ -22,9 +22,10 @@
 #define _ZF_UTIL_BASE_INC
 #include <weapondata>
 #include <sdkhooks>
-
-#include <sdktools>
-
+#include <tf2items>
+ 
+ #include <sdktools>
+ 
 #include <sourcemod>
 
 #include <tf2_stocks>
@@ -650,7 +651,7 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_SCATTERGUN]   = F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_FORCEANATURE] = F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_SHORTSTOP]    = F_ISBULLET;
-  ZF_WEAPON_DATA[ZFWEAP_SCOUTPISTOL]  = F_ISAUTO|F_ISBULLET;
+  ZF_WEAPON_DATA[ZFWEAP_SCOUTPISTOL]  = F_ISAUTO|F_ISBULLET | F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_BONK]         = 0;
   ZF_WEAPON_DATA[ZFWEAP_LUGERMORPH]   = F_ISAUTO|F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_CRITACOLA]    = F_NOSTRIP;
@@ -971,7 +972,7 @@ void utilBaseInit()
   ZF_WEAPON_DATA[ZFWEAP_WIDOWMAKER]          = F_ISBULLET | F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_POMSON_6000]         = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_RESCUE_RANGER]       = F_NOSTRIP;
-  ZF_WEAPON_DATA[ZFWEAP_ENGINEERPISTOL]      = F_ISAUTO|F_ISBULLET | F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_ENGINEERPISTOL]      = F_ISAUTO | F_ISBULLET | F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_WRANGLER]            = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_SHORT_CIRCUIT]       = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_GIGER_COUNTER]       = F_NOSTRIP;
@@ -1051,7 +1052,7 @@ void utilBaseInit()
   
   // Sniper
   ZF_WEAPON_DATA[ZFWEAP_SNIPERRIFLE]   = F_ISBULLET;
-  ZF_WEAPON_DATA[ZFWEAP_HUNTSMAN]      = 0;
+  ZF_WEAPON_DATA[ZFWEAP_HUNTSMAN]      = F_NOSTRIP;
   ZF_WEAPON_DATA[ZFWEAP_SYDNEYSLEEPER] = F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_BAZAAR_BARGAIN]= F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_MACHINA]       = F_ISBULLET;
@@ -1406,27 +1407,51 @@ stock void stripWeapons(int client, bool keepPri = false)
   //
   bool doStrip;
   int weaponId;
+
+
   for(int i = 0; i < 5; i++)
   {
     weaponId = slotWeaponId(client, i);
     if(weaponId > 0)
     {
+
       if(weaponId >= MAX_ZF_WEAPONS)
       {
-        LogError("[ZF] - stripToMelee() - Invalid weaponId: %d", weaponId);
+        LogError("[ZF] - stripWeapons() - Invalid weaponId: %d in slot %d. Stripping.", weaponId, i);
         TF2_RemoveWeaponSlot(client, i);
       }
       else
       {
-        doStrip = ((ZF_WEAPON_DATA[weaponId] & F_NOSTRIP) == 0);
+        bool isBulletWeapon = (ZF_WEAPON_DATA[weaponId] & F_ISBULLET) != 0;
+        bool noStripFlag = (ZF_WEAPON_DATA[weaponId] & F_NOSTRIP) != 0;
+        
+
+        if (noStripFlag)
+        {
+            // Rule 2: If not Rule 1, weapons with F_NOSTRIP are kept.
+            doStrip = false;
+        }
+        else
+        {
+            // Rule 3: All other weapons are stripped.
+            doStrip = true;
+        }
+        if (validZom(client) && isBulletWeapon)
+        {
+            // Rule 1: Zombies' bullet weapons must be stripped.
+            doStrip = true;
+        }
+
         if((i == 0) && keepPri)
+        {
           doStrip = false;
-        if(doStrip){
-          if (!(ZF_WEAPON_DATA[weaponId] & (F_ISBULLET | F_ISAUTO))) 
-            PrintHintText(client, "你的武器在黑名单中，已被禁用！");
+        }
+          
+        if(doStrip)
+        {
+          PrintHintText(client, "你的武器在黑名单中，已被禁用！");
           TF2_RemoveWeaponSlot(client, i);
         }
-        
       }
     }
   }
@@ -2029,7 +2054,19 @@ stock void spawnClient(int client, int nextClientTeam)
     }
     if((nextClientTeam == surTeam()) && !validSurvivor(nextClientClass))
     {
-      nextClientClass = randomSurvivor();    
+      nextClientClass = randomSurvivor();
+    }
+
+    // Add a check for bots trying to become Engineer or Spy
+    if (IsFakeClient(client) && nextClientTeam == surTeam())
+    {
+        if (nextClientClass == TFClass_Engineer || nextClientClass == TFClass_Spy)
+        {
+            // If the bot's chosen class is Engineer or Spy, pick a different valid survivor class
+            char validClasses[4][32] = {"soldier", "pyro", "demoman", "medic"};
+            int randomIndex = GetRandomInt(0, sizeof(validClasses) - 1);
+            nextClientClass = TF2_GetClass(validClasses[randomIndex]);
+        }
     }
  
     // Use of m_lifeState here prevents:

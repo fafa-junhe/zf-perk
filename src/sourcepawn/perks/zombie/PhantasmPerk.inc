@@ -15,6 +15,7 @@
 // --- Defines from new_perks.md ---
 #define ZF_PHANTASM_HEALTH_PENALTY -25
 #define ZF_PHANTASM_ATTACK_PENALTY -25
+#define ZF_PHANTASM_ATTACK_BONUS 25
 #define ZF_PHANTASM_WALK_DURATION 1.0
 #define ZF_PHANTASM_STUN_DURATION 0.5
 #define ZF_PHANTASM_COOLDOWN 17.0
@@ -29,9 +30,7 @@ methodmap PhantasmPerk < ZombieBasePerk {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         PhantasmPerk sm = view_as<PhantasmPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, PhantasmPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, PhantasmPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, PhantasmPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, PhantasmPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, PhantasmPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_CALL_FOR_MEDIC, PhantasmPerkFonCallForMedic);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, PhantasmPerkFonPeriodic);
@@ -83,6 +82,11 @@ FUNCTION(PhantasmPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "PhantasmPerk_desc");
 }
 
+FUNCTION_INT(PhantasmPerk, getCategory))
+{
+    return 5;
+}
+
 FUNCTION(PhantasmPerk, onPlayerSpawn)) {
     _inst.walk_timer = 0.0;
     _inst.cooldown = 0.0;
@@ -113,9 +117,6 @@ FUNCTION(PhantasmPerk, onCallForMedic)) {
         SetEntityRenderMode(client, RENDER_TRANSCOLOR);
         SetEntityRenderColor(client, 255, 255, 255, 150);
         
-        // Prevent attacking
-        SetEntProp(client, Prop_Send, "m_fFlags", GetEntProp(client, Prop_Send, "m_fFlags") | FL_FROZEN);
-
         PrintHintText(client, "%t", "PhantasmPerk_Enter_Void_Walk");
     } else {
         PrintHintText(client, "%t", "PhantasmPerk_Status_Cooldown", RoundToNearest(_inst.cooldown));
@@ -165,13 +166,13 @@ FUNCTION(PhantasmPerk, onPeriodic)) {
             SetEntityMoveType(client, MOVETYPE_WALK);
             SetEntityRenderMode(client, RENDER_NORMAL);
             SetEntityRenderColor(client, 255, 255, 255, 255);
-            SetEntProp(client, Prop_Send, "m_fFlags", GetEntProp(client, Prop_Send, "m_fFlags") & ~FL_FROZEN);
         }
     }
 }
 
 FUNCTION(PhantasmPerk, updateCondStats), char[] buffer, int maxlen) {
     if (_inst.walk_timer > 0.0) {
+        addStat(_inst.client, ZFStatAtt, ZFStatTypeCond, ZF_PHANTASM_ATTACK_BONUS);
         Format(buffer, maxlen, "%t", "PhantasmPerk_Status_Active", _inst.walk_timer - GetGameTime());
     } else if (_inst.cooldown > 0.0) {
         Format(buffer, maxlen, "%t", "PhantasmPerk_Status_Cooldown", _inst.cooldown);

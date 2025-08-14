@@ -38,9 +38,10 @@
 #define VTABLE_ON_ASSIST_KILL               26
 #define VTABLE_ON_DEAL_DAMAGE_POST          35
 #define VTABLE_ON_KILL                      36
-#define VTABLE_ON_BUILDING_TAKE_DAMAGE 37
+#define VTABLE_ON_BUILDING_TAKE_DAMAGE      37
+#define VTABLE_GET_CATEGORY                 38
 
-#define PERK_VTABLE_SIZE                    38
+#define PERK_VTABLE_SIZE                    39
 
 
 // =================================================================================
@@ -55,7 +56,7 @@
 // Perks that need to store their own data should start from this index
 // to avoid conflicts with the base perk's vtable and data.
 // Each level of "inheritance" should increment this.
-#define PERK_DATA_START_INDEX               38
+#define PERK_DATA_START_INDEX               39
 
 /*
     Example Usage for a new perk 'MyPerk' that inherits from 'BasePerk':

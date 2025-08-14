@@ -35,6 +35,7 @@ stock char ZFMDL_MINE[]        = "models/props_combine/combine_mine01.mdl";
 stock char ZFMDL_HAYBALE[]     = "models/props_farm/haypile001.mdl";
 stock char ZFMDL_FLAG[]        = "models/flag/flag.mdl";
 stock char ZFMDL_FENCE[]       = "models/props_coalmines/wood_fence_short_128.mdl";
+stock char ZFMDL_AEGIS_SHIELD[] = "models/items/ammocrate_smg1.mdl";
 
 stock char ZFMDL_TOTEM[2][]    = {
     "models/props_badlands/rock001_skybox.mdl",
@@ -247,6 +248,7 @@ stock void utilFxPrecache()
     PrecacheModel(ZFMDL_HAYBALE, true);
     PrecacheModel(ZFMDL_FLAG, true);
     PrecacheModel(ZFMDL_FENCE, true);
+    PrecacheModel(ZFMDL_AEGIS_SHIELD, true);
     PrecacheModel("models/props_junk/garbage_milkcarton002a.mdl", true);
     PrecacheModel("models/props_fortifications/fort_blocker_64.mdl", true);
     PrecacheModel("models/props_halloween/hwn_flask_vial.mdl", true);

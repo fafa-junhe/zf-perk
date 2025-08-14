@@ -23,9 +23,7 @@ methodmap CharitablePerk < SurvivorBasePerk {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         CharitablePerk sm = view_as<CharitablePerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, CharitablePerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, CharitablePerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, CharitablePerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, CharitablePerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, CharitablePerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, CharitablePerk_onKill);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_ASSIST_KILL, CharitablePerk_onAssistKill);
@@ -54,6 +52,11 @@ FUNCTION(CharitablePerk, getDesc), char[] buffer, int maxlen) {
 FUNCTION(CharitablePerk, updateCondStats), char[] buffer, int maxlen) {
     int gifts = zf_perkState[_inst.client] / ZF_CHARITABLE_POINTS_GIFT;
 Format(buffer, maxlen, "%t", "CharitablePerk_Status_Gifts", gifts);
+}
+
+FUNCTION_INT(CharitablePerk, getCategory))
+{
+    return 3;
 }
 
 public void CharitablePerk_onKill(CharitablePerk _inst, int victim, int killer, int assist, int inflictor, int damagetype) {

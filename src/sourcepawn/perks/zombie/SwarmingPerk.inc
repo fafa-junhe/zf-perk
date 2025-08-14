@@ -23,16 +23,14 @@
 #define ZF_SWARMING_COMBAT -20
 #define ZF_SWARMING_RADIUSSQ (400 * 400)
 #define ZF_SWARMING_SPEED 50
-#define ZF_SWARMING_RESPAWNTIME 0.5
+#define ZF_SWARMING_RESPAWNTIME 3.0
 
 methodmap SwarmingPerk < ZombieBasePerk {
     public SwarmingPerk(int client) {
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         SwarmingPerk sm = view_as<SwarmingPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, SwarmingPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, SwarmingPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, SwarmingPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, SwarmingPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, SwarmingPerkFupdatePermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, SwarmingPerkFonPlayerSpawn);
         return sm;
@@ -53,6 +51,11 @@ FUNCTION(SwarmingPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(SwarmingPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "SwarmingPerk_desc");
+}
+
+FUNCTION_INT(SwarmingPerk, getCategory))
+{
+    return 4;
 }
 
 FUNCTION(SwarmingPerk, updatePermStats)) {

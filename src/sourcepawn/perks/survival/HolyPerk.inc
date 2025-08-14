@@ -26,9 +26,7 @@ public     HolyPerk(int client)
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         HolyPerk         sm      = view_as<HolyPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, HolyPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, HolyPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, HolyPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, HolyPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, HolyPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, HolyPerkFupdateCondStats);
 
@@ -56,6 +54,11 @@ FUNCTION(HolyPerk, getDesc), char[] buffer, int maxlen)
     strcopy(buffer, maxlen, "HolyPerk_desc");
 }
 
+FUNCTION_INT(HolyPerk, getCategory))
+{
+    return 3;
+}
+
 FUNCTION(HolyPerk, updateClientPermStats))
 {
     addStat(_inst.client, ZFStatDef, ZFStatTypePerm, ZF_HOLY_DEFENCE);
@@ -66,7 +69,7 @@ FUNCTION(HolyPerk, updateCondStats), char[] buffer, int maxlen)
 {
     int client = _inst.client;
 
-    if (isGrounded(client) && isCrouching(client) && isNotMoving(client))
+    if (isGrounded(client) && isCrouching(client))
     {
         float client_pos[3];
         GetClientAbsOrigin(client, client_pos);

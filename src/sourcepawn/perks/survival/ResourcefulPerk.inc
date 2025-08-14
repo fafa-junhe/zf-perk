@@ -29,9 +29,7 @@ methodmap ResourcefulPerk < SurvivorBasePerk {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         ResourcefulPerk sm = view_as<ResourcefulPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, ResourcefulPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, ResourcefulPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, ResourcefulPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, ResourcefulPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, ResourcefulPerkFonKill);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_AMMO_PICKUP, ResourcefulPerkFonAmmoPickup);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_MED_PICKUP, ResourcefulPerkFonMedPickup);
@@ -54,6 +52,12 @@ FUNCTION(ResourcefulPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(ResourcefulPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "ResourcefulPerk_desc");
+}
+
+
+FUNCTION_INT(ResourcefulPerk, getCategory))
+{
+    return 5;
 }
 
 FUNCTION(ResourcefulPerk, onKill), int victim, int killer, int assist, int inflictor, int damagetype) {

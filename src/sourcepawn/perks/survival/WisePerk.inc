@@ -26,9 +26,7 @@ methodmap WisePerk < SurvivorBasePerk {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         WisePerk sm = view_as<WisePerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, WisePerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, WisePerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, WisePerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, WisePerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, WisePerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, WisePerkFonTakeDamage);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_KILL, WisePerkFonKill);
@@ -52,6 +50,11 @@ FUNCTION(WisePerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(WisePerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "WisePerk_desc");
+}
+
+FUNCTION_INT(WisePerk, getCategory))
+{
+    return 5;
 }
 
 FUNCTION(WisePerk, updateClientPermStats)) {

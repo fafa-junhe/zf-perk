@@ -34,9 +34,7 @@ public     ToxicPerk(int client)
         ZombieBasePerk sm_base = new ZombieBasePerk(client);
         ToxicPerk      sm      = view_as<ToxicPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, ToxicPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, ToxicPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, ToxicPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, ToxicPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, ToxicPerkFupdateClientPermStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEAL_DAMAGE_POST, ToxicPerkFonDealDamagePost);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE_POST, ToxicPerkFonTakeDamagePost);
@@ -123,6 +121,11 @@ FUNCTION(ToxicPerk, getShortdesc), char[] buffer, int maxlen)
 FUNCTION(ToxicPerk, getDesc), char[] buffer, int maxlen)
 {
     strcopy(buffer, maxlen, "ToxicPerk_desc");
+}
+
+FUNCTION_INT(ToxicPerk, getCategory))
+{
+    return 4;
 }
 
 FUNCTION(ToxicPerk, updateClientPermStats))

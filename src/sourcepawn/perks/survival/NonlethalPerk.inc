@@ -25,9 +25,7 @@ methodmap NonlethalPerk < SurvivorBasePerk {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         NonlethalPerk sm = view_as<NonlethalPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, NonlethalPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, NonlethalPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, NonlethalPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, NonlethalPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE_POST, NonlethalPerkFonTakeDamagePost);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, NonlethalPerkFonTakeDamage);
 
@@ -50,6 +48,11 @@ FUNCTION(NonlethalPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(NonlethalPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "NonlethalPerk_desc");
+}
+
+FUNCTION_INT(NonlethalPerk, getCategory))
+{
+    return 2;
 }
 
 FUNCTION_FLOAT(NonlethalPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype)

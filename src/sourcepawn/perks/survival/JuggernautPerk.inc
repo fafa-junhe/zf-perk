@@ -35,9 +35,7 @@ methodmap JuggernautPerk < SurvivorBasePerk {
         SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
         JuggernautPerk sm = view_as<JuggernautPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, JuggernautPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, JuggernautPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, JuggernautPerkFgetDesc);
+        PERK_REGISTER_BASIC_INFO(sm, JuggernautPerk);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, JuggernautPerkFonTakeDamage);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE_POST, JuggernautPerkFonTakeDamagePost);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, JuggernautPerkFupdateClientPermStats);
@@ -61,6 +59,11 @@ FUNCTION(JuggernautPerk, getShortdesc), char[] buffer, int maxlen) {
 
 FUNCTION(JuggernautPerk, getDesc), char[] buffer, int maxlen) {
     strcopy(buffer, maxlen, "JuggernautPerk_desc");
+}
+
+FUNCTION_INT(JuggernautPerk, getCategory))
+{
+    return 1;
 }
 
 FUNCTION(JuggernautPerk, updateClientPermStats)) {
