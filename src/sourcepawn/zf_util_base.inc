@@ -1052,7 +1052,7 @@ void utilBaseInit()
   
   // Sniper
   ZF_WEAPON_DATA[ZFWEAP_SNIPERRIFLE]   = F_ISBULLET;
-  ZF_WEAPON_DATA[ZFWEAP_HUNTSMAN]      = F_NOSTRIP;
+  ZF_WEAPON_DATA[ZFWEAP_HUNTSMAN]      = 0;
   ZF_WEAPON_DATA[ZFWEAP_SYDNEYSLEEPER] = F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_BAZAAR_BARGAIN]= F_ISBULLET;
   ZF_WEAPON_DATA[ZFWEAP_MACHINA]       = F_ISBULLET;
@@ -1556,6 +1556,8 @@ stock bool attackWasFire(int damagetype)
 ////////////////////////////////////////////////////////////
 stock void addCondKritz(int client, float duration)
 { TF2_AddCondition(client, TFCond_Kritzkrieged, duration); }
+stock void addCondKing(int client, float duration)
+{ TF2_AddCondition(client, TFCond_KingRune, duration); }
 stock void remCondKritz(int client)
 { TF2_RemoveCondition(client, TFCond_Kritzkrieged); }
 
@@ -2058,12 +2060,18 @@ stock void spawnClient(int client, int nextClientTeam)
     }
 
     // Add a check for bots trying to become Engineer or Spy
-    if (IsFakeClient(client) && nextClientTeam == surTeam())
+    if (IsFakeClient(client))
     {
-        if (nextClientClass == TFClass_Engineer || nextClientClass == TFClass_Spy)
+        if (nextClientClass == TFClass_Engineer)
         {
             // If the bot's chosen class is Engineer or Spy, pick a different valid survivor class
             char validClasses[4][32] = {"soldier", "pyro", "demoman", "medic"};
+            int randomIndex = GetRandomInt(0, sizeof(validClasses) - 1);
+            nextClientClass = TF2_GetClass(validClasses[randomIndex]);
+        }
+        else if (nextClientClass == TFClass_Spy){
+          // If the bot's chosen class is Engineer or Spy, pick a different valid survivor class
+            char validClasses[3][32] = {"heavy", "scout", "sniper"};
             int randomIndex = GetRandomInt(0, sizeof(validClasses) - 1);
             nextClientClass = TF2_GetClass(validClasses[randomIndex]);
         }

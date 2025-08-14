@@ -13,7 +13,7 @@
 #include <halflife>
 #include "zf_perk.inc"
 
-#define PLUGIN_VERSION "4.5.2fix4"
+#define PLUGIN_VERSION "4.5.3fix1"
 
 Handle zf_hudLine0;
 Handle zf_hudLine1;
@@ -22,11 +22,8 @@ Handle zf_hudAtt;
 Handle zf_hudDef;
 Handle zf_hudCrit;
 Handle zf_hudSpeed;
-Handle zf_hudTeammateLine0;
-Handle zf_hudTeammateLine1;
-Handle zf_hudTeammateLine2;
-Handle zf_hudTeammateLine3;
 int         g_iDebugTarget[MAXPLAYERS + 1];
+static int  g_iInspectTarget[MAXPLAYERS + 1];
 int         g_iDebugStat[MAXPLAYERS + 1];
 
 /**
@@ -117,10 +114,6 @@ void utilUiInit()
     zf_hudDef = CreateHudSynchronizer();
     zf_hudCrit = CreateHudSynchronizer();
     zf_hudSpeed = CreateHudSynchronizer();
-    zf_hudTeammateLine0 = CreateHudSynchronizer();
-    zf_hudTeammateLine1 = CreateHudSynchronizer();
-    zf_hudTeammateLine2 = CreateHudSynchronizer();
-    zf_hudTeammateLine3 = CreateHudSynchronizer();
 }
 ////////////////////////////////////////////////////////////
 //
@@ -172,9 +165,31 @@ void updateHud(int client)
 
     char strHudPerk[128];
     char perkName[64];
+    int target = g_iInspectTarget[client];
 
+    // 如果正在检视队友，则显示队友信息
+    if (target > 0 && IsClientInGame(target) && IsPlayerAlive(target))
+    {
+        if (_GetPlayerPerkDisplayName(client, target, perkName, sizeof(perkName)))
+        {
+            char targetName[MAX_NAME_LENGTH];
+            GetClientName(target, targetName, sizeof(targetName));
+            Format(strHudPerk, sizeof(strHudPerk), "%T\n%T", "ZF_HUD_Inspecting", client, targetName, "ZF_HUD_Perk", client, perkName);
+            SetHudTextParams(0.15, 0.80, 2.1, 200, 200, 200, 150);
+            if (zf_perkStr[target][0] != '\0')
+                ShowSyncHudText(client, zf_hudLine0, "%s (%s)", strHudPerk, zf_perkStr[target]);
+            else
+                ShowSyncHudText(client, zf_hudLine0, strHudPerk);
+        }
+
+        int att = getStat(target, ZFStatAtt);
+        int def = getStat(target, ZFStatDef);
+        int crit = getStat(target, ZFStatCrit);
+        int speed = getStat(target, ZFStatSpeed);
+        ShowPlayerStatsHud(client, 0.14, 0.84, att, def, crit, speed, 150);
+    }
     // 玩家存活: 显示自己的Perk和状态
-    if (IsPlayerAlive(client) && (isSur(client) || isZom(client)))
+    else if (IsPlayerAlive(client) && (isSur(client) || isZom(client)))
     {
         if (_GetPlayerPerkDisplayName(client, client, perkName, sizeof(perkName)))
         {
@@ -221,44 +236,15 @@ void updateTeammateHud(int client, int target)
     if (!IsClientInGame(client))
         return;
 
-    // 条件检查，如果不满足则清除HUD
+    // 条件检查，如果不满足则清除目标
     if (target <= 0 || !IsClientInGame(target) || !IsPlayerAlive(target) || (GetClientTeam(target) != GetClientTeam(client) && !GetConVarBool(zf_cvDebug)) || target == client)
     {
-        ShowSyncHudText(client, zf_hudTeammateLine0, "");
-        ShowSyncHudText(client, zf_hudTeammateLine1, "");
-        ShowSyncHudText(client, zf_hudTeammateLine2, "");
-        ShowSyncHudText(client, zf_hudTeammateLine3, "");
+        g_iInspectTarget[client] = 0;
         return;
     }
 
-    // 显示HUD
-    char buffer[128];
-    char targetName[MAX_NAME_LENGTH];
-    GetClientName(target, targetName, sizeof(targetName));
-
-    // Line 0: 玩家名称
-    SetHudTextParams(0.80, 0.40, 1.1, 200, 200, 200, 150);
-    ShowSyncHudText(client, zf_hudTeammateLine0, "%s", targetName);
-
-    // Line 1: Perk 名称
-    char perkName[64];
-    if (_GetPlayerPerkDisplayName(client, target, perkName, sizeof(perkName)) && !StrEqual(perkName, "None", false))
-    {
-        Format(buffer, sizeof(buffer), "%T", "ZF_HUD_Perk", client, perkName);
-        SetHudTextParams(0.80, 0.43, 1.1, 200, 200, 200, 150);
-        ShowSyncHudText(client, zf_hudTeammateLine1, buffer);
-    }
-    else
-    {
-        ShowSyncHudText(client, zf_hudTeammateLine1, "");
-    }
-
-    // Line 2 & 3: 统计数据
-    int att = getStat(target, ZFStatAtt);
-    int def = getStat(target, ZFStatDef);
-    int crit = getStat(target, ZFStatCrit);
-    int speed = getStat(target, ZFStatSpeed);
-    ShowPlayerStatsHud(client, 0.80, 0.46, att, def, crit, speed, 150);
+    // 设置检视目标
+    g_iInspectTarget[client] = target;
 }
 
 ////////////////////////////////////////////////////////////
@@ -269,13 +255,14 @@ void updateTeammateHud(int client, int target)
 
 #define PERKS_PER_PAGE 7
 
+int zf_menuCategory[MAXPLAYERS + 1];
 
 //
 // Generic Perk List Menu
 //
-public void panel_PrintPerkList(int client, bool isZombie)
+public void panel_PrintPerkCategoryList(int client, bool isZombie)
 {
-    Menu menu = new Menu(isZombie ? MenuHandler_ZomPerkList : MenuHandler_SurPerkList);
+    Menu menu = new Menu(isZombie ? MenuHandler_ZomPerkCategoryList : MenuHandler_SurPerkCategoryList);
 
     char title[128];
     Format(title, sizeof(title), "%T", isZombie ? "ZF_Menu_SelectZomPerk_Title" : "ZF_Menu_SelectSurPerk_Title", client);
@@ -283,27 +270,65 @@ public void panel_PrintPerkList(int client, bool isZombie)
     menu.ExitButton = true;
     menu.ExitBackButton = true;
 
-    int perkCount = isZombie ? GetTotalZomPerks() : GetTotalSurPerks();
+    // Display categories
+    for (int i = 1; i <= 5; i++)
+    {
+        if (!isZombie && i == 4) { continue;}
+        char sCategoryIndex[16];
+        IntToString(i, sCategoryIndex, sizeof(sCategoryIndex));
+        char categoryNameKey[64];
+        Format(categoryNameKey, sizeof(categoryNameKey), "ZF_PerkCategory_%d", i);
+        char categoryName[128];
+        Format(categoryName, sizeof(categoryName), "%T", categoryNameKey, client);
+        
+        menu.AddItem(sCategoryIndex, categoryName);
+    }
+
+    menu.Display(client, MENU_TIME_FOREVER);
+}
+
+public void panel_PrintPerkList(int client, bool isZombie, int category)
+{
+    Menu menu = new Menu(isZombie ? MenuHandler_ZomPerkList : MenuHandler_SurPerkList);
+
+    char title[256];
+    char categoryDescKey[64];
+    Format(categoryDescKey, sizeof(categoryDescKey), "ZF_PerkCategory_%d_Desc", category);
+    Format(title, sizeof(title), "%T", categoryDescKey, client);
+    menu.SetTitle(title);
+    menu.ExitButton = true;
+    menu.ExitBackButton = true;
+
+    ArrayList perkTypes = isZombie ? g_ZomPerkTypes : g_SurPerkTypes;
+    int perkCount = perkTypes.Length;
+
     for (int i = 0; i < perkCount; i++)
     {
-        char sPerkIndex[16];
-        IntToString(i, sPerkIndex, sizeof(sPerkIndex));
-        char displayName[128];
-        if (isZombie)
-            GetZomPerkDisplayShortDesc(client, i, displayName, sizeof(displayName));
-        else
-            GetSurPerkDisplayShortDesc(client, i, displayName, sizeof(displayName));
+        StringMap perkInfo = view_as<StringMap>(perkTypes.Get(i));
+        int perkCategory;
+        perkInfo.GetValue("category", perkCategory);
 
-        int limit = isZombie ? zf_zomPerksLimit[i] : zf_surPerksLimit[i];
-        int current = isZombie ? getZomPerkCount(i) : getSurPerkCount(i);
-        char countStr[32];
-        if (limit != -1)
-            Format(countStr, sizeof(countStr), " [%d/%d]", current, limit);
-        else
-            Format(countStr, sizeof(countStr), " [%d]", current);
-        
-        StrCat(displayName, sizeof(displayName), countStr);
-        menu.AddItem(sPerkIndex, displayName);
+        if (perkCategory == category)
+        {
+            char sPerkIndex[16];
+            IntToString(i, sPerkIndex, sizeof(sPerkIndex));
+            char displayName[128];
+            if (isZombie)
+                GetZomPerkDisplayShortDesc(client, i, displayName, sizeof(displayName));
+            else
+                GetSurPerkDisplayShortDesc(client, i, displayName, sizeof(displayName));
+
+            int limit = isZombie ? zf_zomPerksLimit[i] : zf_surPerksLimit[i];
+            int current = isZombie ? getZomPerkCount(i) : getSurPerkCount(i);
+            char countStr[32];
+            if (limit != -1)
+                Format(countStr, sizeof(countStr), " [%d/%d]", current, limit);
+            else
+                Format(countStr, sizeof(countStr), " [%d]", current);
+            
+            StrCat(displayName, sizeof(displayName), countStr);
+            menu.AddItem(sPerkIndex, displayName);
+        }
     }
 
     menu.Display(client, MENU_TIME_FOREVER);
@@ -317,11 +342,11 @@ void _MenuHandler_PerkList_Internal(Menu menu, MenuAction action, int client, in
         char sPerkIndex[16];
         menu.GetItem(item, sPerkIndex, sizeof(sPerkIndex));
         int perkIndex = StringToInt(sPerkIndex);
-        panel_PrintPerkSelect(client, perkIndex, isZombie);
+        panel_PrintPerkSelect(client, perkIndex, isZombie, zf_menuCategory[client]);
     }
     else if (action == MenuAction_Cancel && item == MenuCancel_ExitBack)
     {
-        panel_PrintMain(client);
+        panel_PrintPerkCategoryList(client, isZombie);
     }
     else if (action == MenuAction_End)
     {
@@ -339,12 +364,43 @@ public int MenuHandler_ZomPerkList(Menu menu, MenuAction action, int client, int
     return 0;
 }
 
+void _MenuHandler_PerkCategoryList_Internal(Menu menu, MenuAction action, int client, int item, bool isZombie)
+{
+    if (action == MenuAction_Select)
+    {
+        char sCategoryIndex[16];
+        menu.GetItem(item, sCategoryIndex, sizeof(sCategoryIndex));
+        int categoryIndex = StringToInt(sCategoryIndex);
+        zf_menuCategory[client] = categoryIndex;
+        panel_PrintPerkList(client, isZombie, categoryIndex);
+    }
+    else if (action == MenuAction_Cancel && item == MenuCancel_ExitBack)
+    {
+        panel_PrintMain(client);
+    }
+    else if (action == MenuAction_End)
+    {
+        delete menu;
+    }
+}
+
+public int MenuHandler_SurPerkCategoryList(Menu menu, MenuAction action, int client, int item) {
+    _MenuHandler_PerkCategoryList_Internal(menu, action, client, item, false);
+    return 0;
+}
+
+public int MenuHandler_ZomPerkCategoryList(Menu menu, MenuAction action, int client, int item) {
+    _MenuHandler_PerkCategoryList_Internal(menu, action, client, item, true);
+    return 0;
+}
+
 //
 // Generic Perk Select Menu
 //
-public void panel_PrintPerkSelect(int client, int perk, bool isZombie)
+public void panel_PrintPerkSelect(int client, int perk, bool isZombie, int category)
 {
     zf_menuPerk[client] = perk; // Store perk index for the handler
+    zf_menuCategory[client] = category; // Store category for back button
 
     Menu menu = new Menu(isZombie ? panel_HandleZomPerkSelect : panel_HandleSurPerkSelect);
 
@@ -414,7 +470,7 @@ void _panel_HandlePerkSelect_Internal(Menu menu, MenuAction action, int client, 
     }
     else if (action == MenuAction_Cancel && item == MenuCancel_ExitBack)
     {
-        panel_PrintPerkList(client, isZombie);
+        panel_PrintPerkList(client, isZombie, zf_menuCategory[client]);
     }
     else if (action == MenuAction_End)
     {
@@ -496,12 +552,12 @@ public void panel_HandleMain(Handle menu, MenuAction action, int param1, int par
         {
             case 1: // Select Survivor Perk
             {
-                panel_PrintPerkList(param1, false);
+                panel_PrintPerkCategoryList(param1, false);
                 return;
             }
             case 2: // Select Zombie Perk
             {
-                panel_PrintPerkList(param1, true);
+                panel_PrintPerkCategoryList(param1, true);
                 return;
             }
             case 3:

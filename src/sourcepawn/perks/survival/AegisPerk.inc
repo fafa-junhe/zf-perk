@@ -14,7 +14,7 @@
 #include "../../zf_util_fx.inc"
 
 #define AEGIS_MAX_ITEMS 5
-#define AEGIS_COOLDOWN 0
+#define AEGIS_COOLDOWN 10
 #define AEGIS_DEFENSE_BONUS 10
 
 #define AEGIS_DATA_TIMER (PERK_DATA_START_INDEX + 0)
@@ -132,7 +132,12 @@ FUNCTION(AegisPerk, updateCondStats), char[] buffer, int maxlen)
 FUNCTION(AegisPerk, onCallForMedic))
 {
     int client = _inst.client;
- 
+    if (roundState() == RoundGrace)
+    {
+        PrintHintText(client, "%t", "Ability_Cannot_Use_Grace");
+        return;
+    }
+
     if (_inst.perk_timer > 0 || roundState() == RoundGrace)
     {
         PrintHintText(client, "%t", "AegisPerk_Hint_Cooldown", _inst.perk_timer);
@@ -217,7 +222,7 @@ FUNCTION(AegisPerk, onDeath), int victim, int killer, int assist, int inflictor,
 
 public Action onShieldTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
-    if (validClient(attacker) && isSur(attacker) && attackWasMelee(attacker, inflictor, damagetype))
+    if (validClient(attacker) && attackWasMelee(attacker, inflictor, damagetype))
     {
         SDKUnhook(victim, SDKHook_OnTakeDamage, onShieldTakeDamage);
 

@@ -193,59 +193,70 @@ VTable 是这套框架实现多态（即不同 Perk 对同一事件有不同响�
 *   **用户反馈**: 在主动技能的所有失败条件下（冷却中、地雷已满、没有随从等）都提供 `PrintHintText`，提升用户体验。
 *   **向量计算**: 注意 `ScaleVector` 是原地修改。在进行复杂计算前，先将源向量复制到一个临时变量中。
 
-#### 6. 代码示例：一个简单的“再生”Perk
+#### 6. 代码示例：一个简单的Perk
 
-假设我们要创建一个简单的僵尸 Perk，效果是每秒恢复 `10` 点生命值。
 
-**`RegenPerk.inc`**:
+**`AthleticPerk.inc`**:
 ```c
-#if defined __RegenPerk_included
+#if defined __AthleticPerk_included
 #endinput
 #endif
-#define __RegenPerk_included
+#define __AthleticPerk_included
 
-#include "ZombieBasePerk.inc"
+#include "../../perk_structs.inc"
+#include "../../zf_perk.inc"
+#include "SurvivorBasePerk.inc"
+#include <datapack>
 #include "../../perk_vtable.inc"
 #include "../../perk_macros.inc"
 
-#define REGEN_AMOUNT 10
+#define ZF_ATHLETIC_ATTACK -(40)
+#define ZF_ATHLETIC_DEFEND -(20)
+#define ZF_ATHLETIC_CRIT -(100)
+#define ZF_ATHLETIC_ROF 100
+#define ZF_ATHLETIC_SPEED 100
 
-methodmap RegenPerk < ZombieBasePerk {
-    public RegenPerk(int client) {
-        ZombieBasePerk sm_base = new ZombieBasePerk(client);
-        RegenPerk sm = view_as<RegenPerk>(sm_base);
+methodmap AthleticPerk < SurvivorBasePerk {
+    public AthleticPerk(int client) {
+        SurvivorBasePerk sm_base = new SurvivorBasePerk(client);
+        AthleticPerk sm = view_as<AthleticPerk>(sm_base);
 
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_NAME, RegenPerkFgetName);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_SHORT_DESC, RegenPerkFgetShortdesc);
-        PERK_REGISTER_VTABLE(sm, VTABLE_GET_LONG_DESC, RegenPerkFgetDesc);
-        // 我们需要一个周期性事件来回血
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, RegenPerkFonPeriodic);
+        PERK_REGISTER_BASIC_INFO(sm, AthleticPerk);
+        PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, AthleticPerkFupdateClientPermStats);
 
         return sm;
     }
 }
 
-stock BasePerk RegenPerkFnew(int client) {
-    return new RegenPerk(client);
+stock SurvivorBasePerk AthleticPerkFnew(int client) {
+    return new AthleticPerk(client);
 }
 
-FUNCTION(RegenPerk, getName), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "Regenerator");
+FUNCTION_INT(AthleticPerk, getCategory))
+{
+    return 5;
 }
 
-FUNCTION(RegenPerk, getShortdesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "RegeneratorPerk_shortdesc");
+FUNCTION(AthleticPerk, getName), char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, "Athletic");
 }
 
-FUNCTION(RegenPerk, getDesc), char[] buffer, int maxlen) {
-    strcopy(buffer, maxlen, "RegeneratorPerk_desc");
+FUNCTION(AthleticPerk, getShortdesc), char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, "AthleticPerk_shortdesc");
 }
 
-// onPeriodic 是实现持续效果的最佳位置
-FUNCTION(RegenPerk, onPeriodic)) {
-    int client = _inst.client;
-    // 使用框架的 addHealth 函数
-    addHealth(client, REGEN_AMOUNT);
+FUNCTION(AthleticPerk, getDesc), char[] buffer, int maxlen) {
+    strcopy(buffer, maxlen, "AthleticPerk_desc");
 }
+
+FUNCTION(AthleticPerk, updateClientPermStats)) {
+    addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, ZF_ATHLETIC_ATTACK);
+    addStat(_inst.client, ZFStatCrit, ZFStatTypePerm, ZF_ATHLETIC_CRIT);
+    addStat(_inst.client, ZFStatDef, ZFStatTypePerm, ZF_ATHLETIC_DEFEND);
+    addStat(_inst.client, ZFStatRof, ZFStatTypePerm, ZF_ATHLETIC_ROF);
+    addStat(_inst.client, ZFStatSpeed, ZFStatTypePerm, ZF_ATHLETIC_SPEED);
+}
+
+
 ```
-这个例子展示了编写一个简单 Perk 的完整流程，从注册到实现，并选择了正确的 VTable 事件 (`onPeriodic`) 来实现其核心功能。
+这个例子展示了编写一个简单 Perk 的完整流程，从注册到实现，并选择了正确的 VTable 事件 (`updateClientPermStats`) 来实现其核心功能。

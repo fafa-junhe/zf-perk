@@ -48,10 +48,11 @@
             perkInfo.SetString("name", classname); \
             perkInfo.SetString("shortDesc", shortDesc); \
             perkInfo.SetString("longDesc", longDesc); \
+            perkInfo.SetValue("category", perk.getCategory()); \
             %2.SetValue(classname, perkInfo); \
             %3.Push(perkInfo); \
             %4.Push(view_as<Function>(%1Fnew)); \
-            LogMessage("[ZF] %s perk: classname %s shortDesc %s", %5, classname, shortDesc); \
+            LogMessage("[ZF] %s perk: classname %s shortDesc %s category %d", %5, classname, shortDesc, perk.getCategory()); \
         } \
     } IsCharAlpha(0)
 

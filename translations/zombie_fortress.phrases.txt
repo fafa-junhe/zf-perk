@@ -205,6 +205,56 @@
 		"chi"	"UI is not English?"
 	}
 
+	"ZF_PerkCategory_1"
+	{
+		"en" "Damage"
+		"chi" "输出类"
+	}
+	"ZF_PerkCategory_1_Desc"
+	{
+		"en" "Damage\nThese perks focus on directly enhancing damage output, critical hit capabilities, or providing new means of attack to efficiently eliminate enemies."
+		"chi" "输出类\n这类职业的核心是通过各种方式直接增强伤害输出、暴击能力或提供新的攻击手段，目标是高效地消灭敌人。"
+	}
+	"ZF_PerkCategory_2"
+	{
+		"en" "Defensive"
+		"chi" "防守类"
+	}
+	"ZF_PerkCategory_2_Desc"
+	{
+		"en" "Defensive\nThese perks focus on increasing survivability by boosting defense, health, blocking, or special damage reduction mechanics to absorb damage and buy time for the team."
+		"chi" "防守类\n这类职业专注于提升自身的生存能力，通过增加防御、生命值、格挡或特殊减伤机制来吸收伤害，为团队争取时间。"
+	}
+	"ZF_PerkCategory_3"
+	{
+		"en" "Support"
+		"chi" "辅助类"
+	}
+	"ZF_PerkCategory_3_Desc"
+	{
+		"en" "Support\nThe core of these perks is to help the entire team by healing, providing buffs, placing functional structures, or weakening enemies, valuing tactical advantage over individual combat power."
+		"chi" "辅助类\n这类职业的核心是通过治疗、提供增益、放置功能性建筑或削弱敌人来帮助整个团队，战术价值大于个人战斗力。"
+	}
+	"ZF_PerkCategory_4"
+	{
+		"en" "Aura"
+		"chi" "光环类"
+	}
+	"ZF_PerkCategory_4_Desc"
+	{
+		"en" "The main feature of these perks is a passive, continuously active area-of-effect aura that affects enemies or allies within range, acting as a mobile tactical node."
+		"chi" "这类职业的主要特点是自身携带一个被动的、持续生效的区域光环，能影响范围内的敌人或友军，是移动的战术节点。"
+	}
+	"ZF_PerkCategory_5"
+	{
+		"en" "Miscellaneous"
+		"chi" "其他类"
+	}
+	"ZF_PerkCategory_5_Desc"
+	{
+		"en" "The characteristics of these perks are difficult to classify into the above categories, often focusing on mobility, resource management, or unique growth mechanics."
+		"chi" "这类职业的特点难以归入以上类别，通常专注于机动性、资源管理或独特的成长机制。"
+	}
 	//================================================================================
 	// 3. 帮助系统 (Help System)
 	//================================================================================
@@ -651,6 +701,13 @@
 		"en"	"Perk: %s"
 		"chi"	"职业: %s"
 	}
+	
+	"ZF_HUD_Inspecting"
+	{
+		"#format" "{1:s}"
+		"en"    "Inspecting: {1:s}"
+		"chi" "检视: {1:s}"
+	}
 	"ZF_HUD_Attack"
 	{
 		"en"	"Attack: "
@@ -754,7 +811,7 @@
 	"AlchemistPerk_shortdesc"
 	{
 		"en"	" Alchemist - Throws potions to turn the tide"
-		"chi"	"炼金术士(Alchemist)——治疗与伤害并存"
+		"chi"	"炼金术士——治疗与伤害并存"
 	}
 	"AlchemistPerk_desc"
 	{
@@ -798,7 +855,7 @@
 	"AthleticPerk_shortdesc"
 	{
 		"en"	"Athletic - High mobility"
-		"chi"	"运动员(Athletic)——高移动力"
+		"chi"	"运动员——高移动力"
 	}
 	"AthleticPerk_desc"
 	{
@@ -817,7 +874,7 @@
 	"BerserkerPerk_shortdesc"
 	{
 		"en"	" Berserker - The lower your health, the stronger you become"
-		"chi"	"狂战士(Berserker)——生命越低越强大"
+		"chi"	"狂战士——生命越低越强大"
 	}
 	"BerserkerPerk_desc"
 	{
@@ -841,7 +898,7 @@
 	"CarpenterPerk_shortdesc"
 	{
 		"en"	"Carpenter - Builds barricades"
-		"chi"	"木工(Carpenter)——建造障碍物"
+		"chi"	"木工——建造障碍物"
 	}
 	"CarpenterPerk_desc"
 	{
@@ -895,7 +952,7 @@
 	"CharitablePerk_shortdesc"
 	{
 		"en"	"Charitable - Exchange kills for gifts"
-		"chi"	"慈善家(Charitable)——击杀换取礼物"
+		"chi"	"慈善家——击杀换取礼物"
 	}
 	"CharitablePerk_desc"
 	{
@@ -919,7 +976,7 @@
 	"CowardlyPerk_shortdesc"
 	{
 		"en"	"Cowardly - Always ready to run"
-		"chi"	"懦夫(Cowardly)——随时准备逃跑"
+		"chi"	"懦夫——随时准备逃跑"
 	}
 	"CowardlyPerk_desc"
 	{
@@ -958,7 +1015,7 @@
 	"EchoPerk_shortdesc"
 	{
 		"en"	" Echo - Return to sender"
-		"chi"	"回响者(Echo)——受伤以击退僵尸"
+		"chi"	"回响者——受伤以击退僵尸"
 	}
 	"EchoPerk_desc"
 	{
@@ -1002,7 +1059,7 @@
 	"FriendPerk_shortdesc"
 	{
 		"en"	"Friend - Gain a bonus with a partner"
-		"chi"	"伙计(Friend)——和同伴获得加成"
+		"chi"	"伙计——和同伴获得加成"
 	}
 	"FriendPerk_desc"
 	{
@@ -1031,7 +1088,7 @@
 	"GamblerPerk_shortdesc"
 	{
 		"en"	" Gambler - Good luck or bad?"
-		"chi"	"赌徒(Gambler)——概率说了算"
+		"chi"	"赌徒——概率说了算"
 	}
 	"GamblerPerk_desc"
 	{
@@ -1075,7 +1132,7 @@
 	"GuardianPerk_shortdesc"
 	{
 		"en"	" Guardian - Hold your ground, inch by inch"
-		"chi"	"守护者(Guardian)——擅长群体控制"
+		"chi"	"守护者——擅长群体控制"
 	}
 	"GuardianPerk_desc"
 	{
@@ -1099,30 +1156,6 @@
 	}
 
 	//------------------------------------------------
-	// Heroic (英雄)
-	//------------------------------------------------
-	"Heroic"
-	{
-		"en"	"Heroic"
-		"chi"	"英雄"
-	}
-	"HeroicPerk_shortdesc"
-	{
-		"en"	"Heroic - Get crits when you live to the end"
-		"chi"	"英雄(Heroic)——活到最后获得暴击"
-	}
-	"HeroicPerk_desc"
-	{
-		"en"	"You have an attack and defense bonus. Each of\nyour kills and assists increases your crit time.\nWhen you are the last survivor, you will receive\ncrits for the corresponding time.\n“Good night, and good luck.”\nRecommended classes: Soldier, Pyro, Demoman."
-		"chi"	"你有攻击力和防御力加成.\n你的每个击杀和助攻都会增加你的暴击时间.\n当你是最后一个幸存者时,你就会获得对应时间的暴击.\n \n“晚安,好运.”\n推荐职业: 士兵、火焰兵、爆破手."
-	}
-	"HeroicPerk_Status_CritTime"
-	{
-		"en"	"Crit Time: %ds"
-		"chi"	"暴击时间: %d秒"
-	}
-
-	//------------------------------------------------
 	// Holy (牧师)
 	//------------------------------------------------
 	"Holy"
@@ -1133,7 +1166,7 @@
 	"HolyPerk_shortdesc"
 	{
 		"en"	"Holy - Crouch to heal survivors"
-		"chi"	"牧师(Holy)——蹲着治疗幸存者"
+		"chi"	"牧师——蹲着治疗幸存者"
 	}
 	"HolyPerk_desc"
 	{
@@ -1157,7 +1190,7 @@
 	"JuggernautPerk_shortdesc"
 	{
 		"en"	"Juggernaut - High attack, low speed"
-		"chi"	"主宰者(Juggernaut)——攻击力高,速度慢"
+		"chi"	"主宰者——攻击力高,速度慢"
 	}
 	"JuggernautPerk_desc"
 	{
@@ -1176,7 +1209,7 @@
 	"LeaderPerk_shortdesc"
 	{
 		"en"	"Leader - Place a buff banner"
-		"chi"	"领袖(Leader)——放置增益旗帜"
+		"chi"	"领袖——放置增益旗帜"
 	}
 	"LeaderPerk_desc"
 	{
@@ -1205,7 +1238,7 @@
 	"MountaineerPerk_shortdesc"
 	{
 		"en"	" Mountaineer - Wall-climbing mobility master"
-		"chi"	"登山家(Mountaineer)——在高度上自由移动"
+		"chi"	"登山家——在高度上自由移动"
 	}
 	"MountaineerPerk_desc"
 	{
@@ -1254,7 +1287,7 @@
 	"NinjaPerk_shortdesc"
 	{
 		"en"	"Ninja - Place a decoy for retreat"
-		"chi"	"忍者(Ninja)——放置撤退点"
+		"chi"	"忍者——放置撤退点"
 	}
 	"NinjaPerk_desc"
 	{
@@ -1313,7 +1346,7 @@
 	"NonlethalPerk_shortdesc"
 	{
 		"en"	"Nonlethal - Low power bullets, knock back zombies"
-		"chi"	"治安官(Nonlethal)——低威力子弹,击退僵尸"
+		"chi"	"治安官——低威力子弹,击退僵尸"
 	}
 	"NonlethalPerk_desc"
 	{
@@ -1332,7 +1365,7 @@
 	"ResourcefulPerk_shortdesc"
 	{
 		"en"	"Resourceful - Friends with supplies"
-		"chi"	"计划通(Resourceful)——和补给品做朋友"
+		"chi"	"计划通——和补给品做朋友"
 	}
 	"ResourcefulPerk_desc"
 	{
@@ -1351,7 +1384,7 @@
 	"RicochetSpecialistPerk_shortdesc"
 	{
 		"en"	" Ricochett - One bullet, multiple surprises"
-		"chi"	"弹射专家(Ricochet)——多重子弹打击"
+		"chi"	"弹射专家——多重子弹打击"
 	}
 	"RicochetSpecialistPerk_desc"
 	{
@@ -1374,7 +1407,7 @@
 	"ScavengerPerk_shortdesc"
 	{
 		"en"	"Scavenger - Chance to get extra rewards when picking up ammo."
-		"chi"	"拾荒者(Scavenger)——从弹药中获得补给"
+		"chi"	"拾荒者——从弹药中获得补给"
 	}
 	"ScavengerPerk_desc"
 	{
@@ -1402,7 +1435,7 @@
 	"SelflessPerk_shortdesc"
 	{
 		"en"	"Selfless - Drag zombies down with you"
-		"chi"	"利他主义者(Selfless)——拉僵尸垫背"
+		"chi"	"利他主义者——拉僵尸垫背"
 	}
 	"SelflessPerk_desc"
 	{
@@ -1421,7 +1454,7 @@
 	"SpecterPerk_shortdesc"
 	{
 		"en"	" Specter - Extreme damage, fragile on touch"
-		"chi"	"幽灵(Specter)——玻璃大炮"
+		"chi"	"幽灵——玻璃大炮"
 	}
 	"SpecterPerk_desc"
 	{
@@ -1465,7 +1498,7 @@
 	"StirCrazyPerk_shortdesc"
 	{
 		"en"	"Stir-Crazy - Speed determines attack power"
-		"chi"	"狂人(Stir-Crazy)——速度决定攻击力"
+		"chi"	"狂人——速度决定攻击力"
 	}
 	"StirCrazyPerk_desc"
 	{
@@ -1484,7 +1517,7 @@
 	"TantrumPerk_shortdesc"
 	{
 		"en"	"Tantrum - Gain crits for a short period of time"
-		"chi"	"暴脾气(Tantrum)——短时间内获得暴击"
+		"chi"	"暴脾气——短时间内获得暴击"
 	}
 	"TantrumPerk_desc"
 	{
@@ -1518,7 +1551,7 @@
 	"TrapperPerk_shortdesc"
 	{
 		"en"	"Trapper - Place mines"
-		"chi"	"陷阱大师(Trapper)——放置地雷"
+		"chi"	"陷阱大师——放置地雷"
 	}
 	"TrapperPerk_desc"
 	{
@@ -1577,7 +1610,7 @@
 	"TurtlePerk_shortdesc"
 	{
 		"en"	"Turtle - High defense, low speed"
-		"chi"	"肉盾(Turtle)——防御力高,速度慢"
+		"chi"	"肉盾——防御力高,速度慢"
 	}
 	"TurtlePerk_desc"
 	{
@@ -1601,7 +1634,7 @@
 	"WisePerk_shortdesc"
 	{
 		"en"	"Wise - Improve attributes by killing"
-		"chi"	"智者(Wise)——击杀提高属性"
+		"chi"	"智者——击杀提高属性"
 	}
 	"WisePerk_desc"
 	{
@@ -1620,7 +1653,7 @@
 	"ZenlikePerk_shortdesc"
 	{
 		"en"	"Zenlike - Increase crit rate by crouching"
-		"chi"	"禅师(Zenlike)——蹲着增加暴击率"
+		"chi"	"禅师——蹲着增加暴击率"
 	}
 	"ZenlikePerk_desc"
 	{
@@ -1645,7 +1678,7 @@
 	"BountyHunterPerk_shortdesc"
 	{
 		"en"		"Bounty - Kill specific targets for bonus"
-		"chi"		"[新]赏金猎人(Bounty)——从特定目标上获益"
+		"chi"		"赏金猎人——从特定目标上获益"
 	}
 
 	"BountyHunterPerk_desc"
@@ -1708,13 +1741,13 @@
 		
 	"AegisPerk_shortdesc"
     {
-        "en" "Press E to drop a shield. Allies can pick it up for a defense bonus."
-        "chi" "按 E 键放置一个护盾。队友拾取后可获得防御加成。"
+        "en" "Aegis - Press E to drop a shield. Allies can pick it up for a defense bonus."
+        "chi" "[新]神盾手——按 E 键放置一个装甲箱。队友拾取后可获得防御加成。"
     }
     "AegisPerk_desc"
     {
         "en" "Press E to drop a shield at your feet. You can place up to 5 shields per life. Allies can melee the shield to equip it, permanently gaining +10% damage resistance. Cooldown: 15 seconds."
-        "chi" "按 E 键在脚下放置一个护盾，每条命最多可放置5个。队友可以通过近战攻击拾取护盾，永久获得 +10% 伤害抗性。冷却时间：15秒。"
+        "chi" "按 E 键在脚下放置一个装甲箱，每条命最多可放置5个。队友可以通过近战攻击拾取护盾，永久获得 +10% 伤害抗性。冷却时间：15秒。"
     }
     "AegisPerk_Status_Cooldown"
     {
@@ -1777,7 +1810,7 @@
 	"AlphaPerk_shortdesc"
 	{
 		"en"	"Alpha - Summon zombie minions"
-		"chi"	"零号僵尸(Alpha)——召唤僵尸随从"
+		"chi"	"零号僵尸——召唤僵尸随从"
 	}
 	"AlphaPerk_desc"
 	{
@@ -1826,7 +1859,7 @@
 	"ChargerPerk_shortdesc"
 	{
 		"en"	" Charger - Brute force charge, unstoppable"
-		"chi"	"冲锋僵尸(Charger)——欢迎来到求生之路2"
+		"chi"	"冲锋僵尸——欢迎来到求生之路2"
 	}
 	"ChargerPerk_desc"
 	{
@@ -1924,7 +1957,7 @@
 	"CombustiblePerk_shortdesc"
 	{
 		"en"	"Combustible - As the name implies"
-		"chi"	"自爆僵尸(Combustible)——尸如其名"
+		"chi"	"自爆僵尸——尸如其名"
 	}
 	"CombustiblePerk_desc"
 	{
@@ -1948,7 +1981,7 @@
 	"CorruptorPerk_shortdesc"
 	{
 		"en"	" Corruptor - Infect buildings, turn them to your side"
-		"chi"	"骇客僵尸(Corruptor)——入侵敌方建筑"
+		"chi"	"骇客僵尸——入侵敌方建筑"
 	}
 	"CorruptorPerk_desc"
 	{
@@ -1982,7 +2015,7 @@
 	"GeomancerPerk_shortdesc"
 	{
 		"en"	" Geomancer - Raise rock, rocket up survirvors"
-		"chi"	"唤石僵尸(Geomancer)——唤石击飞幸存者"
+		"chi"	"唤石僵尸——唤石击飞幸存者"
 	}
 	"GeomancerPerk_desc"
 	{
@@ -2051,7 +2084,7 @@
 	"GravityWarperPerk_shortdesc"
 	{
 		"en"	" Gravity Warper - Change gravity, disrupt jumps"
-		"chi"	"重力僵尸(Gravity)——干扰幸存者移动"
+		"chi"	"重力僵尸——干扰幸存者移动"
 	}
 	"GravityWarperPerk_desc"
 	{
@@ -2075,81 +2108,12 @@
 	"HorrifyingPerk_shortdesc"
 	{
 		"en"	"Horrifying - Attacks weaken humans"
-		"chi"	"惊吓僵尸(Horrifying)——攻击削弱幸存者"
+		"chi"	"惊吓僵尸——攻击削弱幸存者"
 	}
 	"HorrifyingPerk_desc"
 	{
 		"en"	"Your attack power is reduced, but your attacks lower survivors' attack power,\ndefense, and rate of fire. The debuff lasts for 15 seconds.\nThis effect is removed upon your death.\n\"Chilling to the bone.\"\nRecommended classes: Heavy, Spy."
 		"chi"	"你的攻击力与开火速度降低.\n但你的近战攻击能短暂眩晕幸存者并降低其攻击力、防御力和速度.\n减益效果持续15秒.你死亡后,这个效果也随即消失.\n \n“敲骨吸髓.”\n推荐职业: 侦察兵、机枪手、间谍."
-	}
-
-	//------------------------------------------------
-	// Hunter (猎手僵尸)
-	//------------------------------------------------
-	"Hunter"
-	{
-		"en"	"Hunter"
-		"chi"	"猎手僵尸"
-	}
-	"HunterPerk_Name"
-	{
-		"en"	"Hunter"
-		"chi"	"猎手"
-	}
-	"HunterPerk_shortdesc"
-	{
-		"en"	"Hunter - Manually place a respawn point"
-		"chi"	"猎手僵尸(Hunter)——手动放置重生点"
-	}
-	"HunterPerk_desc"
-	{
-		"en"	"Call for a medic to place your respawn point.\nWhen respawning from your own point, you have a shorter respawn time\nand gain a temporary attack bonus.\nYou can only place one respawn point per life.\nWarning! Survivors can destroy your respawn point.\n\"You will be my prey!\"\nRecommended classes: Any."
-		"chi"	"发医生语音来放置你的重生点.\n从自己的重生点重生时,你的重生时间较短,并获得临时的攻击加成.\n每次重生后,你只能放置一次重生点.\n注意!幸存者可以摧毁你的重生点.\n \n“你将成为我的猎物!”\n推荐职业: 任何."
-	}
-	"HunterPerk_Hint_AlreadyPlaced"
-	{
-		"en"	"You have already placed your respawn point."
-		"chi"	"你已经放过了你的重生点."
-	}
-	"HunterPerk_Hint_NotGrounded"
-	{
-		"en"	"You must be on the ground to place a respawn point."
-		"chi"	"你必须站在地上才能布置重生点."
-	}
-	"HunterPerk_Hint_NoCrouch"
-	{
-		"en"	"You do not need to crouch to place a respawn point."
-		"chi"	"你不需要蹲着来布置重生点."
-	}
-	"HunterPerk_Hint_Placed"
-	{
-		"en"	"Respawn point placed."
-		"chi"	"重生点已放置."
-	}
-	"HunterPerk_Hint_Destroyed"
-	{
-		"en"	"Your respawn point has been destroyed by a survivor!"
-		"chi"	"你的重生点已被幸存者摧毁!"
-	}
-	"HunterPerk_Hint_Destroyed_Survivor"
-	{
-		"en"	"You has been destroyed a respawn point!"
-		"chi"	"你摧毁了一个重生点!"
-	}
-	"HunterPerk_Status_CanPlace"
-	{
-		"en"	"Respawn point can be placed"
-		"chi"	"可以放置重生点"
-	}
-	"HunterPerk_Status_Destroyed"
-	{
-		"en"	"Respawn point destroyed"
-		"chi"	"猎手僵尸的重生点已被摧毁!"
-	}
-	"HunterPerk_Status_Active"
-	{
-		"en"	"Respawn point is active"
-		"chi"	"重生点激活中"
 	}
 
 	//------------------------------------------------
@@ -2163,7 +2127,7 @@
 	"LeapPerk_shortdesc"
 	{
 		"en"	"Leap - Leap into the air"
-		"chi"	"飞跃僵尸(Leap)——大跳飞向空中"
+		"chi"	"飞跃僵尸——大跳飞向空中"
 	}
 	"LeapPerk_desc"
 	{
@@ -2192,7 +2156,7 @@
 	"MagneticPerk_shortdesc"
 	{
 		"en"	"Magnetic - Disables nearby buildings"
-		"chi"	"磁化僵尸(Magnetic)——瘫痪附近建筑"
+		"chi"	"磁化僵尸——瘫痪附近建筑"
 	}
 	"MagneticPerk_desc"
 	{
@@ -2216,7 +2180,7 @@
 	"MarkedPerk_shortdesc"
 	{
 		"en"	"Marked - Focus a specific target"
-		"chi"	"标记僵尸(Marked)——瞄准特定目标"
+		"chi"	"标记僵尸——瞄准特定目标"
 	}
 	"MarkedPerk_desc"
 	{
@@ -2270,7 +2234,7 @@
 	"OverlordPerk_shortdesc"
 	{
 		"en"	" Overlord - Spread creep, empower the swarm"
-		"chi"	"霸主僵尸(Overlord)——坚实的团队支援"
+		"chi"	"霸主僵尸——坚实的团队支援"
 	}
 	"OverlordPerk_desc"
 	{
@@ -2323,7 +2287,7 @@
 	"PhantasmPerk_shortdesc"
 	{
 		"en"	" Phantasm - Walk through the void, ignoring obstacles"
-		"chi"	"幻影僵尸(Phantasm)——穿越障碍"
+		"chi"	"幻影僵尸——穿越障碍"
 	}
 	"PhantasmPerk_desc"
 	{
@@ -2382,7 +2346,7 @@
 	"RagePerk_shortdesc"
 	{
 		"en"	"Rage - Become a temporary tank"
-		"chi"	"狂怒僵尸(Rage)——短时间加强属性"
+		"chi"	"狂怒僵尸——短时间加强属性"
 	}
 	"RagePerk_desc"
 	{
@@ -2431,7 +2395,7 @@
 	"RoarPerk_shortdesc"
 	{
 		"en"	"Roar - Area control and debuff"
-		"chi"	"咆哮僵尸(Roar)——咆哮击退幸存者"
+		"chi"	"咆哮僵尸——咆哮击退幸存者"
 	}
 	"RoarPerk_desc"
 	{
@@ -2460,7 +2424,7 @@
 	"ScorchingPerk_shortdesc"
 	{
 		"en"	"Scorching - Ignites enemies"
-		"chi"	"火焰僵尸(Scorching)——点燃敌人"
+		"chi"	"火焰僵尸——点燃敌人"
 	}
 	"ScorchingPerk_desc"
 	{
@@ -2479,7 +2443,7 @@
 	"SickPerk_shortdesc"
 	{
 		"en"	"Sick - Area denial"
-		"chi"	"吐酸僵尸(Sick)——吐出有害的酸液"
+		"chi"	"吐酸僵尸——吐出有害的酸液"
 	}
 	"SickPerk_desc"
 	{
@@ -2508,7 +2472,7 @@
 	"StaticFieldPerk_shortdesc"
 	{
 		"en"	" Static Field - The faster you run, the harder you get zapped"
-		"chi"	"电场僵尸(Static Field)——限制高速移动"
+		"chi"	"电场僵尸——限制高速移动"
 	}
 	"StaticFieldPerk_desc"
 	{
@@ -2532,14 +2496,23 @@
 	"SwarmingPerk_shortdesc"
 	{
 		"en"	"Swarming - Fast respawn aura"
-		"chi"	"招魂僵尸(Swarming)——快速复活僵尸"
+		"chi"	"招魂僵尸——快速复活僵尸"
 	}
 	"SwarmingPerk_desc"
 	{
 		"en"	"Zombie teammates (and yourself) who die within your aura\nwill respawn quickly in 0.5 seconds.\n-20% attack, -20% defense, +50% movement speed."
 		"chi"	"你有移速加成,但你的攻击和防御力降低.\n你能使自己与身边的队友快速重生.\n \n“嘿!速生不是投票关掉了吗?”\n推荐职业: 侦察兵."
 	}
-
+	"ZF_Swarming_Aura_Applied"
+	{
+		"en"    "Your Swarming aura has granted %N a fast respawn!"
+		"chi"    "你的速生光环为 %N 提供了快速重生！"
+	}
+	"ZF_Swarming_Aura_Applied_By"
+	{
+		"en"    "You had fast respawned due to %N's Swarming aura had granted!"
+		"chi"    "你因 %N 的速生光环而快速重生！"
+	}
 	//------------------------------------------------
 	// Toxic (剧毒僵尸)
 	//------------------------------------------------
@@ -2551,7 +2524,7 @@
 	"ToxicPerk_shortdesc"
 	{
 		"en"	"Toxic - Continuous poison damage"
-		"chi"	"剧毒僵尸(Toxic)——施加范围伤害"
+		"chi"	"剧毒僵尸——施加范围伤害"
 	}
 	"ToxicPerk_desc"
 	{
@@ -2586,7 +2559,7 @@
 	"VampiricPerk_shortdesc"
 	{
 		"en"	"Vampiric - Melee lifesteal"
-		"chi"	"吸血僵尸(Vampiric)——攻击大量回血"
+		"chi"	"吸血僵尸——攻击大量回血"
 	}
 	"VampiricPerk_desc"
 	{
@@ -2605,7 +2578,7 @@
 	"VindictivePerk_shortdesc"
 	{
 		"en"	"Damages your killer on death"
-		"chi"	"复仇僵尸(Vindictive)——击杀提高属性"
+		"chi"	"复仇僵尸——击杀提高属性"
 	}
 	"VindictivePerk_desc"
 	{
@@ -2624,7 +2597,7 @@
 	"VolatilePerk_shortdesc"
 	{
 		"en"	" Volatile - Detonate on command"
-		"chi"	"充能僵尸(Volatile)——主动引爆造成伤害"
+		"chi"	"充能僵尸——主动引爆造成伤害"
 	}
 	"VolatilePerk_desc"
 	{
@@ -2642,6 +2615,88 @@
 		"chi"	"储存的能量: %.0f"
 	}
 
+	//------------------------------------------------
+	// :wq (锚定者)
+	//------------------------------------------------
+	"Anchor"
+	{
+		"en"	"Anchor"
+		"chi"	"锚定僵尸"
+	}
+	"AnchorPerk_shortdesc"
+	{
+		"en"	"Anchor - Become an immovable fortress"
+		"chi"	"[新]锚定僵尸——化身无法移动的堡垒"
+	}
+	"AnchorPerk_desc"
+	{
+		"en"	"Call for a medic to enter an anchored stance. While anchored, you cannot move but gain massive defense and health regeneration. Press again to release the stance. Cooldown applies after releasing."
+		"chi"	"发医生语音来进入“锚定”姿态。在该姿态下，你无法移动，但获得巨额的防御力加成和生命恢复。再次按下技能键可以解除姿态。解除后技能进入冷却。"
+	}
+	"AnchorPerk_Hint_Cooldown"
+	{
+		"en"	"Anchor is on cooldown for %d seconds."
+		"chi"	"锚定技能冷却中，剩余 %d 秒。"
+	}
+	"AnchorPerk_Hint_Anchored"
+	{
+		"en"	"You are now anchored. Unmovable and unbreakable!"
+		"chi"	"你已进入锚定状态。不动如山！"
+	}
+	"AnchorPerk_Hint_Released"
+	{
+		"en"	"You have been released from the anchor."
+		"chi"	"你解除了锚定状态。"
+	}
+	"AnchorPerk_Status_Active"
+	{
+		"en"	"Anchored!"
+		"chi"	"已锚定！"
+	}
+	"AnchorPerk_Status_Cooldown"
+	{
+		"en"	"Anchor Cooldown: %ds"
+		"chi"	"锚定冷却: %d秒"
+	}
+	"AnchorPerk_Status_Ready"
+	{
+		"en"	"Anchor Ready"
+		"chi"	"锚定已就绪"
+	}
+
+	//------------------------------------------------
+	// Catalyst (催化者)
+	//------------------------------------------------
+	"Catalyst"
+	{
+		"en"	"Catalyst"
+		"chi"	"催化者"
+	}
+	"CatalystPerk_shortdesc"
+	{
+		"en"	"Catalyst - Causes other zombies to explode on death."
+		"chi"	"[新]催化者——使其他僵尸死亡时爆炸。"
+	}
+	"CatalystPerk_desc"
+	{
+		"en"	"A support zombie that causes non-Catalyst zombies who die nearby to explode, dealing area damage to survivors. This encourages zombies to group up. Multiple Catalyst auras do not stack."
+		"chi"	"一个辅助型僵尸，它能使其周围死去的其他僵尸发生爆炸，对幸存者造成范围伤害。这个能力鼓励僵尸团队抱团冲锋。多个Catalyst的光环效果不叠加。"
+	}
+	"CatalystPerk_Status_Active"
+	{
+		"en"	"Aura Active"
+		"chi"	"光环已激活"
+	}
+	"ZF_Catalyst_Triggered"
+	{
+		"en"    "%N's death triggered your Catalyst explosion!"
+		"chi"    "%N 的死亡触发了爆炸！"
+	}
+	"ZF_Catalyst_Triggered_By"
+	{
+		"en"    "You triggered %N's Catalyst explosion!"
+		"chi"    "你的死亡由于 %N 的催化剂光环，触发了爆炸！"
+	}
 	//================================================================================
 	// 9. 制作人员 (Credits)
 	//================================================================================
@@ -2726,5 +2781,5 @@
 		"en"	"Change Perk"
 		"chi"	"修改职业"
 	}
+
 }
-    

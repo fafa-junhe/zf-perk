@@ -9,7 +9,6 @@
 #include "survival/AthleticPerk.inc"
 #include "survival/CarpenterPerk.inc"
 #include "survival/FriendPerk.inc"
-#include "survival/HeroicPerk.inc"
 #include "survival/CharitablePerk.inc"
 #include "survival/CowardlyPerk.inc"
 #include "survival/JuggernautPerk.inc"
@@ -41,7 +40,6 @@
 #include "zombie/AlphaPerk.inc"
 #include "zombie/CombustiblePerk.inc"
 #include "zombie/HorrifyingPerk.inc"
-#include "zombie/HunterPerk.inc"
 #include "zombie/LeapPerk.inc"
 #include "zombie/MagneticPerk.inc"
 #include "zombie/MarkedPerk.inc"
@@ -61,6 +59,8 @@
 #include "zombie/CorruptorPerk.inc"
 #include "zombie/OverlordPerk.inc"
 #include "zombie/ChargerPerk.inc"
+#include "zombie/AnchorPerk.inc"
+#include "zombie/CatalystPerk.inc"
 #include <datapack>
 
 
@@ -69,7 +69,6 @@ public void registerSurvivorPerks() {
     RegisterSurvivorPerk(AthleticPerk);
     RegisterSurvivorPerk(CarpenterPerk);
     RegisterSurvivorPerk(FriendPerk);
-    RegisterSurvivorPerk(HeroicPerk);
     RegisterSurvivorPerk(CharitablePerk);
     RegisterSurvivorPerk(ScavengerPerk);
     RegisterSurvivorPerk(CowardlyPerk);
@@ -103,7 +102,6 @@ public void registerZombiePerks() {
     RegisterZombiePerk(AlphaPerk);
     RegisterZombiePerk(CombustiblePerk);
     RegisterZombiePerk(HorrifyingPerk);
-    RegisterZombiePerk(HunterPerk);
     RegisterZombiePerk(LeapPerk);
     RegisterZombiePerk(MagneticPerk);
     RegisterZombiePerk(MarkedPerk);
@@ -123,5 +121,7 @@ public void registerZombiePerks() {
     RegisterZombiePerk(CorruptorPerk);
     RegisterZombiePerk(OverlordPerk);
     RegisterZombiePerk(ChargerPerk);
+    RegisterZombiePerk(AnchorPerk);
+    RegisterZombiePerk(CatalystPerk);
 }
 

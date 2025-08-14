@@ -23,7 +23,7 @@
 #define HORRIFYING_DEFEND_HEAVY -15
 #define HORRIFYING_DURATION 10
 #define HORRIFYING_DURATION_HEAVY 20
-#define HORRIFYING_ROF -25
+#define HORRIFYING_ROF -45
 
 methodmap HorrifyingPerk < ZombieBasePerk {
     public HorrifyingPerk(int client) {

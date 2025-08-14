@@ -19,7 +19,7 @@
 #define ZF_TRAPPER_MAX_ITEMS 5
 #define ZF_TRAPPER_DAMAGE    200
 #define ZF_TRAPPER_RADIUS    150
-#define ZF_TRAPPER_RADIUSSQ  (200 * 200)
+#define ZF_TRAPPER_RADIUSSQ  (100 * 100)
 #define ZF_TRAPPER_TIMER     20
 
 methodmap TrapperPerk < SurvivorBasePerk

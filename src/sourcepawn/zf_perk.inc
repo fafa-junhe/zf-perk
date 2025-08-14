@@ -81,7 +81,7 @@ ArrayList                      g_ZomPerkCreators;
 #include "zf_zombie_visuals.inc"
 #include "perks/zombie/MarkedPerk.inc"
 #include "perks/zombie/SwarmingPerk.inc"
-
+#include "perks/zombie/CatalystPerk.inc"
 // 全局变量声明
 int zf_perkAlphaMaster[MAXPLAYERS + 1];    // 记录每个僵尸的主控者（零号僵尸）
 //
@@ -211,10 +211,6 @@ public void perkInit()
     zf_hudLine0         = CreateHudSynchronizer();
     zf_hudLine1         = CreateHudSynchronizer();
     zf_hudLine2         = CreateHudSynchronizer();
-    zf_hudTeammateLine0 = CreateHudSynchronizer();
-    zf_hudTeammateLine1 = CreateHudSynchronizer();
-    zf_hudTeammateLine2 = CreateHudSynchronizer();
-    zf_hudTeammateLine3 = CreateHudSynchronizer();
 
     // Initialize menu handles
     // 移除旧的静态菜单构建调用
@@ -1401,7 +1397,31 @@ public void perk_OnPeriodic()    // 1Hz
             }
         }
     }
-
+ 
+    // Handle last survivor crown
+    if (roundState() == RoundActive)
+    {
+        int lastSurvivor = -1;
+        lastSurvivor = validSurs[0];
+        if (validSurCount == 1 && !TF2_IsPlayerInCondition(lastSurvivor, TFCond_KingRune))
+        {
+            addCondKing(lastSurvivor, 99999.0);
+            addStat(lastSurvivor, ZFStatAtt, ZFStatTypePerm, 10);
+            addStat(lastSurvivor, ZFStatDef, ZFStatTypePerm, 20);
+            addStat(lastSurvivor, ZFStatCrit, ZFStatTypePerm, 5);
+            addStat(lastSurvivor, ZFStatRof, ZFStatTypePerm, 10);
+            addStat(lastSurvivor, ZFStatSpeed, ZFStatTypePerm, 30);
+        }
+ 
+        for (int i = 1; i <= MaxClients; i++)
+        {
+            if (i != lastSurvivor && IsClientInGame(i) && TF2_IsPlayerInCondition(i, TFCond_KingRune))
+            {
+                TF2_RemoveCondition(i, TFCond_KingRune);
+            }
+        }
+    }
+ 
     //
     // Call new object-oriented periodic updates
     //
@@ -1888,7 +1908,7 @@ public Action perk_OnTakeDamage(int victim, int &attacker, int &inflictor, float
     if (validLivingClient(attacker) && (victim != attacker))
         att_bonus = float(getStat(attacker, ZFStatAtt));
     if (validLivingClient(victim) && (victim != attacker))
-        def_bonus = float(getStat(victim, ZFStatDef));
+        def_bonus = float(min(getStat(victim, ZFStatDef), 85));
 
     // 应用攻击和防御加成
     fDamage = fDamage * (1.0 + att_bonus / 100.0);
@@ -1991,7 +2011,7 @@ public void perk_OnPlayerSpawn(int client)
             {
                 if ((js & ZF_JOINSTATE_SUR) == 0)
                 {
-                    panel_PrintPerkList(client, false);
+                    panel_PrintPerkCategoryList(client, false);
                     prefSet(client, JoinState, (js | ZF_JOINSTATE_SUR));
                 }
             }
@@ -1999,7 +2019,7 @@ public void perk_OnPlayerSpawn(int client)
             {
                 if ((js & ZF_JOINSTATE_ZOM) == 0)
                 {
-                    panel_PrintPerkList(client, true);
+                    panel_PrintPerkCategoryList(client, true);
                     prefSet(client, JoinState, (js | ZF_JOINSTATE_ZOM));
                 }
             }
@@ -2264,6 +2284,30 @@ public void perk_OnPlayerSpawn(int client)
 
 public void perk_OnPlayerDeath(int victim, int killer, int assist, int inflictor, int damagetype)
 {
+    // Catalyst Perk Logic: Explode on nearby zombie death
+    if (isZom(victim) && !isClientPerkNameEquals(victim, "Catalyst"))
+    {
+        float victimPos[3];
+        GetClientAbsOrigin(victim, victimPos);
+
+        for (int i = 1; i <= MaxClients; i++)
+        {
+            if (validLivingZom(i) && isClientPerkNameEquals(i, "Catalyst"))
+            {
+                float catalystPos[3];
+                GetClientAbsOrigin(i, catalystPos);
+                if (GetVectorDistance(victimPos, catalystPos) <= CATALYST_RADIUS)
+                {
+                    applyDamageRadial(victim, RoundToNearest(CATALYST_EXPLOSION_DAMAGE), victimPos, RoundToNearest(CATALYST_EXPLOSION_RADIUS), true, i);
+                    fxExplosionBig(victim);
+                    PrintHintText(i, "%t", "ZF_Catalyst_Triggered", victim);
+                    PrintHintText(victim, "%t", "ZF_Catalyst_Triggered", i);
+                    break; // Prevent multiple catalysts from triggering on the same death
+                }
+            }
+        }
+    }
+
     //   // DEBUG
     //   LogMessage("[ZF DEBUG] Vic %d, Klr %d, Ast %d, Inf %d, DTp %x", victim, killer, assist, inflictor, damagetype);
 
@@ -2330,6 +2374,8 @@ public void perk_OnPlayerDeath(int victim, int killer, int assist, int inflictor
 
                         if (GetVectorDistance(victimPos, swarmerPos, true) <= ZF_SWARMING_RADIUSSQ)
                         {
+                            PrintHintText(i, "%t", "ZF_Swarming_Aura_Applied", victim);
+                            PrintHintText(victim, "%t", "ZF_Swarming_Aura_Applied_By", i);
                             CreateTimer(ZF_SWARMING_RESPAWNTIME, perk_tSpawnClient, victim);
                             break;    // Found a swarmer, no need to check further
                         }

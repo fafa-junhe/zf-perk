@@ -112,7 +112,7 @@ stock bool isAoeZombie(int client)
     char perkName[32];
     g_hPerks[client].getName(perkName, sizeof(perkName));
     // AOE zombies are Toxic and Static Field
-    return StrEqual(perkName, "Toxic") || StrEqual(perkName, "StaticField") || StrEqual(perkName, "GravityWarper") || StrEqual(perkName, "Swarming") || StrEqual(perkName, "Magnetic");
+    return StrEqual(perkName, "Toxic") || StrEqual(perkName, "StaticField") || StrEqual(perkName, "GravityWarper") || StrEqual(perkName, "Swarming") || StrEqual(perkName, "Magnetic") || StrEqual(perkName, "Catalyst");
 }
 
 FUNCTION(BountyHunterPerk, onCallForMedic))
@@ -238,6 +238,12 @@ FUNCTION(BountyHunterPerk, OnGameFrame))
                         color[1] = 191;
                         color[2] = 255;
                         color[3] = 200;    // Deep Sky Blue
+                    }
+                    else if (StrEqual(perkName, "Catalyst")) {
+                       color[0] = 255;
+                       color[1] = 0;
+                       color[2] = 0;
+                       color[3] = 200;    // Red
                     }
                     else {    // Toxic
                         color[0] = 0;

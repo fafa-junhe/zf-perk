@@ -99,6 +99,7 @@ stock char ZFPART_AURAENERGYGREEN[]   = "superrare_greenenergy";
 stock char ZFPART_AURAENERGYPURPLE[]  = "superrare_purpleenergy";
 stock char ZFPART_AURAPOTIONPUDDLE[]  = "halloween_boss_summon";
 stock char ZFPART_AURAGUARDIAN[]      = "medic_resist_fire";
+stock char ZFPART_AURACATALYST[]      = "utaunt_poweraura_yellow_explosion2";
 
 // Non-persistent particle systems
 stock char ZFPART_REDPOWERUP[]        = "teleportedin_red";

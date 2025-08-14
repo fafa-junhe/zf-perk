@@ -62,6 +62,7 @@
 #include <tf2items>
 
 #include <tf2attributes>
+#tryinclude <steamworks>
 
 int         g_iRoundKills[MAXPLAYERS + 1];
 int         g_iSurvivorKills[MAXPLAYERS + 1];
@@ -221,6 +222,11 @@ public void OnPluginStart()
     RegConsoleCmd("zf_menu", cmd_zfMenu);
     RegConsoleCmd("zf_perk", cmd_zfMenu);
     RegConsoleCmd("zfdebug", cmd_zfDebugMenu);
+
+    char gameDesc[64];
+    Format(gameDesc, sizeof(gameDesc), "%T", "ZF_GameDescription", LANG_SERVER, PLUGIN_VERSION);
+
+    SteamWorks_SetGameDescription(gameDesc);
 
     WriteCsvHeader();
 }
@@ -564,23 +570,6 @@ public Action hook_JoinClass(int client,
     if (requestedClass != TFClass_Unknown && requestedClass != currentClass)
     {
         LogAndResetSession(client);
-    }
-
-    if (IsFakeClient(client) && (StrEqual(cmd1, "spy", false) || StrEqual(cmd1, "engineer", false)))
-    {
-        // Define an array of valid survivor classes for bots
-        char validClasses[4][32] = {"soldier", "pyro", "demoman", "medic"};
-        
-        // Pick a random class from the array
-        int randomIndex = GetRandomInt(0, sizeof(validClasses) - 1);
-        char randomClass[32];
-        strcopy(randomClass, sizeof(randomClass), validClasses[randomIndex]);
-        
-        // Set the bot's class
-        TF2_SetPlayerClass(client, TF2_GetClass(randomClass));
-        
-        // Block the original class change
-        return Plugin_Handled;
     }
 
     if (isZom(client))
