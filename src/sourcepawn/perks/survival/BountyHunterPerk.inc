@@ -109,10 +109,8 @@ stock bool isAoeZombie(int client)
     {
         return false;
     }
-    char perkName[32];
-    g_hPerks[client].getName(perkName, sizeof(perkName));
     // AOE zombies are Toxic and Static Field
-    return StrEqual(perkName, "Toxic") || StrEqual(perkName, "StaticField") || StrEqual(perkName, "GravityWarper") || StrEqual(perkName, "Swarming") || StrEqual(perkName, "Magnetic") || StrEqual(perkName, "Catalyst");
+    return isClientPerkNameEquals(client, "Toxic") || isClientPerkNameEquals(client, "StaticField") || isClientPerkNameEquals(client, "GravityWarper") || isClientPerkNameEquals(client, "Swarming") || isClientPerkNameEquals(client, "Magnetic") || isClientPerkNameEquals(client, "Catalyst");
 }
 
 FUNCTION(BountyHunterPerk, onCallForMedic))
@@ -211,35 +209,33 @@ FUNCTION(BountyHunterPerk, OnGameFrame))
                 if (GetVectorDistance(my_pos, zom_pos, true) <= BOUNTY_SCAN_RADIUS_SQ)
                 {
                     int  color[4];
-                    char perkName[32];
-                    g_hPerks[i].getName(perkName, sizeof(perkName));
 
-                    if (StrEqual(perkName, "StaticField"))
+                    if (isClientPerkNameEquals(i, "StaticField"))
                     {
                         color[0] = 255;
                         color[1] = 255;
                         color[2] = 255;
                         color[3] = 200;    // White
                     }
-                    else if (StrEqual(perkName, "GravityWarper")) {
+                    else if (isClientPerkNameEquals(i, "GravityWarper")) {
                         color[0] = 138;
                         color[1] = 43;
                         color[2] = 226;
                         color[3] = 200;    // Purple
                     }
-                    else if (StrEqual(perkName, "Swarming")) {
+                    else if (isClientPerkNameEquals(i, "Swarming")) {
                         color[0] = 139;
                         color[1] = 69;
                         color[2] = 19;
                         color[3] = 200;    // Brown
                     }
-                    else if (StrEqual(perkName, "Magnetic")) {
+                    else if (isClientPerkNameEquals(i, "Magnetic")) {
                         color[0] = 0;
                         color[1] = 191;
                         color[2] = 255;
                         color[3] = 200;    // Deep Sky Blue
                     }
-                    else if (StrEqual(perkName, "Catalyst")) {
+                    else if (isClientPerkNameEquals(i, "Catalyst")) {
                        color[0] = 255;
                        color[1] = 0;
                        color[2] = 0;

@@ -275,9 +275,7 @@ public Action timer_SpitProjectile(Handle timer, DataPack pack)
         return Plugin_Stop;
     }
 
-    char perkName[32];
-    perk.getName(perkName, sizeof(perkName));
-    if (!StrEqual(perkName, "Sick"))
+    if (!isClientPerkNameEquals(client, "Sick"))
     {
         pack.Reset();
         delete pack;

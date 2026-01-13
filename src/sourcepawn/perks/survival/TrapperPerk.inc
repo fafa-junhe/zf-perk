@@ -254,7 +254,5 @@ stock bool isMagnetic(int client)
     {
         return false;
     }
-    char perkName[32];
-    g_hPerks[client].getName(perkName, sizeof(perkName));
-    return StrEqual(perkName, "Magnetic");
+    return isClientPerkNameEquals(client, "Magnetic");
 }

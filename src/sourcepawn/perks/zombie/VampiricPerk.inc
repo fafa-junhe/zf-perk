@@ -21,7 +21,8 @@
 // Defines from all_perks.md
 #define ZF_VAMPIRIC_LIFESTEAL_RATIO 0.6  // 50% of damage dealt is returned as health
 #define ZF_VAMPIRIC_REGEN 10             // Health regenerated per second
-#define ZF_VAMPIRIC_DEFEND -10
+#define ZF_VAMPIRIC_DEFEND 10
+#define ZF_VAMPIRIC_ATTACK -20
 
 methodmap VampiricPerk < ZombieBasePerk {
     public VampiricPerk(int client) {
@@ -55,11 +56,12 @@ FUNCTION(VampiricPerk, getDesc), char[] buffer, int maxlen) {
 
 FUNCTION_INT(VampiricPerk, getCategory))
 {
-    return 2;
+    return 1;
 }
 
 FUNCTION(VampiricPerk, updateClientPermStats)) {
     addStat(_inst.client, ZFStatDef, ZFStatTypePerm, ZF_VAMPIRIC_DEFEND);
+    addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, ZF_VAMPIRIC_ATTACK);
 }
 
 FUNCTION(VampiricPerk, onDealDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype) {

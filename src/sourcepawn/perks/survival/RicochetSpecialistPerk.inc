@@ -129,13 +129,20 @@ public Action Ricochet_Chain(Handle timer, DataPack hPack)
 
     delete hPack;
 
-    if (!validClient(victim) || !IsPlayerAlive(victim))
+    // Use IsClientInGame for a more robust check to ensure players are still connected.
+    if (!IsClientInGame(victim) || !IsPlayerAlive(victim))
     {
         return Plugin_Stop;    // Target is no longer valid, stop the chain.
     }
-    if (!validClient(attacker))
+    if (!IsClientInGame(attacker))
     {
         return Plugin_Stop;    // Attacker is no longer valid, stop the chain.
+    }
+
+    // Also validate the weapon entity, as it might be removed if the attacker disconnects or switches weapons.
+    if (!IsValidEntity(inflictor))
+    {
+        return Plugin_Stop;
     }
 
     // --- Visuals & Sound ---
@@ -187,7 +194,7 @@ stock int findNextRicochetTarget(int current_victim, float origin_pos[3])
 
     for (int i = 1; i <= MaxClients; i++)
     {
-        if (i == current_victim || !validClient(i) || !isZom(i) || !IsPlayerAlive(i))
+        if (i == current_victim || !IsClientInGame(i) || !isZom(i) || !IsPlayerAlive(i))
         {
             continue;
         }

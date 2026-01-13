@@ -110,11 +110,9 @@ FUNCTION(CowardlyPerk, onPeriodic))
         {
             PrintHintText(_inst.client, "%t", "CowardlyPerk_Hint_WornOff");
         }
-        else {
-            if ((_inst.perk_timer == 0))
-            {
-                PrintHintText(_inst.client, "%t", "CowardlyPerk_Hint_Ready");
-            }
+        else if ((_inst.perk_timer == 0))
+        {
+            PrintHintText(_inst.client, "%t", "CowardlyPerk_Hint_Ready");
         }
     }
 }
@@ -126,7 +124,10 @@ FUNCTION(CowardlyPerk, updateCondStats), char[] buffer, int maxlen)
         addStat(_inst.client, ZFStatDef, ZFStatTypeCond, ZF_COWARDLY_DEFEND);
         addStat(_inst.client, ZFStatSpeed, ZFStatTypeCond, ZF_COWARDLY_SPEED);
     }
-    else if (_inst.perk_timer == 0) {
+    else if (_inst.perk_timer > 0) {
+        Format(buffer, maxlen, "%t", "CarpenterPerk_Status_Cooldown", _inst.perk_timer);
+    }
+    else {
         Format(buffer, maxlen, "%t", "CowardlyPerk_Status_Ready");
     }
 }

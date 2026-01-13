@@ -17,8 +17,8 @@
 #include "../../perk_vtable.inc"
 #include "../../perk_macros.inc"
 
-#define ZF_NONLETHAL_ATTACK_BULLET -(90)
-#define ZF_NONLETHAL_FORCE 50.0
+#define ZF_NONLETHAL_ATTACK -(50)
+#define ZF_NONLETHAL_FORCE 400.0
 
 methodmap NonlethalPerk < SurvivorBasePerk {
     public NonlethalPerk(int client) {
@@ -26,8 +26,8 @@ methodmap NonlethalPerk < SurvivorBasePerk {
         NonlethalPerk sm = view_as<NonlethalPerk>(sm_base);
 
         PERK_REGISTER_BASIC_INFO(sm, NonlethalPerk);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE_POST, NonlethalPerkFonTakeDamagePost);
-        PERK_REGISTER_VTABLE(sm, VTABLE_ON_TAKE_DAMAGE, NonlethalPerkFonTakeDamage);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_DEAL_DAMAGE_POST, NonlethalPerkFonDealDamagePost);
+        PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, NonlethalPerkFupdateClientPermStats);
 
         return sm;
     }
@@ -55,42 +55,26 @@ FUNCTION_INT(NonlethalPerk, getCategory))
     return 2;
 }
 
-FUNCTION_FLOAT(NonlethalPerk, onTakeDamage), int victim, int attacker, int inflictor, float damage, int damagetype)
-{
-    // 如果攻击者不是自己，或者受害者不是僵尸，直接返回原始伤害
-    if (attacker != _inst.client || !validZom(victim)) {
-        return damage;
-    }
-
-    // 如果是子弹伤害，计算削弱后的伤害并返回
-    if (damagetype & DMG_BULLET) {
-        float modifiedDamage = damage * (1.0 + (ZF_NONLETHAL_ATTACK_BULLET / 100.0));
-        return modifiedDamage;
-    }
-
-    // 如果不是子弹伤害，返回原始伤害
-    return damage;
-}
-
-FUNCTION(NonlethalPerk, onTakeDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype) {
+FUNCTION(NonlethalPerk, onDealDamagePost), int victim, int attacker, int inflictor, float damage, int damagetype) {
     if (((attacker != _inst.client)) || (!(validZom(victim)))) {
         return;
     }
-    if ((damagetype & DMG_BULLET)) {
-        float attacker_pos[3];
-        GetClientAbsOrigin(attacker, attacker_pos);
-        float victim_pos[3];
-        GetClientAbsOrigin(victim, victim_pos);
-        float knockback_dir[3];
-        SubtractVectors(victim_pos, attacker_pos, knockback_dir);
-        NormalizeVector(knockback_dir, knockback_dir);
-        float force = (ZF_NONLETHAL_FORCE * damage);
-        float current_velocity[3];
-        GetEntPropVector(victim, Prop_Data, "m_vecVelocity", current_velocity);
-        float knockback_velocity[3];
-        ScaleVector(knockback_dir, force);
-        AddVectors(current_velocity, knockback_dir, knockback_velocity);
-        TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, knockback_velocity);
-    }
+    float attacker_pos[3];
+    GetClientAbsOrigin(attacker, attacker_pos);
+    float victim_pos[3];
+    GetClientAbsOrigin(victim, victim_pos);
+    float knockback_dir[3];
+    SubtractVectors(victim_pos, attacker_pos, knockback_dir);
+    NormalizeVector(knockback_dir, knockback_dir);
+    float force = (ZF_NONLETHAL_FORCE * damage);
+    float current_velocity[3];
+    GetEntPropVector(victim, Prop_Data, "m_vecVelocity", current_velocity);
+    float knockback_velocity[3];
+    ScaleVector(knockback_dir, force);
+    AddVectors(current_velocity, knockback_dir, knockback_velocity);
+    TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, knockback_velocity);
 }
 
+FUNCTION(NonlethalPerk, updateClientPermStats)) {
+    addStat(_inst.client, ZFStatAtt, ZFStatTypePerm, ZF_NONLETHAL_ATTACK);
+}

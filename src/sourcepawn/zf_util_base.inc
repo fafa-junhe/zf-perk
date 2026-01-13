@@ -44,6 +44,7 @@
 #define ZF_DMGTYPE_POISON         0x8000_0000 // Should be unused
 
 #define ZF_DAMAGERADIUS_NAME      "zfdmgrad"
+#define TEAM_CLASSNAME "tf_team"
 
 //
 // ZF Weapon Constants / Objects
@@ -1206,9 +1207,9 @@ stock void setZomTeam(int team)
 { zf_zomTeam = team; }
 stock void setSurTeam(int team)
 { zf_surTeam = team; }
-stock int isZom(int client)
+stock bool isZom(int client)
 { return GetClientTeam(client) == zf_zomTeam; }
-stock int isSur(int client)
+stock bool isSur(int client)
 { return GetClientTeam(client) == zf_surTeam; }
 
 ////////////////////////////////////////////////////////////
@@ -1280,6 +1281,13 @@ stock bool mapIsCP()
   char mapname[4];
   GetCurrentMap(mapname, sizeof(mapname));
   return strncmp(mapname, "cp_", 3, false) == 0;
+}
+
+stock bool mapIsSZF()
+{
+  char mapname[4];
+  GetCurrentMap(mapname, sizeof(mapname));
+  return strncmp(mapname, "szf_", 4, false) == 0;
 }
 
 ////////////////////////////////////////////////////////////
@@ -1558,9 +1566,10 @@ stock void addCondKritz(int client, float duration)
 { TF2_AddCondition(client, TFCond_Kritzkrieged, duration); }
 stock void addCondKing(int client, float duration)
 { TF2_AddCondition(client, TFCond_KingRune, duration); }
+stock void addCondLast(int client, float duration)
+{ TF2_AddCondition(client, TFCond_Reprogrammed, duration); }
 stock void remCondKritz(int client)
 { TF2_RemoveCondition(client, TFCond_Kritzkrieged); }
-
 stock bool isSlowed(int client)
 { return (TF2_IsPlayerInCondition(client, TFCond_Slowed)); }
 stock bool isKritzed(int client)
@@ -2082,10 +2091,15 @@ stock void spawnClient(int client, int nextClientTeam)
     // 2. Adding a death to player stats.
     SetEntProp(client, Prop_Send, "m_lifeState", 2); 
     TF2_SetPlayerClass(client, nextClientClass, false, true);
-    ChangeClientTeam(client, nextClientTeam);
+    ChangeClientTeamEx(client, nextClientTeam);
     SetEntProp(client, Prop_Send, "m_lifeState", 0);      
     TF2_RespawnPlayer(client);      
   }
+}
+
+void ChangeClientTeamEx(int iClient, int iNewTeamNum)
+{
+  TF2_ChangeClientTeam(iClient, view_as<TFTeam>(iNewTeamNum)); // compiles fine
 }
 
 void setTeamRespawnTime(int team, float time)

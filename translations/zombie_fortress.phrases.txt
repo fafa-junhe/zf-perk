@@ -74,6 +74,16 @@
 		"en"	"Zombie Fortress (%s)"
 		"chi"	"僵尸要塞 (%s)"
 	}
+	"ZF_Last_Survivor_Announce"
+	{
+		"en"	"[ZF] %N is the last survivor! They have been buffed!"
+		"chi"	"[ZF] %N 是最后一位幸存者！获得了加强属性！"
+	}
+    "ZF_CannotDropPowerup"
+    {
+        "en"    "You cannot drop this item."
+        "chi"    "你不能丢弃这个物品。"
+    }
 
 	//================================================================================
 	// 2. 主菜单系统 (Main Menu System)
@@ -213,7 +223,7 @@
 	"ZF_PerkCategory_1_Desc"
 	{
 		"en" "Damage\nThese perks focus on directly enhancing damage output, critical hit capabilities, or providing new means of attack to efficiently eliminate enemies."
-		"chi" "输出类\n这类职业的核心是通过各种方式直接增强伤害输出、暴击能力或提供新的攻击手段，目标是高效地消灭敌人。"
+		"chi" "输出类\n通过各种方式直接增强伤害力或提供新的攻击手段，高效地消灭敌人。"
 	}
 	"ZF_PerkCategory_2"
 	{
@@ -223,7 +233,7 @@
 	"ZF_PerkCategory_2_Desc"
 	{
 		"en" "Defensive\nThese perks focus on increasing survivability by boosting defense, health, blocking, or special damage reduction mechanics to absorb damage and buy time for the team."
-		"chi" "防守类\n这类职业专注于提升自身的生存能力，通过增加防御、生命值、格挡或特殊减伤机制来吸收伤害，为团队争取时间。"
+		"chi" "防守类\n专注于提升自身的生存能力或凭借特殊减伤机制来吸收伤害，为团队争取时间。"
 	}
 	"ZF_PerkCategory_3"
 	{
@@ -233,7 +243,7 @@
 	"ZF_PerkCategory_3_Desc"
 	{
 		"en" "Support\nThe core of these perks is to help the entire team by healing, providing buffs, placing functional structures, or weakening enemies, valuing tactical advantage over individual combat power."
-		"chi" "辅助类\n这类职业的核心是通过治疗、提供增益、放置功能性建筑或削弱敌人来帮助整个团队，战术价值大于个人战斗力。"
+		"chi" "辅助类\n通过治疗、提供增益、放置功能性建筑或削弱敌人来帮助整个团队，战术价值高。"
 	}
 	"ZF_PerkCategory_4"
 	{
@@ -243,7 +253,7 @@
 	"ZF_PerkCategory_4_Desc"
 	{
 		"en" "The main feature of these perks is a passive, continuously active area-of-effect aura that affects enemies or allies within range, acting as a mobile tactical node."
-		"chi" "这类职业的主要特点是自身携带一个被动的、持续生效的区域光环，能影响范围内的敌人或友军，是移动的战术节点。"
+		"chi" "自身携带一个被动的、持续生效的区域光环，能影响范围内的玩家，作为移动的战术节点。"
 	}
 	"ZF_PerkCategory_5"
 	{
@@ -685,6 +695,11 @@
 	{
 		"en"	"[ZF] Desired perk (%s) is already at its limit (%d)."
 		"chi"	"[ZF] 想要的职业 (%s) 已达到限制 (%d)."
+	}
+	"ZF_Perk_Info_Current"
+	{
+		"en"	"[ZF] Your current perk is"
+		"chi"	"[ZF] 你当前的职业为"
 	}
 	"ZF_Perk_Limit_Reached_Zom"
 	{
@@ -1658,7 +1673,7 @@
 	"ZenlikePerk_desc"
 	{
 		"en"	"When you crouch and stand still, your health will\nslowly recover, and your crit rate will constantly\nincrease. Each attack will reduce the crit chance\nby 25%. (Note: Engi hitting buildings with a\nwrench will also reduce the crit rate.)\n“Come on out, 100% crit rocket!”\nRecommended class: Soldier."
-		"chi"	"当蹲下不动时,你的生命值会慢慢恢复,并不断增加你的暴击率.\n每攻击一次,暴击率都会降低25%.\n(注意:工程师用扳手敲打建筑也会消耗暴击率.)\n \n“出来吧,百分百暴击火箭!”\n推荐职业: 士兵."
+		"chi"	"当蹲下时,你的生命值会慢慢恢复,并不断增加你的暴击率.\n每攻击一次,暴击率都会降低25%.\n(注意:工程师用扳手敲打建筑也会消耗暴击率.)\n \n“出来吧,百分百暴击火箭!”\n推荐职业: 士兵."
 	}
 	"ZenlikePerk_Status_Crit"
 	{
@@ -1684,7 +1699,7 @@
 	"BountyHunterPerk_desc"
 	{
 		"en"		"Press E to scan for nearby AOE zombies (Toxic, Static Field) for 5 seconds (20s cooldown).\nKilling an AOE zombie permanently grants +5% damage and +5% critical chance."
-		"chi"		"发医生语音来扫描附近的关键僵尸,并用激光暂时指示它们.\n目前的关键僵尸包括:磁化僵尸、剧毒僵尸、电场僵尸、重力僵尸。\n击杀这些僵尸会获得永久的攻击力与暴击率提高,并为你回复部分生命值.\n \n“我可不像那些见到谁都从中学习的家伙;我只挑关键目标!”\n推荐职业: 士兵、爆破手."
+		"chi"		"发医生语音来扫描附近的光环僵尸,并用激光暂时指示它们.\n目前的光环僵尸包括:磁化、剧毒、电场、重力、尸爆僵尸。\n击杀这些僵尸会获得永久的攻击力与暴击率提高,并为你回复部分生命值.\n \n“我可不像那些见到谁都从中学习的家伙;我只挑关键目标!”\n推荐职业: 士兵、爆破手."
 	}
 
 	"BountyHunterPerk_Hint_Cooldown"
@@ -1696,13 +1711,13 @@
 	"BountyHunterPerk_Hint_Found"
 	{
 		"en"		"AOE zombies marked!"
-		"chi"		"已标记关键僵尸!"
+		"chi"		"已标记光环僵尸!"
 	}
 
 	"BountyHunterPerk_Hint_NotFound"
 	{
 		"en"		"No AOE zombies found in range."
-		"chi"		"范围内未发现关键僵尸."
+		"chi"		"范围内未发现光环僵尸."
 	}
 
 	"BountyHunterPerk_Hint_Bonus"
@@ -1742,57 +1757,57 @@
 	"AegisPerk_shortdesc"
     {
         "en" "Aegis - Press E to drop a shield. Allies can pick it up for a defense bonus."
-        "chi" "[新]神盾手——按 E 键放置一个装甲箱。队友拾取后可获得防御加成。"
+        "chi" "[新]神盾手——用护甲包武装队友"
     }
     "AegisPerk_desc"
     {
         "en" "Press E to drop a shield at your feet. You can place up to 5 shields per life. Allies can melee the shield to equip it, permanently gaining +10% damage resistance. Cooldown: 15 seconds."
-        "chi" "按 E 键在脚下放置一个装甲箱，每条命最多可放置5个。队友可以通过近战攻击拾取护盾，永久获得 +10% 伤害抗性。冷却时间：15秒。"
+        "chi" "发医生语言来放置一个护甲包，每回合内最多可放置5个.\n队友可以通过近战攻击拾取护甲包，永久获得一定的防御力提升,冷却时间15秒.\n \n“灵感来自一款拆迁模拟器.”\n推荐职业: 任何."
     }
     "AegisPerk_Status_Cooldown"
     {
         "en" "Shield Cooldown: %ds"
-        "chi" "护盾冷却: %d秒"
+        "chi" "护甲包冷却: %d秒"
     }
     "AegisPerk_Status_Full"
     {
         "en" "Shields Full"
-        "chi" "护盾已满"
+        "chi" "护甲包已满"
     }
     "AegisPerk_Status_Ready"
     {
         "en" "Shields: %d/%d"
-        "chi" "护盾: %d/%d"
+        "chi" "护甲包: %d/%d"
     }
     "AegisPerk_Hint_Cooldown"
     {
         "en" "You must wait %d more seconds to place a shield."
-        "chi" "你需要等待 %d 秒才能放置护盾。"
+        "chi" "你需要等待 %d 秒才能放置护甲包。"
     }
     "AegisPerk_Hint_NotGrounded"
     {
         "en" "You must be on the ground to place a shield."
-        "chi" "你必须在地面上才能放置护盾。"
+        "chi" "你必须在地面上才能放置护甲包。"
     }
     "AegisPerk_Hint_Full"
     {
         "en" "You have the maximum number of shields placed."
-        "chi" "你已放置了最大数量的护盾。"
+        "chi" "你已放置了最大数量的护甲包。"
     }
     "AegisPerk_Hint_ShieldEquipped"
     {
         "en" "Shield equipped! You feel tougher."
-        "chi" "已装备护盾！你感觉更坚固了。"
+        "chi" "已装备护甲包！你感觉更坚固了。"
     }
 	"AegisPerk_Hint_PlayersNearby"
 	{
 		"en"	"Cannot place a shield - other players are nearby."
-		"chi"	"无法设置护盾 - 附近有其他玩家."
+		"chi"	"无法设置护甲包 - 附近有其他玩家."
 	}
 	"AegisPerk_Hint_WaitUntilGrace"
 	{
 		"en"	"Cannot place a shield - must wait until grace period end."
-		"chi"	"无法设置护盾 - 需要等待准备时间结束."
+		"chi"	"无法设置护甲包 - 需要等待准备时间结束."
 	}
 
 	//================================================================================
@@ -2564,7 +2579,7 @@
 	"VampiricPerk_desc"
 	{
 		"en"	"100% of damage dealt by your melee attacks is converted to your health.\nYou also passively regenerate 15 HP per second."
-		"chi"	"你有防御力和生命值回复加成. \n你的攻击附带吸血效果. \n \n“不靠近你,怎么把你给揍扁呢.” \n推荐职业: 侦察兵、机枪手."
+		"chi"	"你有额外生命值回复加成,但攻击力降低. \n你的攻击附带吸血效果. \n \n“不靠近你,怎么把你给揍扁呢.” \n推荐职业: 侦察兵、机枪手."
 	}
 
 	//------------------------------------------------
@@ -2665,17 +2680,17 @@
 	}
 
 	//------------------------------------------------
-	// Catalyst (催化者)
+	// Catalyst (尸爆僵尸)
 	//------------------------------------------------
 	"Catalyst"
 	{
 		"en"	"Catalyst"
-		"chi"	"催化者"
+		"chi"	"催化尸爆僵尸者"
 	}
 	"CatalystPerk_shortdesc"
 	{
 		"en"	"Catalyst - Causes other zombies to explode on death."
-		"chi"	"[新]催化者——使其他僵尸死亡时爆炸。"
+		"chi"	"[新]尸爆僵尸——将队友转化为炸弹"
 	}
 	"CatalystPerk_desc"
 	{
@@ -2782,4 +2797,18 @@
 		"chi"	"修改职业"
 	}
 
+	//================================================================================
+	// 12. SZF 兼容模式 (SZF Compatibility Mode)
+	//================================================================================
+	"SZF_SpecialPerkAssigned"
+	{
+		"en"	"[ZF] You have been randomly assigned a special perk: %s"
+		"chi"	"[ZF] 你被随机分配了一个特殊职业: %s"
+	}
+
+	"SZF_ModeActive_Announce"
+	{
+		"en"	"[SZF] Special Zombie Fortress mode is ACTIVE. Some perks are disabled and special zombies may appear."
+		"chi"	"[SZF] 超级僵尸要塞兼容模式已激活。部分职业被禁用，部分特殊僵尸随机刷新。"
+	}
 }

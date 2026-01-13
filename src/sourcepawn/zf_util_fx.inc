@@ -87,6 +87,7 @@ stock char ZFPART_AURAINRED[]         = "soldierbuff_red_spikes";
 stock char ZFPART_AURAINBLU[]         = "soldierbuff_blue_spikes";
 stock char ZFPART_AURAOUTRED[]        = "soldierbuff_red_spirial";
 stock char ZFPART_AURAOUTBLU[]        = "soldierbuff_blue_spiral";
+stock char ZFPART_AURAVOLATILE[]        = "merasmus_ambient_body_BACKUP";
 stock char ZFPART_AURAHALO[]          = "halopoint";
 stock char ZFPART_AURASPARKLE[]       = "community_sparkle";
 stock char ZFPART_AURAVORTEXBLU[]     = "coin_blue";

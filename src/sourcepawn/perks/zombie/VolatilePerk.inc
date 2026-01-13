@@ -10,11 +10,11 @@
 #include "../../zf_perk.inc"
 #include "../../zf_util_fx.inc"
 
-#define VOLATILE_ENERGY_STORE_RATIO 0.5 // 储存50%的伤害
-#define VOLATILE_ENERGY_DECAY 8.0      // 每秒衰减5点能量
+#define VOLATILE_ENERGY_STORE_RATIO 1.0 // 储存100%的伤害
+#define VOLATILE_ENERGY_DECAY 3.0      // 每秒衰减3点能量
 #define VOLATILE_MAX_ENERGY 150.0      // 最大能量
 #define VOLATILE_EXPLOSION_RADIUS 500.0
-#define VOLATILE_SUICIDE_MULTIPLIER 1.0 // 主动引爆的伤害倍率
+#define VOLATILE_SUICIDE_MULTIPLIER 0.7 // 主动引爆的伤害倍率
 
 #define VOLATILE_DATA_ENERGY (PERK_DATA_START_INDEX + 0)
 
@@ -29,6 +29,8 @@ methodmap VolatilePerk < ZombieBasePerk {
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PERIODIC, VolatilePerkFonPeriodic);
         PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_COND_STATS, VolatilePerkFupdateCondStats);
         PERK_REGISTER_VTABLE(sm, VTABLE_ON_PLAYER_SPAWN, VolatilePerkFonPlayerSpawn);
+        PERK_REGISTER_VTABLE(sm, VTABLE_UPDATE_CLIENT_PERM_STATS, VolatilePerkFupdateClientPermStats);
+        PERK_REGISTER_VTABLE(sm, VTABLE_ON_REMOVE, VolatilePerkFonRemove);
 
         sm.energy = 0.0;
         sm.hasExploded = false;
@@ -92,6 +94,9 @@ FUNCTION_FLOAT(VolatilePerk, onTakeDamage), int victim, int attacker, int inflic
     if (victim != client) {
         return damage;
     }
+    if (client == attacker) {
+        return damage;
+    }
 
     // Store energy from any incoming damage
     _inst.energy = fMin(VOLATILE_MAX_ENERGY, _inst.energy + damage * VOLATILE_ENERGY_STORE_RATIO);
@@ -123,10 +128,19 @@ FUNCTION(VolatilePerk, onCallForMedic)) {
 FUNCTION(VolatilePerk, onPeriodic)) {
     if (_inst.energy > 0) {
         _inst.energy = fMax(0.0, _inst.energy - VOLATILE_ENERGY_DECAY);
-        fxExplosionBig(_inst.client);
     }
 }
 
 FUNCTION(VolatilePerk, updateCondStats), char[] buffer, int maxlen) {
     Format(buffer, maxlen, "%t", "ZF_Volatile_Stored_Energy", _inst.energy);
+}
+
+FUNCTION(VolatilePerk, updateClientPermStats)) {
+    createAura(_inst.client, ZFPART_AURAVOLATILE, AttachBase);
+}
+
+FUNCTION(VolatilePerk, onRemove)) {
+    if (validAura(_inst.client)) {
+        removeAura(_inst.client);
+    }
 }

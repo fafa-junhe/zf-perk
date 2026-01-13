@@ -24,7 +24,7 @@
 #define ZF_RAGE_SPEED 150
 #define ZF_RAGE_SPEED_DURATION 10
 #define ZF_RAGE_HEALTHPCT_TOUSE 0.80
-#define ZF_RAGE_HEALTHPCT_ONUSE 0.3
+#define ZF_RAGE_HEALTHPCT_ONUSE 0.5
 
 // Data slots
 #define RAGE_DATA_STATE (PERK_DATA_START_INDEX + 0)
@@ -92,7 +92,7 @@ FUNCTION(RagePerk, getDesc), char[] buffer, int maxlen) {
 
 FUNCTION_INT(RagePerk, getCategory))
 {
-    return 2;
+    return 1;
 }
 
 FUNCTION(RagePerk, onRemove)) {

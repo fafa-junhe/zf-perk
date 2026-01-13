@@ -56,13 +56,13 @@
 #include <tf2>
 
 #include "zf_util_base.inc"
+#include "zf_util_log.inc"
 
 #include "zf_util_pref.inc"
 
 #include <tf2items>
 
 #include <tf2attributes>
-#tryinclude <steamworks>
 
 int         g_iRoundKills[MAXPLAYERS + 1];
 int         g_iSurvivorKills[MAXPLAYERS + 1];
@@ -72,23 +72,19 @@ int         g_iLastSurvivorPerk[MAXPLAYERS + 1];
 TFClassType g_eLastZombieClass[MAXPLAYERS + 1];
 int         g_iLastZombiePerk[MAXPLAYERS + 1];
 int         g_iLastAimTarget[MAXPLAYERS + 1];
-int         g_iWeaponOwners[4096] = { 0, ... }; // Global array to track weapon ownership
+int         g_iWeaponOwners[4096] = { 0, ... };    // Global array to track weapon ownership
 ArrayList   g_hDeadSurvivors;
 ArrayList   g_hLastRoundSurvivors;
- 
-// 用于CSV日志记录的会话统计
-int g_iSessionKills[MAXPLAYERS + 1];
-int g_iSessionAssists[MAXPLAYERS + 1];
-int g_iSessionDeaths[MAXPLAYERS + 1];
+
 
 #include "zf_perk.inc"
 #include "zf_util_bot.inc"
 #include "zf_util_ui.inc"
+#include "zf_util_team.inc"
 
 //
 // Plugin Information
 //
-
 public Plugin myinfo =
 {
     name        = "Zombie Fortress",
@@ -130,10 +126,9 @@ Handle g_hPlayerAimTimer[MAXPLAYERS + 1];
 
 // Cvar Handles
 Handle zf_cvForceOn;
-Handle zf_cvRatio;
 Handle zf_cvSwapOnPayload;
 Handle zf_cvSwapOnAttdef;
- 
+
 ////////////////////////////////////////////////////////////
 //
 // Sourcemod Callbacks
@@ -167,16 +162,11 @@ public void OnPluginStart()
     perkInit();
     utilUiInit();
     InitZombieVisuals();
-    g_hDeadSurvivors = new ArrayList();
+    g_hDeadSurvivors      = new ArrayList();
     g_hLastRoundSurvivors = new ArrayList();
- 
+
     // Initialize session stats
-    for (int i = 0; i <= MAXPLAYERS; i++)
-    {
-        g_iSessionKills[i] = 0;
-        g_iSessionAssists[i] = 0;
-        g_iSessionDeaths[i] = 0;
-    }
+    InitSessionStats();
 
     // Register cvars
     CreateConVar("sm_zf_version", PLUGIN_VERSION, "Current Zombie Fortress Version", FCVAR_SPONLY | FCVAR_REPLICATED | FCVAR_NOTIFY);
@@ -185,7 +175,9 @@ public void OnPluginStart()
     zf_cvSwapOnPayload = CreateConVar("sm_zf_swaponpayload", "1", "<0/1> Swap teams on non-ZF payload maps.", FCVAR_REPLICATED | FCVAR_NOTIFY, true, 0.0, true, 1.0);
     zf_cvSwapOnAttdef  = CreateConVar("sm_zf_swaponattdef", "1", "<0/1> Swap teams on non-ZF attack/defend maps.", FCVAR_REPLICATED | FCVAR_NOTIFY, true, 0.0, true, 1.0);
     AutoExecConfig(true, "zombie_fortress_perk");
- 
+    g_hRainbowCycleRate     = CreateConVar("sm_rainbow_cycle_rate", "1.0", "Controls the speed of which the rainbow glow changes color");
+    g_iLastSurvivorWithGlow = 0;
+
     // Hook events
     HookEvent("teamplay_round_start", event_RoundStart);
     HookEvent("teamplay_setup_finished", event_SetupEnd);
@@ -216,17 +208,13 @@ public void OnPluginStart()
     AddCommandListener(hook_JoinTeam, "jointeam");
     AddCommandListener(hook_JoinClass, "joinclass");
     AddCommandListener(hook_VoiceMenu, "voicemenu");
+    AddCommandListener(hook_DropItem, "dropitem");
     // Hook Client Console Commands
     // Hook Client Chat / Console Commands
     RegConsoleCmd("zf", cmd_zfMenu);
     RegConsoleCmd("zf_menu", cmd_zfMenu);
     RegConsoleCmd("zf_perk", cmd_zfMenu);
     RegConsoleCmd("zfdebug", cmd_zfDebugMenu);
-
-    char gameDesc[64];
-    Format(gameDesc, sizeof(gameDesc), "%T", "ZF_GameDescription", LANG_SERVER, PLUGIN_VERSION);
-
-    SteamWorks_SetGameDescription(gameDesc);
 
     WriteCsvHeader();
 }
@@ -236,6 +224,12 @@ public void OnConfigsExecuted()
     // Determine whether to enable ZF.
     // + Enable ZF for "zf_" maps or if sm_zf_force_on is set.
     // + Disable ZF otherwise.
+    if (mapIsSZF())
+    {
+        g_bSzfCompatible = true;
+        SZF_UpdatePerkAvailability();
+        PrintToServer("[ZF] SZF map detected. Forcing SZF compatibility mode.");
+    }
     if (mapIsZF() || GetConVarBool(zf_cvForceOn))
     {
         zfEnable();
@@ -312,11 +306,22 @@ public void OnMapEnd()
         g_hLastRoundSurvivors = null;
     }
 }
- 
+
 public void OnPluginEnd()
 {
     // Only perform cleanup if the plugin was active.
     zfDisable();
+
+    int index = -1;
+    while ((index = FindEntityByClassname(index, "tf_glow")) != -1)
+    {
+        char strName[64];
+        GetEntPropString(index, Prop_Data, "m_iName", strName, sizeof(strName));
+        if (StrEqual(strName, "RainbowGlow"))
+        {
+            AcceptEntityInput(index, "Kill");
+        }
+    }
 }
 
 public void OnClientPostAdminCheck(int client)
@@ -332,26 +337,50 @@ public void OnClientPostAdminCheck(int client)
 
     pref_OnClientConnect(client);
     perk_OnClientConnect(client);
-    g_iLastAimTarget[client] = 0;
+    g_iLastAimTarget[client]  = 0;
+    
+    int totalPriority = 0;
+    int validPlayers = 0;
+    for (int i = 1; i <= MaxClients; i++)
+    {
+        if (IsClientInGame(i) && i != client)
+        {
+            totalPriority += g_iZombiePriority[i];
+            validPlayers++;
+        }
+    }
+    
+    if (validPlayers > 0)
+    {
+        g_iZombiePriority[client] = max(2, totalPriority / validPlayers);
+    }
+    else
+    {
+        g_iZombiePriority[client] = 2;
+    }
 
     if (g_hPlayerAimTimer[client] != INVALID_HANDLE)
     {
         KillTimer(g_hPlayerAimTimer[client]);
         g_hPlayerAimTimer[client] = INVALID_HANDLE;
     }
-    g_hPlayerAimTimer[client] = CreateTimer(0.2, timer_CheckPlayerAim, client, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+    g_hPlayerAimTimer[client] = CreateTimer(0.5, timer_CheckPlayerAim, client, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public void OnClientDisconnect(int client)
 {
     if (!zf_bEnabled) return;
 
-    LogPlayerSessionData(client); // 记录断开连接玩家的最终数据
+    if (client == g_iLastSurvivorWithGlow)
+    {
+        g_iLastSurvivorWithGlow = 0;
+    }
+
+    LogPlayerSessionData(client);    // 记录断开连接玩家的最终数据
     pref_OnClientDisconnect(client);
     perk_OnClientDisconnect(client);
     g_bIsCosmeticZombie[client] = false;
     g_iLastAimTarget[client]    = 0;
-
 
     if (g_hPlayerAimTimer[client] != INVALID_HANDLE)
     {
@@ -359,7 +388,6 @@ public void OnClientDisconnect(int client)
         g_hPlayerAimTimer[client] = INVALID_HANDLE;
     }
 }
-
 
 public void OnGameFrame()
 {
@@ -374,7 +402,6 @@ public void OnEntityCreated(int entity,
                      const char[] classname)
 {
     if (!zf_bEnabled) return;
-
     if (StrEqual(classname, "obj_sentrygun") || StrEqual(classname, "obj_dispenser") || StrEqual(classname, "obj_teleporter"))
     {
         SDKHook(entity, SDKHook_OnTakeDamage, Hook_BuildingOnTakeDamage);
@@ -427,7 +454,6 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 public void OnTakeDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype)
 {
     if (!zf_bEnabled) return;
-
 
     perk_OnTakeDamagePost(victim, attacker, inflictor, damage, damagetype);
     perk_OnDealDamagePost(attacker, victim, inflictor, damage, damagetype);
@@ -505,7 +531,7 @@ public Action hook_JoinTeam(int client,
     GetCmdArg(1, cmd1, sizeof(cmd1));
 
     // Log session data if team is changing
-    int currentTeam = GetClientTeam(client);
+    int currentTeam   = GetClientTeam(client);
     int requestedTeam = -1;
     if (StrEqual(cmd1, "red", false)) requestedTeam = view_as<int>(TFTeam_Red);
     else if (StrEqual(cmd1, "blue", false)) requestedTeam = view_as<int>(TFTeam_Blue);
@@ -536,7 +562,7 @@ public Action hook_JoinTeam(int client,
         // team and present them with the zombie class select screen.
         if (StrEqual(cmd1, sSurTeam, false) || StrEqual(cmd1, "auto", false))
         {
-            ChangeClientTeam(client, zomTeam());
+            ChangeClientTeamEx(client, zomTeam());
             ShowVGUIPanel(client, sZomVgui);
             return Plugin_Handled;
         }
@@ -565,7 +591,7 @@ public Action hook_JoinClass(int client,
     GetCmdArg(1, cmd1, sizeof(cmd1));
 
     // Log session data if class is changing
-    TFClassType currentClass = TF2_GetPlayerClass(client);
+    TFClassType currentClass   = TF2_GetPlayerClass(client);
     TFClassType requestedClass = TF2_GetClass(cmd1);
     if (requestedClass != TFClass_Unknown && requestedClass != currentClass)
     {
@@ -620,6 +646,15 @@ public Action hook_VoiceMenu(int client,
     return Plugin_Continue;
 }
 
+public Action hook_DropItem(int client, const char[] command, int argc)
+{
+    if (!zf_bEnabled)
+    {
+        return Plugin_Continue;
+    }
+    PrintToChat(client, "%t", "ZF_CannotDropPowerup");
+    return Plugin_Handled;    // 阻止命令执行
+}
 
 public Action cmd_zfMenu(int client, int args)
 {
@@ -737,6 +772,11 @@ public Action event_WaitingBegins(Handle event, const char[] name, bool dontBroa
 public Action event_RoundStart(Handle event,
                         const char[] name, bool dontBroadcast)
 {
+    if (g_bSzfCompatible)
+    {
+        PrintToChatAll("%t", "SZF_ModeActive_Announce");
+    }
+
     for (int i = 0; i <= MaxClients; i++)
     {
         g_iRoundKills[i]        = 0;
@@ -746,44 +786,33 @@ public Action event_RoundStart(Handle event,
         g_iLastSurvivorPerk[i]  = 0;
         g_eLastZombieClass[i]   = TFClass_Unknown;
         g_iLastZombiePerk[i]    = 0;
-        }
-        if (g_hDeadSurvivors != null)
-        {
-            g_hDeadSurvivors.Clear();
-        } else {
-            g_hDeadSurvivors = new ArrayList();
-        }
-     
-        // Although g_hLastRoundSurvivors is populated at the end of a round,
-        // we clear it here as a safety measure to ensure a clean state for the new round,
-        // especially if the previous round ended abnormally.
-        if (g_hLastRoundSurvivors != null)
-        {
-            g_hLastRoundSurvivors.Clear();
-        } else {
-            g_hLastRoundSurvivors = new ArrayList();
-        }
-        // Reset session stats for all players
-        for (int i = 0; i <= MaxClients; i++)
+    }
+    if (g_hDeadSurvivors != null)
     {
-        g_iSessionKills[i] = 0;
-        g_iSessionAssists[i] = 0;
-        g_iSessionDeaths[i] = 0;
+        g_hDeadSurvivors.Clear();
+    }
+    else {
+        g_hDeadSurvivors = new ArrayList();
     }
 
-    int players[MAXPLAYERS];
-    int playerCount;
-    int surCount;
+    // Although g_hLastRoundSurvivors is populated at the end of a round,
+    // we clear it here as a safety measure to ensure a clean state for the new round,
+    // especially if the previous round ended abnormally.
+    if (g_hLastRoundSurvivors != null)
+    {
+        g_hLastRoundSurvivors.Clear();
+    }
+    else {
+        g_hLastRoundSurvivors = new ArrayList();
+    }
+    // Reset session stats for all players
+    InitSessionStats();
 
     if (!zf_bEnabled) return Plugin_Continue;
     //
     // Handle round state.
     // + "teamplay_round_start" event is fired twice on new map loads.
     // //
-    // remove_entity_all("item_ammopack_full", true);
-    // remove_entity_all("item_ammopack_medium", true);
-    // remove_entity_all("item_healthkit_full", false);
-    // remove_entity_all("item_healthkit_medium", false);
     if (roundState() == RoundInit1)
     {
         setRoundState(RoundInit2);
@@ -799,78 +828,7 @@ public Action event_RoundStart(Handle event,
     //
     if (zf_bNewRound)
     {
-        // Find all active players.
-        playerCount = 0;
-        for (int i = 1; i <= MaxClients; i++)
-        {
-            if (IsClientInGame(i) && (GetClientTeam(i) > 1))
-            {
-                players[playerCount++] = i;
-            }
-        }
-
-        // Randomize the initial list of players
-        SortIntegers(players, playerCount, Sort_Random);
-        // NOTE: As of SM 1.3.1, SortIntegers w/ Sort_Random doesn't
-        //       sort the first element of the array. Temp fix below.
-        if (playerCount > 1)
-        {
-            int idx      = GetRandomInt(0, playerCount - 1);
-            int temp     = players[idx];
-            players[idx] = players[0];
-            players[0]   = temp;
-        }
-
-        // Prioritize survivors from the last round by moving them to the front of the already randomized list.
-        int lastRoundSurvivorCount = g_hLastRoundSurvivors.Length;
-        if (lastRoundSurvivorCount > 0)
-        {
-            int frontOfList = 0;
-            for (int i = 0; i < playerCount && frontOfList < lastRoundSurvivorCount; i++)
-            {
-                int client = players[i];
-                bool wasSurvivor = false;
-                for (int j = 0; j < lastRoundSurvivorCount; j++)
-                {
-                    if (g_hLastRoundSurvivors.Get(j) == client)
-                    {
-                        wasSurvivor = true;
-                        break;
-                    }
-                }
-
-                if (wasSurvivor)
-                {
-                    // Swap this player with the one at the `frontOfList` position.
-                    // This preserves the initial randomization among the prioritized group.
-                    int temp = players[frontOfList];
-                    players[frontOfList] = players[i];
-                    players[i] = temp;
-                    frontOfList++;
-                }
-            }
-        }
-
-        // Calculate team counts based on the ratio.
-        surCount = RoundToFloor(playerCount * GetConVarFloat(zf_cvRatio));
-
-        // --- Team Balance Rules ---
-        // 1. If there are players but the calculation resulted in zero survivors, force at least one.
-        if (playerCount > 0 && surCount == 0)
-        {
-            surCount = 1;
-        }
-        // 2. If there are multiple players but the calculation resulted in zero zombies, force at least one.
-        if (playerCount > 1 && surCount == playerCount)
-        {
-            surCount = playerCount - 1;
-        }
-
-        // Assign active players to survivor and zombie teams.
-        for (int i = 0; i < surCount; i++)
-            spawnClient(players[i], surTeam());
-        for (int i = surCount; i < playerCount; i++)
-            spawnClient(players[i], zomTeam());
+        AssignTeams();
     }
 
     // Handle zombie spawn state.
@@ -929,6 +887,20 @@ public Action event_RoundEnd(Handle event,
     //
     zf_bNewRound = GetEventBool(event, "full_round") || (GetEventInt(event, "team") == zomTeam());
     setRoundState(RoundPost);
+    for (int i = 1; i <= MaxClients; i++)
+    {
+        if (IsClientInGame(i))
+        {
+            if (isSur(i))
+            {
+                g_iZombiePriority[i]++;
+            }
+            else if (isZom(i))
+            {
+                g_iZombiePriority[i] = 0;
+            }
+        }
+    }
 
     // Log final session data for all connected players
     for (int i = 1; i <= MaxClients; i++)
@@ -938,7 +910,6 @@ public Action event_RoundEnd(Handle event,
             LogPlayerSessionData(i);
         }
     }
-
 
     perk_OnRoundEnd();
 
@@ -953,7 +924,12 @@ public Action event_PlayerSpawn(Handle event,
 {
     if (!zf_bEnabled) return Plugin_Continue;
 
-    int         client      = GetClientOfUserId(GetEventInt(event, "userid"));
+    int client = GetClientOfUserId(GetEventInt(event, "userid"));
+
+    if (g_bSzfCompatible)
+    {
+        SZF_OnPlayerSpawn(client);
+    }
 
     // Unhook weapon drop to prevent issues during spawn
 
@@ -988,8 +964,6 @@ public Action event_PlayerSpawn(Handle event,
 
     // 2. Handle valid, post spawn logic
     CreateTimer(0.1, timer_postSpawn, client, TIMER_FLAG_NO_MAPCHANGE);
-
-    
 
     return Plugin_Continue;
 }
@@ -1030,7 +1004,7 @@ public Action event_PlayerDeath(Handle event,
     if (killer > 0 && killer != victim)
     {
         g_iRoundKills[killer]++;
-        g_iSessionKills[killer]++; // 累加会话击杀
+        g_iSessionKills[killer]++;    // 累加会话击杀
         if (isSur(killer) && isZom(victim))
         {
             g_iSurvivorKills[killer]++;
@@ -1039,12 +1013,12 @@ public Action event_PlayerDeath(Handle event,
             g_iZombieKills[killer]++;
         }
     }
-    g_iSessionDeaths[victim]++; // 累加会话死亡
+    g_iSessionDeaths[victim]++;    // 累加会话死亡
 
-    int assist     = GetClientOfUserId(GetEventInt(event, "assister"));
+    int assist = GetClientOfUserId(GetEventInt(event, "assister"));
     if (assist > 0 && assist != victim)
     {
-        g_iSessionAssists[assist]++; // 累加会话助攻
+        g_iSessionAssists[assist]++;    // 累加会话助攻
     }
     int inflictor  = GetEventInt(event, "inflictor_entindex");
     int damagetype = GetEventInt(event, "damagebits");
@@ -1057,16 +1031,16 @@ public Action event_PlayerDeath(Handle event,
         g_iLastZombiePerk[victim]  = prefGet(victim, ZomPerk);
 
         // Remove dropped ammopacks from zombies.
-        int index = -1;
+        int index                  = -1;
         while ((index = FindEntityByClassname(index, "tf_ammo_pack")) != -1)
         {
             if (GetEntPropEnt(index, Prop_Send, "m_hOwnerEntity") == victim)
                 AcceptEntityInput(index, "Kill");
         }
     }
- 
+
     perk_OnPlayerDeath(victim, killer, assist, inflictor, damagetype);
- 
+
     // 当幸存者死亡时，检查他是否在任何重力光环的影响下
     if (isSur(victim))
     {
@@ -1105,7 +1079,7 @@ public Action event_PlayerDeath(Handle event,
     {
         // Record the dying survivor
         g_hDeadSurvivors.Push(victim);
- 
+
         if (GetConVarBool(zf_cvDebug))
         {
             CreateTimer(0.1, timer_instantRespawn, victim, TIMER_FLAG_NO_MAPCHANGE);
@@ -1164,25 +1138,19 @@ public void event_post_inventory_application(Handle event, const char[] name, bo
 
 public void TF2_OnConditionAdded(int client, TFCond cond)
 {
-    
-	if(cond == TFCond_Jarated)
-	{
+    if (cond == TFCond_Jarated)
+    {
         TF2_RemoveCondition(client, cond);
-		addStatTempStack(client, ZFStatSpeed, -100, 6);
+        addStatTempStack(client, ZFStatSpeed, -100, 6);
         SetEntityRenderColor(client, 255, 242, 89, 255);
         CreateTimer(6.0, timer_reset_color, client, TIMER_FLAG_NO_MAPCHANGE);
-	}
-    ZombieVisuals_OnConditionAdded(client, cond);
+    }
 }
 
-public Action timer_reset_color(Handle timer, int victim){
+public Action timer_reset_color(Handle timer, int victim)
+{
     SetEntityRenderColor(victim, 255, 255, 255, 255);
     return Plugin_Continue;
-}
-
-public void TF2_OnConditionRemoved(int client, TFCond cond)
-{
-    ZombieVisuals_OnConditionRemoved(client, cond);
 }
 
 public void event_AmmopackPickup(const char[] output, int caller, int activator, float delay)
@@ -1330,7 +1298,6 @@ public Action timer_postSpawn(Handle timer, any client)
     if (isZom(client))
     {
         ApplyZombieVisuals(client);
-        
     }
     else
     {
@@ -1339,13 +1306,12 @@ public Action timer_postSpawn(Handle timer, any client)
     return Plugin_Continue;
 }
 
-
 public Action timer_zombify(Handle timer, any client)
 {
     if (validClient(client))
     {
         PrintToChat(client, "%t", "ZF_Infected");
-        LogAndResetSession(client); // Log before zombifying
+        LogAndResetSession(client);    // Log before zombifying
         spawnClient(client, zomTeam());
     }
 
@@ -1363,7 +1329,6 @@ public Action timer_instantRespawn(Handle timer, any client)
 
 public Action timer_CheckPlayerAim(Handle timer, any client)
 {
-    // ZF_LogDebug("timer_CheckPlayerAim: client=%d", client); // Called frequently
     if (!IsClientInGame(client) || !IsPlayerAlive(client))
     {
         if (g_iLastAimTarget[client] != 0)
@@ -1417,7 +1382,7 @@ void handle_winCondition()
 {
     // 1. Check for win conditions.
     int survivorCount = 0;
-    int zombieCount = 0;
+    int zombieCount   = 0;
     for (int i = 1; i <= MaxClients; i++)
     {
         if (IsClientInGame(i) && IsPlayerAlive(i))
@@ -1671,6 +1636,8 @@ void zfEnable()
             OnClientPostAdminCheck(i);
         }
     }
+
+
 }
 
 void zfDisable()
@@ -1729,6 +1696,7 @@ void zfDisable()
             }
         }
     }
+
 }
 
 void zfSetTeams()
@@ -1799,91 +1767,3 @@ void zfSwapTeams()
 // Utility Functionality
 //
 ////////////////////////////////////////////////////////////
-// ====================================================================================================
-//
-// CSV Logging
-//
-// ====================================================================================================
-
-stock void WriteCsvHeader()
-{
-    char path[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, path, sizeof(path), "logs/zf_stats.csv");
-
-    if (!FileExists(path))
-    {
-        LogToFile(path, "user,steamid,team,class,perk,kill,assist,death,lastattack,lastspeed,lastcritchance,lastrof,lastdefense");
-    }
-}
-
-void LogPlayerSessionData(int client)
-{
-    if (!IsClientInGame(client))
-        return;
-
-    char path[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, path, sizeof(path), "logs/zf_stats.csv");
-
-    // User
-    char name[MAX_NAME_LENGTH];
-    GetClientName(client, name, sizeof(name));
-    ReplaceString(name, sizeof(name), ",", ";"); // Escape commas in name
-
-    // SteamID
-    char steamid[64];
-    GetClientAuthId(client, AuthId_Steam2, steamid, sizeof(steamid));
-
-    // Team, Class, Perk
-    char teamStr[16];
-    char classStr[32];
-    char perkName[32];
-    int perkId;
-
-    if (isSur(client))
-    {
-        strcopy(teamStr, sizeof(teamStr), "survivor");
-        GetClassNameFromEnum(TF2_GetPlayerClass(client), classStr, sizeof(classStr));
-        perkId = prefGet(client, SurPerk);
-        GetSurPerkName(perkId, perkName, sizeof(perkName));
-    }
-    else if (isZom(client))
-    {
-        strcopy(teamStr, sizeof(teamStr), "zombie");
-        GetClassNameFromEnum(TF2_GetPlayerClass(client), classStr, sizeof(classStr));
-        perkId = prefGet(client, ZomPerk);
-        GetZomPerkName(perkId, perkName, sizeof(perkName));
-    }
-    else
-    {
-        strcopy(teamStr, sizeof(teamStr), "spectator");
-        strcopy(classStr, sizeof(classStr), "none");
-        strcopy(perkName, sizeof(perkName), "none");
-    }
-
-    // Session Stats
-    int kills = g_iSessionKills[client];
-    int assists = g_iSessionAssists[client];
-    int deaths = g_iSessionDeaths[client];
-
-    // Last Stats
-    int lastAttack = getStat(client, ZFStatAtt);
-    int lastSpeed = getStat(client, ZFStatSpeed);
-    int lastCritChance = getStat(client, ZFStatCrit);
-    int lastRof = getStat(client, ZFStatRof);
-    int lastDefense = getStat(client, ZFStatDef);
-
-    LogToFile(path, "%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d",
-        name, steamid, teamStr, classStr, perkName,
-        kills, assists, deaths,
-        lastAttack, lastSpeed, lastCritChance, lastRof, lastDefense);
-}
-
-public void LogAndResetSession(int client)
-{
-    LogPlayerSessionData(client);
-
-    // Reset session stats
-    g_iSessionKills[client] = 0;
-    g_iSessionAssists[client] = 0;
-    g_iSessionDeaths[client] = 0;
-}

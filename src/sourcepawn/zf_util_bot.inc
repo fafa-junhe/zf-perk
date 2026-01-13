@@ -132,7 +132,7 @@ stock void bot_onPlayerRunCmd(int client, int &buttons, int &impulse, float vel[
     // 持续呼叫类
     else if (isClientPerkNameEquals(client, "Specter") || isClientPerkNameEquals(client, "Tantrum"))
     {
-            ClientCommand(client, "voicemenu 0 0");
+        ClientCommand(client, "voicemenu 0 0");
     }
     // 光环不动类: 敌人在近处时停下
     else if (isClientPerkNameEquals(client, "Toxic") || isClientPerkNameEquals(client, "StaticField") || isClientPerkNameEquals(client, "Guardian"))

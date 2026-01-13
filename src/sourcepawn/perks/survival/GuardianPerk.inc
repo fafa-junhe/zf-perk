@@ -133,7 +133,7 @@ FUNCTION(GuardianPerk, onPeriodic))
     GetEntPropVector(client, Prop_Data, "m_vecVelocity", vel);
 
     // Check if player is moving
-    if (GetVectorLength(vel) >= 5.0)
+    if (GetVectorLength(vel) >= 100.0)
     {
         _inst.still_timer = 0.0;
         if (_inst.field_active)

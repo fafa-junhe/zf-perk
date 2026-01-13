@@ -38,7 +38,6 @@
 #include "survival/AegisPerk.inc"
 #include "zombie/ZombieBasePerk.inc"
 #include "zombie/AlphaPerk.inc"
-#include "zombie/CombustiblePerk.inc"
 #include "zombie/HorrifyingPerk.inc"
 #include "zombie/LeapPerk.inc"
 #include "zombie/MagneticPerk.inc"
@@ -100,7 +99,6 @@ public void registerSurvivorPerks() {
 public void registerZombiePerks() {
     RegisterZombiePerk(ZombieBasePerk);
     RegisterZombiePerk(AlphaPerk);
-    RegisterZombiePerk(CombustiblePerk);
     RegisterZombiePerk(HorrifyingPerk);
     RegisterZombiePerk(LeapPerk);
     RegisterZombiePerk(MagneticPerk);

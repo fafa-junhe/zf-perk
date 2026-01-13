@@ -107,9 +107,7 @@ stock bool isCarpenter(int client)
     {
         return false;
     }
-    char perkName[32];
-    g_hPerks[client].getName(perkName, sizeof(perkName));
-    return StrEqual(perkName, "Carpenter");
+    return isClientPerkNameEquals(client, "Carpenter");
 }
 
 FUNCTION(CarpenterPerk, onPeriodic))

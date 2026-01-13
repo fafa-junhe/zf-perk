@@ -78,7 +78,6 @@ FUNCTION_FLOAT(SelflessPerk, onTakeDamage), int victim, int attacker, int inflic
     if (isUbered(victim)){
         return 0.0;
     }
-
     // 2. 检查是否是来自僵尸的致命一击
     if (validZom(attacker)) {
         int currentHealth = GetClientHealth(client);
@@ -95,6 +94,7 @@ FUNCTION_FLOAT(SelflessPerk, onTakeDamage), int victim, int attacker, int inflic
             float pos[3];
             GetClientAbsOrigin(client, pos);
             applyDamageRadial(client, ZF_SELFLESS_DAMAGE, pos, ZF_SELFLESS_RADIUS, false, GetClientTeam(client));
+            ForcePlayerSuicide(client);
         }
     }
 

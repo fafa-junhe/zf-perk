@@ -13,7 +13,7 @@
 #include <halflife>
 #include "zf_perk.inc"
 
-#define PLUGIN_VERSION "4.5.3fix1"
+#define PLUGIN_VERSION "4.5.4fix1"
 
 Handle zf_hudLine0;
 Handle zf_hudLine1;
@@ -100,9 +100,9 @@ stock void ShowPlayerStatsHud(int client, float x, float y, int att, int def, in
 
     // 使用帮助函数来简化显示
     _ShowSingleStatHud(client, zf_hudAtt,   x,         y,                  att,   "ZF_HUD_Attack",  alpha);
-    _ShowSingleStatHud(client, zf_hudDef,   x + 0.1,   y,          def,   "ZF_HUD_Defense", alpha);
+    _ShowSingleStatHud(client, zf_hudDef,   x + 0.1,   y - 0.001,          def,   "ZF_HUD_Defense", alpha);
     _ShowSingleStatHud(client, zf_hudCrit,  x,         y + y_offset,       crit,  "ZF_HUD_Crit",    alpha);
-    _ShowSingleStatHud(client, zf_hudSpeed, x + 0.1,   y + y_offset, speed, "ZF_HUD_Speed",   alpha);
+    _ShowSingleStatHud(client, zf_hudSpeed, x + 0.1,   y + y_offset - 0.001, speed, "ZF_HUD_Speed",   alpha);
 }
 // FX.HUD
 void utilUiInit()
@@ -146,12 +146,12 @@ stock bool _GetPlayerPerkDisplayName(int client, int target, char[] perkName, in
 {
     if (isSur(target))
     {
-        GetSurPerkDisplayName(client, prefGet(target, SurPerk), perkName, maxlen);
+        GetPerkDisplayName(client, prefGet(target, SurPerk), false, perkName, maxlen);
         return true;
     }
     else if (isZom(target))
     {
-        GetZomPerkDisplayName(client, prefGet(target, ZomPerk), perkName, maxlen);
+        GetPerkDisplayName(client, prefGet(target, ZomPerk), true, perkName, maxlen);
         return true;
     }
     perkName[0] = '\0';
@@ -174,12 +174,17 @@ void updateHud(int client)
         {
             char targetName[MAX_NAME_LENGTH];
             GetClientName(target, targetName, sizeof(targetName));
-            Format(strHudPerk, sizeof(strHudPerk), "%T\n%T", "ZF_HUD_Inspecting", client, targetName, "ZF_HUD_Perk", client, perkName);
-            SetHudTextParams(0.15, 0.80, 2.1, 200, 200, 200, 150);
-            if (zf_perkStr[target][0] != '\0')
-                ShowSyncHudText(client, zf_hudLine0, "%s (%s)", strHudPerk, zf_perkStr[target]);
-            else
-                ShowSyncHudText(client, zf_hudLine0, strHudPerk);
+           char inspectingText[128];
+           Format(inspectingText, sizeof(inspectingText), "%T", "ZF_HUD_Inspecting", client, targetName);
+           SetHudTextParams(0.15, 0.76, 2.1, 200, 200, 200, 150);
+           ShowSyncHudText(client, zf_hudLine1, inspectingText);
+
+           Format(strHudPerk, sizeof(strHudPerk), "%T", "ZF_HUD_Perk", client, perkName);
+           SetHudTextParams(0.15, 0.80, 2.1, 200, 200, 200, 150);
+           if (zf_perkStr[target][0] != '\0')
+               ShowSyncHudText(client, zf_hudLine0, "%s (%s)", strHudPerk, zf_perkStr[target]);
+           else
+               ShowSyncHudText(client, zf_hudLine0, strHudPerk);
         }
 
         int att = getStat(target, ZFStatAtt);
@@ -191,6 +196,7 @@ void updateHud(int client)
     // 玩家存活: 显示自己的Perk和状态
     else if (IsPlayerAlive(client) && (isSur(client) || isZom(client)))
     {
+       ShowSyncHudText(client, zf_hudLine1, ""); // 清除检视行
         if (_GetPlayerPerkDisplayName(client, client, perkName, sizeof(perkName)))
         {
             Format(strHudPerk, sizeof(strHudPerk), "%T", "ZF_HUD_Perk", client, perkName);
@@ -262,6 +268,9 @@ int zf_menuCategory[MAXPLAYERS + 1];
 //
 public void panel_PrintPerkCategoryList(int client, bool isZombie)
 {
+    // Force update perk availability right before showing the menu
+    SZF_UpdatePerkAvailability();
+
     Menu menu = new Menu(isZombie ? MenuHandler_ZomPerkCategoryList : MenuHandler_SurPerkCategoryList);
 
     char title[128];
@@ -310,13 +319,30 @@ public void panel_PrintPerkList(int client, bool isZombie, int category)
 
         if (perkCategory == category)
         {
+            if (isZombie)
+            {
+                if (!zomPerkEnabled(i))
+                    continue;
+            }
+            else
+            {
+                if (!surPerkEnabled(i))
+                    continue;
+            }
+            char perkName[64];
+            if (isZombie)
+                GetPerkName(i, true, perkName, sizeof(perkName));
+            else
+                GetPerkName(i, false, perkName, sizeof(perkName));
+
+
             char sPerkIndex[16];
             IntToString(i, sPerkIndex, sizeof(sPerkIndex));
             char displayName[128];
             if (isZombie)
-                GetZomPerkDisplayShortDesc(client, i, displayName, sizeof(displayName));
+                GetPerkDisplayShortDesc(client, i, true, displayName, sizeof(displayName));
             else
-                GetSurPerkDisplayShortDesc(client, i, displayName, sizeof(displayName));
+                GetPerkDisplayShortDesc(client, i, false, displayName, sizeof(displayName));
 
             int limit = isZombie ? zf_zomPerksLimit[i] : zf_surPerksLimit[i];
             int current = isZombie ? getZomPerkCount(i) : getSurPerkCount(i);
@@ -413,16 +439,16 @@ public void panel_PrintPerkSelect(int client, int perk, bool isZombie, int categ
 
     if (isZombie)
     {
-        GetZomPerkDisplayName(client, perk, title, sizeof(title));
-        GetZomPerkLongDesc(perk, longDescKey, sizeof(longDescKey));
+        GetPerkDisplayName(client, perk, true, title, sizeof(title));
+        GetPerkLongDesc(perk, true, longDescKey, sizeof(longDescKey));
         limit = zf_zomPerksLimit[perk];
         current = getZomPerkCount(perk);
         disabled = !zomPerkEnabled(perk);
     }
     else
     {
-        GetSurPerkDisplayName(client, perk, title, sizeof(title));
-        GetSurPerkLongDesc(perk, longDescKey, sizeof(longDescKey));
+        GetPerkDisplayName(client, perk, false, title, sizeof(title));
+        GetPerkLongDesc(perk, false, longDescKey, sizeof(longDescKey));
         limit = zf_surPerksLimit[perk];
         current = getSurPerkCount(perk);
         disabled = !surPerkEnabled(perk);
@@ -1434,7 +1460,7 @@ public int panel_HandleDebugChangeTeam(Menu menu, MenuAction action, int client,
         else if (team == zomTeam())
             spawnClient(target, zomTeam());
         else
-            ChangeClientTeam(target, team);
+            ChangeClientTeamEx(target, team);
     }
     else if (action == MenuAction_End)
     {

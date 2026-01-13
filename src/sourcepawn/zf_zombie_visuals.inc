@@ -100,29 +100,20 @@ stock void ZombieVisuals_OnPlayerInventory(int client)
 {
 	if(g_bIsCosmeticZombie[client])
 	{
+		// [FIX] Add a definitive check to prevent a race condition where a survivor
+		// might get zombie visuals applied during round transitions.
+		if (!isZom(client))
+		{
+			// The flag is true, but the player is not a zombie. This is an inconsistent state.
+			// Force remove the visuals and correct the state.
+			RemoveZombieVisuals(client);
+			return;
+		}
+
 		if(!TF2_IsPlayerInCondition(client, TFCond_Disguised))
-		{	
+		{
 			ApplyZombieVisuals(client);
 		}
-	}
-}
-
-stock void ZombieVisuals_OnConditionAdded(int client, TFCond cond)
-{
-	if(g_bIsCosmeticZombie[client] && cond == TFCond_Disguised)
-	{
-		TF2Attrib_SetByName(client, "player skin override", 0.0);
-		TF2Attrib_SetByName(client, "zombiezombiezombiezombie", 0.0);
-		TF2Attrib_SetByName(client, "SPELL: Halloween voice modulation", 0.0);			
-		SetEntProp(client, Prop_Send, "m_bForcedSkin", 0);
-	}
-}
-
-stock void ZombieVisuals_OnConditionRemoved(int client, TFCond cond)
-{
-	if(g_bIsCosmeticZombie[client] && cond == TFCond_Disguised)
-	{
-		ApplyZombieVisuals(client);	
 	}
 }
 
